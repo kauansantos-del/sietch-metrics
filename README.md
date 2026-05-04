@@ -1,15 +1,15 @@
-# PACT — Performance, Atitude, Cultura e Técnica
+# Sietch Metrics — Performance, Atitude, Cultura e Técnica
 
 > Plataforma interna de avaliação de performance para técnicos de TI.
 
-**Produção:** [sietch-pact.vercel.app](https://sietch-pact.vercel.app)
-**Repositório:** [github.com/kauansantos-del/sietch-pact](https://github.com/kauansantos-del/sietch-pact)
+**Produção:** [sietch-metrics.vercel.app](https://sietch-metrics.vercel.app)
+**Repositório:** [github.com/kauansantos-del/sietch-metrics](https://github.com/kauansantos-del/sietch-metrics)
 
 ---
 
 ## Sumário
 
-1. [O que é a PACT](#1-o-que-é-a-pact)
+1. [O que é o Sietch Metrics](#1-o-que-é-o-sietch-metrics)
 2. [Metodologia](#2-metodologia)
 3. [Funcionalidades implementadas](#3-funcionalidades-implementadas)
 4. [Stack técnica](#4-stack-técnica)
@@ -21,9 +21,9 @@
 
 ---
 
-## 1. O que é a PACT
+## 1. O que é o Sietch Metrics
 
-A PACT é uma metodologia estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos de TI, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
+A metodologia **PACT** (Performance, Atitude, Cultura e Técnica) é uma abordagem estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos de TI, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
 
 A metodologia nasceu de uma conversa entre **Luis Borba**, **Leandro Lamanna Zanardi**, **Patrick Faciroli** e **Rodolfo**, com a premissa de:
 
@@ -107,10 +107,10 @@ Ao final, o avaliador escolhe uma das saídas:
 
 ### 3.1 Navegação e estrutura
 
-- **Sidebar fixa** com logo PACT, navegação principal (Nova Avaliação / Histórico) e ações secundárias (toggle de tema, versão da ciclo)
+- **Sidebar fixa** com logo Sietch Metrics, navegação principal (Nova Avaliação / Histórico) e ações secundárias (toggle de tema, versão da ciclo)
 - **Sistema de views** com 3 telas: avaliação, histórico e resultados
 - **Toggle dark/light** com swap animado de logo (`logo-light.svg` ↔ `logo-dark.svg`) e troca suave de tokens
-- **Persistência de tema** via `localStorage` (`pact_theme`)
+- **Persistência de tema** via `localStorage` (`sietch_theme`)
 
 ### 3.2 Formulário de avaliação
 
@@ -151,7 +151,7 @@ Exibida automaticamente após salvar uma avaliação completa. Não é uma tela 
 - **Botão "Limpar tudo"** com confirmação
 - **Badge de contagem** no item do sidebar (atualiza em tempo real)
 - **Empty state** com SVG e mensagem quando não há avaliações
-- **Persistência** via `localStorage` (`pact_history` — array de evaluations)
+- **Persistência** via `localStorage` (`sietch_history` — array de evaluations)
 
 ### 3.5 Modal de detalhes
 
@@ -182,7 +182,7 @@ Acionado pelo histórico, mostra:
 | Camada | Tecnologia |
 |---|---|
 | Front-end | HTML5 + CSS3 (variáveis nativas) + Vanilla JavaScript ES6+ |
-| Persistência | `localStorage` (`pact_history`, `pact_theme`) |
+| Persistência | `localStorage` (`sietch_history`, `sietch_theme`) |
 | Tipografia | Inter (Google Fonts) — pesos 300/400/500/600/700 |
 | Hospedagem | Vercel (deploy estático) |
 | Versionamento | Git + GitHub |
@@ -194,12 +194,12 @@ Acionado pelo histórico, mostra:
 ## 5. Estrutura de arquivos
 
 ```
-sietch-pact/
+sietch-metrics/
 ├── index.html                         # Aplicação (HTML + CSS inline + JS inline)
 ├── design-system.css                  # Sietch Design System (tokens, componentes base)
 ├── logo-light.svg                     # Logo branco (para fundos escuros)
 ├── logo-dark.svg                      # Logo preto (para fundos claros)
-├── PACT_Plataforma_Metodologia.md     # Documentação da metodologia
+├── SIETCH_METRICS_Plataforma_Metodologia.md     # Documentação da metodologia
 ├── README.md                          # Este arquivo
 └── .gitignore                         # .vercel, .claude/, node_modules/, *.log
 ```
@@ -226,7 +226,7 @@ Componentes inclusos: card, stat-card, button, input, select, textarea, table, b
 A página estende o design system com:
 
 - **Type scale ajustado** — body/label/title aumentados para legibilidade mínima de 14px (acessibilidade)
-- **Componentes específicos da PACT** — `criterion-card`, `score-btn`, `step-footer`, `results-hero`, `results-score-card`, `history-card`, `priority-alta/media/baixa`
+- **Componentes específicos do Sietch Metrics** — `criterion-card`, `score-btn`, `step-footer`, `results-hero`, `results-score-card`, `history-card`, `priority-alta/media/baixa`
 - **Animações** — `sidebarIn`, `contentIn`, `staggerUp`, `viewFade`, `tab-panel`, `btnPop`, `valuePulse`, `badgeFlip`
 
 ---
@@ -258,7 +258,7 @@ A paleta default do Radix em dark é cinza neutro flat. Para um app premium, iss
 
 | Componente | Antes | Depois |
 |---|---|---|
-| Sidebar ativa | Pílula branca pura (chocante no dark) | Overlay translúcido + acento verde PACT no indicador |
+| Sidebar ativa | Pílula branca pura (chocante no dark) | Overlay translúcido + acento verde Sietch no indicador |
 | Botão primário (`.btn-filled`) | Preto puro (invisível no fundo escuro) | `gray-12` (quase branco) com texto escuro |
 | Stat icon | `gray-3` flat | Glass tile — `rgba(255,255,255,0.06)` + borda azulada |
 | Badges classificação | Cores light com baixo contraste | Variantes dark com fundo semi-transparente e cor saturada |
@@ -289,7 +289,7 @@ Originalmente a app fazia reset do formulário ao salvar. A nova arquitetura int
 ```javascript
 function saveEvaluation() {
   // ... validação e salvamento ...
-  localStorage.setItem('pact_history', JSON.stringify(history));
+  localStorage.setItem('sietch_history', JSON.stringify(history));
   updateHistoryBadge();
   showResults(evaluation);  // antes era resetForm()
 }
@@ -380,7 +380,7 @@ Sem JS, sem libs, performático.
 
 ## 8. Deploy
 
-**Produção:** [sietch-pact.vercel.app](https://sietch-pact.vercel.app)
+**Produção:** [sietch-metrics.vercel.app](https://sietch-metrics.vercel.app)
 
 Configuração Vercel:
 - **Framework preset:** None (deploy estático)
@@ -413,4 +413,4 @@ vercel --prod --scope kauansantos-dels-projects
 
 ---
 
-*PACT v1.0 — Ciclo Abril 2026 — Uso interno RH*
+*Sietch Metrics v1.0 (metodologia PACT) — Ciclo Abril 2026 — Uso interno RH*

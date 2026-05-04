@@ -1,7 +1,7 @@
-# PACT — Backend
+# Sietch Metrics — Backend
 
-API REST para a plataforma PACT (Performance, Atitude, Cultura e Técnica).
-Implementação do [PACT_BACKEND_BLUEPRINT.md](../PACT_BACKEND_BLUEPRINT.md).
+API REST para a plataforma Sietch Metrics — metodologia PACT (Performance, Atitude, Cultura e Técnica).
+Implementação do [SIETCH_METRICS_BACKEND_BLUEPRINT.md](../SIETCH_METRICS_BACKEND_BLUEPRINT.md).
 
 ## Stack
 
@@ -28,7 +28,7 @@ backend/
 │   ├── routes/                 # auth, evaluations, technicians, users
 │   ├── services/               # lógica de negócio
 │   ├── schemas/                # validação zod dos DTOs
-│   ├── utils/                  # errors, classification (cálculo PACT), logger
+│   ├── utils/                  # errors, classification (cálculo Sietch Metrics), logger
 │   └── types/express.d.ts      # extensão tipada do Request
 ├── .env.example
 ├── tsconfig.json
@@ -94,10 +94,10 @@ Abre Prisma Studio em `http://localhost:5555`.
    - Tipo: **Web application**
    - Authorized JavaScript origins:
      - `http://localhost:3000`
-     - `https://sietch-pact.vercel.app` (produção)
+     - `https://sietch-metrics.vercel.app` (produção)
    - Authorized redirect URIs:
      - `http://localhost:3000/api/auth/google/callback`
-     - `https://api.sietch-pact.vercel.app/api/auth/google/callback`
+     - `https://api.sietch-metrics.vercel.app/api/auth/google/callback`
 4. Copiar **Client ID** e **Client Secret** para o `.env`
 
 ## Endpoints
@@ -157,7 +157,7 @@ Configurar na Vercel UI:
    - Framework: Other
    - Build: `npx prisma generate && tsc`
    - Install: `npm install`
-3. **Domain** — `api.sietch-pact.vercel.app` ou domínio próprio
+3. **Domain** — `api.sietch-metrics.vercel.app` ou domínio próprio
 
 ### Opção B — Mesmo projeto Vercel do frontend
 
@@ -201,4 +201,4 @@ npm test            # Vitest
 
 ---
 
-*PACT Backend v1.0 — Implementação completa do [PACT_BACKEND_BLUEPRINT.md](../PACT_BACKEND_BLUEPRINT.md)*
+*Sietch Metrics Backend v1.0 — Implementação completa do [SIETCH_METRICS_BACKEND_BLUEPRINT.md](../SIETCH_METRICS_BACKEND_BLUEPRINT.md)*

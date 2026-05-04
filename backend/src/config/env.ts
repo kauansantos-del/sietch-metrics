@@ -14,19 +14,9 @@ const envSchema = z.object({
     'DIRECT_URL deve ser uma connection string Postgres válida',
   ),
 
-  // Google OAuth
-  GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID obrigatório'),
-  GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET obrigatório'),
-  GOOGLE_REDIRECT_URI: z.string().url(),
-
-  // Domain restriction
-  ALLOWED_EMAIL_DOMAIN: z
-    .string()
-    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i, 'ALLOWED_EMAIL_DOMAIN deve ser um domínio válido'),
-
   // Session
   JWT_SECRET: z.string().min(32, 'JWT_SECRET precisa ter no mínimo 32 caracteres'),
-  SESSION_COOKIE_NAME: z.string().min(1).default('pact_session'),
+  SESSION_COOKIE_NAME: z.string().min(1).default('sietch_session'),
   SESSION_MAX_AGE_DAYS: z.coerce.number().int().positive().default(7),
 
   // Frontend / CORS

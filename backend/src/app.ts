@@ -10,6 +10,7 @@ import { logger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 
 import authRoutes from './routes/auth.routes';
+import criteriaRoutes from './routes/criteria.routes';
 import evaluationRoutes from './routes/evaluations.routes';
 import technicianRoutes from './routes/technicians.routes';
 import userRoutes from './routes/users.routes';
@@ -76,6 +77,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // ─── Rotas ────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/criteria', criteriaRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/technicians', technicianRoutes);
 app.use('/api/users', userRoutes);
@@ -85,7 +87,7 @@ app.use('/api', notFoundHandler);
 app.use(errorHandler);
 
 if (!isProduction) {
-  logger.info({ allowedOrigins: env.ALLOWED_ORIGINS }, 'PACT API inicializada');
+  logger.info({ allowedOrigins: env.ALLOWED_ORIGINS }, 'Sietch Metrics API inicializada');
 }
 
 export default app;

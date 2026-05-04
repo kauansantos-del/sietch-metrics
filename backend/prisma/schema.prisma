@@ -1,4 +1,4 @@
-// PACT — Prisma schema
+// Sietch Metrics — Prisma schema
 // Postgres via Neon (pooled URL para runtime, direct URL para migrations)
 // Documentação: https://pris.ly/d/prisma-schema
 
@@ -34,8 +34,9 @@ model User {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  evaluations Evaluation[] @relation("EvaluatorEvaluations")
-  auditLogs   AuditLog[]
+  evaluations    Evaluation[]      @relation("EvaluatorEvaluations")
+  customCriteria CustomCriterion[] @relation("OwnedCriteria")
+  auditLogs      AuditLog[]
 
   @@index([email])
   @@map("users")
@@ -123,6 +124,32 @@ model EvaluationScore {
   @@unique([evaluationId, criterionKey])
   @@index([evaluationId])
   @@map("evaluation_scores")
+}
+
+// ─────────────────────────────────────────────────────────────
+// CUSTOM CRITERIA — perguntas personalizadas por avaliador
+// Cada usuário mantém sua própria lista de critérios para reutilizar
+// entre avaliações. O critério "padrão Sietch" continua hardcoded
+// no frontend para sempre estar disponível como template inicial.
+// ─────────────────────────────────────────────────────────────
+
+model CustomCriterion {
+  id           String         @id @default(uuid()) @db.Uuid
+  ownerId      String         @map("owner_id") @db.Uuid
+  block        CriterionBlock
+  label        String         // texto exibido para o avaliador
+  description  String?        @db.Text
+  weight       Int            @default(2) // 1, 2 ou 3
+  position     Int            @default(0) // ordem de exibição
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  owner User @relation("OwnedCriteria", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, active])
+  @@index([ownerId, block, position])
+  @@map("custom_criteria")
 }
 
 // ─────────────────────────────────────────────────────────────

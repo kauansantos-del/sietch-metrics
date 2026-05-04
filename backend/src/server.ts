@@ -5,7 +5,7 @@ import { logger } from './utils/logger';
 const port = env.PORT;
 
 const server = app.listen(port, () => {
-  logger.info(`🚀 PACT API rodando em http://localhost:${port} (${env.NODE_ENV})`);
+  logger.info(`🚀 Sietch Metrics API rodando em http://localhost:${port} (${env.NODE_ENV})`);
 });
 
 // Graceful shutdown — útil para o tsx watch e para containers

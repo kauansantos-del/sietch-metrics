@@ -1,4 +1,4 @@
-# PACT — Performance, Atitude, Cultura e Técnica
+# Sietch Metrics — Performance, Atitude, Cultura e Técnica
 
 > Plataforma interna de avaliação de performance individual para técnicos.  
 > Desenvolvida a partir de debate entre liderança e RH — ciclo Abril 2026.
@@ -25,7 +25,7 @@ A metodologia nasceu de uma conversa entre **Luis Borba**, **Leandro Lamanna Zan
 
 ---
 
-## 2. Estrutura da Metodologia PACT
+## 2. Estrutura da Metodologia (PACT)
 
 A avaliação é dividida em **dois blocos principais**, com pesos distintos na composição da nota final.
 

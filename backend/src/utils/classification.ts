@@ -14,7 +14,7 @@ export interface ScoreCalculation {
 }
 
 /**
- * Pesos aplicados na nota final — alinhados com PACT_Plataforma_Metodologia.md.
+ * Pesos aplicados na nota final — alinhados com SIETCH_METRICS_Metodologia.md.
  * NUNCA confiamos em valores vindos do cliente — todo cálculo acontece aqui no backend.
  */
 const TECHNICAL_WEIGHT = 0.6;

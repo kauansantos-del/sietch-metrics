@@ -151,13 +151,14 @@
   --border-strong:            var(--gray-8);
   --border-focus:             var(--black);
 
-  /* Text */
+  /* Text — WCAG AA/AAA on white background
+     muted/placeholder bumped from gray-9 (≈3.4:1, fails AA) to gray-11 (≈6.5:1, AA) */
   --text-high:                var(--gray-12);
   --text-default:             var(--gray-12);
   --text-low:                 var(--gray-11);
-  --text-muted:               var(--gray-9);
-  --text-placeholder:         var(--gray-9);
-  --text-disabled:            var(--gray-8);
+  --text-muted:               var(--gray-11);
+  --text-placeholder:         var(--gray-10);
+  --text-disabled:            var(--gray-9);
   --text-on-solid:            var(--white);
 
   /* Semantic Text */
@@ -469,9 +470,9 @@
   --text-high:                var(--gray-12);
   --text-default:             var(--gray-12);
   --text-low:                 var(--gray-11);
-  --text-muted:               var(--gray-9);
-  --text-placeholder:         var(--gray-9);
-  --text-disabled:            var(--gray-7);
+  --text-muted:               var(--gray-11);
+  --text-placeholder:         var(--gray-10);
+  --text-disabled:            var(--gray-8);
   --text-on-solid:            var(--gray-1);
 
   --border-subtle:            var(--gray-6);
@@ -521,6 +522,21 @@ svg {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ─── Global keyboard focus ring (WCAG 2.4.7) ─────────────────────────
+   Visible 3px outline only on keyboard navigation; never strips on mouse
+   click. Uses --border-focus which is guaranteed ≥3:1 vs surface. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  outline: none; /* fields use their own border + box-shadow ring */
 }
 
 button {

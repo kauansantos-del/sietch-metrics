@@ -4,7 +4,7 @@
   "buildCommand": "npx prisma generate",
   "outputDirectory": "public",
   "framework": null,
-  "alias": ["sietch-pact-api.vercel.app"],
+  "alias": ["sietch-metrics-api.vercel.app"],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" }
   ],

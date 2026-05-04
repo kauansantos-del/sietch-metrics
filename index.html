@@ -116,7 +116,7 @@
     .tabs { gap: 0 !important; }
     .tab { font-size: 15px !important; }
 
-    /* ── PACT classification colors ── */
+    /* ── Sietch Metrics classification colors ── */
     .cl-otimo   { color: var(--green-11); }
     .cl-bom     { color: var(--blue-11); }
     .cl-regular { color: var(--amber-11); }
@@ -411,6 +411,879 @@
       border-color: var(--border-default);
     }
 
+    /* ════════════════════════════════════════════════════════════════
+       WIZARD — 4-step stepper (Canva-style guided flow)
+    ════════════════════════════════════════════════════════════════ */
+    .wizard-stepper {
+      margin-bottom: var(--spacing-6);
+      padding: var(--spacing-5) var(--spacing-4);
+      background: linear-gradient(180deg,
+        var(--surface-card) 0%,
+        var(--surface-subtle) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+    }
+    .wizard-stepper__list {
+      display: flex; align-items: stretch;
+      gap: 0;
+      list-style: none; margin: 0; padding: 0;
+      counter-reset: ws;
+    }
+    .wizard-stepper__step {
+      flex: 1; min-width: 0;
+      position: relative;
+    }
+    /* Connector line between bullets */
+    .wizard-stepper__step::after {
+      content: '';
+      position: absolute;
+      top: 19px;
+      left: calc(50% + 22px);
+      right: calc(-50% + 22px);
+      height: 2px;
+      background: var(--border-subtle);
+      z-index: 0;
+      transition: background-color 350ms cubic-bezier(.2,.7,.2,1);
+    }
+    .wizard-stepper__step:last-child::after { display: none; }
+    .wizard-stepper__step--complete::after,
+    .wizard-stepper__step--active::after { background: var(--indigo-9); }
+
+    .wizard-stepper__btn {
+      width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px;
+      padding: 4px 8px;
+      background: transparent; border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 200ms ease;
+      position: relative;
+      z-index: 1;
+    }
+    .wizard-stepper__btn:disabled { cursor: not-allowed; }
+    .wizard-stepper__btn:not(:disabled):hover .wizard-stepper__bullet {
+      transform: scale(1.05);
+    }
+
+    .wizard-stepper__bullet {
+      position: relative;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--surface-card);
+      border: 2px solid var(--border-default);
+      color: var(--text-low);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      transition: all 320ms cubic-bezier(.2,.7,.2,1);
+    }
+    .wizard-stepper__num,
+    .wizard-stepper__check {
+      position: absolute;
+      transition: opacity 200ms ease, transform 320ms cubic-bezier(.2,.7,.2,1);
+    }
+    .wizard-stepper__check { opacity: 0; transform: scale(.6); }
+
+    /* Active step */
+    .wizard-stepper__step--active .wizard-stepper__bullet {
+      background: var(--indigo-9);
+      border-color: var(--indigo-9);
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba(62,99,221,0.16);
+    }
+
+    /* Completed step — green check */
+    .wizard-stepper__step--complete .wizard-stepper__bullet {
+      background: #2f7c57;
+      border-color: #4cc38a;
+      color: #fff;
+    }
+    .wizard-stepper__step--complete .wizard-stepper__num { opacity: 0; transform: scale(.4); }
+    .wizard-stepper__step--complete .wizard-stepper__check { opacity: 1; transform: scale(1); }
+
+    .wizard-stepper__label {
+      display: flex; flex-direction: column;
+      gap: 2px;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .wizard-stepper__caption {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+    .wizard-stepper__title {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-low);
+      transition: color 200ms ease;
+    }
+    .wizard-stepper__step--active .wizard-stepper__title { color: var(--text-high); }
+    .wizard-stepper__step--complete .wizard-stepper__title { color: var(--text-default); }
+
+    /* Mobile: hide labels, keep only bullets */
+    @media (max-width: 720px) {
+      .wizard-stepper { padding: var(--spacing-4) var(--spacing-3); }
+      .wizard-stepper__label { display: none; }
+      .wizard-stepper__btn { gap: 0; }
+    }
+
+    /* ── Wizard panels ─────────────────────────────────────────────── */
+    .wizard-panels { position: relative; }
+    .wizard-panel {
+      display: none;
+      animation: wizardEnter 360ms cubic-bezier(.2,.7,.2,1) both;
+    }
+    .wizard-panel--active { display: block; }
+    @keyframes wizardEnter {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .wizard-panel__head {
+      margin-bottom: var(--spacing-5);
+      max-width: 720px;
+    }
+    .wizard-panel__title {
+      font-family: var(--font-display);
+      font-size: 26px; font-weight: 600;
+      letter-spacing: -.02em;
+      color: var(--text-high);
+      margin-bottom: var(--spacing-2);
+      line-height: 1.2;
+    }
+    .wizard-panel__sub {
+      font-size: var(--type-body-md-size);
+      color: var(--text-low);
+      line-height: 1.55;
+      margin: 0;
+    }
+    @media (max-width: 720px) {
+      .wizard-panel__title { font-size: 22px; }
+    }
+
+    .wizard-panel__body { /* container for step content */ }
+
+    .wizard-card {
+      padding: var(--spacing-6);
+    }
+    .required-mark {
+      color: var(--red-11);
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    /* ── Choice cards (Step 2) ─────────────────────────────────────── */
+    .choice-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+    }
+    @media (max-width: 980px) {
+      .choice-cards { grid-template-columns: 1fr; }
+    }
+
+    .choice-card {
+      position: relative;
+      display: flex; flex-direction: column;
+      gap: var(--spacing-3);
+      padding: var(--spacing-5);
+      text-align: left;
+      background: var(--surface-card);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color 220ms ease, transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease;
+      font-family: inherit;
+      overflow: hidden;
+    }
+    .choice-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(120% 100% at 50% 0%, rgba(62,99,221,0.10), transparent 60%);
+      opacity: 0;
+      transition: opacity 220ms ease;
+      pointer-events: none;
+    }
+    .choice-card:hover {
+      border-color: var(--border-default);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    }
+    .choice-card:hover::before { opacity: 1; }
+    .choice-card--selected {
+      border-color: var(--indigo-9);
+      background: linear-gradient(180deg, rgba(62,99,221,0.06), rgba(62,99,221,0.02));
+    }
+    .choice-card--selected::before { opacity: 0; }
+
+    .choice-card__icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-md);
+      display: grid; place-items: center;
+      background: var(--surface-interactive);
+      color: var(--text-low);
+      transition: all 220ms ease;
+    }
+    .choice-card--selected .choice-card__icon {
+      background: rgba(62,99,221,0.18);
+      color: var(--indigo-11);
+    }
+    .choice-card__title {
+      font-size: var(--type-title-md-size);
+      font-weight: 600;
+      color: var(--text-high);
+      letter-spacing: -.01em;
+    }
+    .choice-card__desc {
+      font-size: var(--type-body-sm-size);
+      color: var(--text-low);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .choice-card__meta {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-muted);
+    }
+    .choice-card__badge {
+      position: absolute; top: 14px; right: 14px;
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: var(--radius-full);
+      background: rgba(62,99,221,0.16);
+      color: var(--indigo-11);
+      border: 1px solid rgba(62,99,221,0.32);
+      font-size: 10px; font-weight: 700; line-height: 1;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .choice-card__check {
+      position: absolute; top: 14px; right: 14px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--surface-card);
+      border: 2px solid var(--border-default);
+      color: transparent;
+      transition: all 220ms cubic-bezier(.2,.7,.2,1);
+    }
+    .choice-card--selected .choice-card__check {
+      background: var(--indigo-9);
+      border-color: var(--indigo-9);
+      color: #fff;
+    }
+    .choice-card--selected .choice-card__badge { display: none; }
+
+    /* ── Tech picker (Step 1: lista de colaboradores cadastrados) ── */
+    .tech-picker {
+      margin-top: var(--spacing-4);
+      padding: var(--spacing-4) var(--spacing-5);
+    }
+    .tech-picker__head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--spacing-4); flex-wrap: wrap;
+      margin-bottom: var(--spacing-3);
+    }
+    .tech-picker__title {
+      font-size: var(--type-label-lg-size); font-weight: 600;
+      color: var(--text-high); margin-bottom: 2px;
+    }
+    .tech-picker__sub {
+      font-size: var(--type-body-sm-size); color: var(--text-low);
+    }
+    .tech-picker__search-wrap {
+      position: relative; flex-shrink: 0;
+      min-width: 220px;
+    }
+    .tech-picker__search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .tech-picker__search {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-default);
+      font-family: inherit;
+      font-size: var(--type-body-sm-size);
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .tech-picker__search::placeholder { color: var(--text-placeholder); }
+    .tech-picker__search:focus {
+      outline: none;
+      border-color: var(--indigo-9);
+      box-shadow: 0 0 0 3px rgba(62,99,221,0.18);
+    }
+
+    .tech-picker__group-bar {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: var(--spacing-3);
+    }
+    .tech-picker__team-chip {
+      padding: 5px 11px;
+      background: transparent;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      color: var(--text-low);
+      font-family: inherit;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 160ms ease;
+    }
+    .tech-picker__team-chip:hover {
+      border-color: var(--text-low); color: var(--text-default);
+    }
+    .tech-picker__team-chip--active {
+      background: var(--indigo-9);
+      border-color: var(--indigo-9);
+      color: #fff;
+    }
+
+    .tech-picker__list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .tech-picker__loading,
+    .tech-picker__empty {
+      grid-column: 1 / -1;
+      padding: var(--spacing-4);
+      text-align: center;
+      font-size: var(--type-body-sm-size);
+      color: var(--text-low);
+      background: var(--surface-subtle);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-sm);
+    }
+
+    .tech-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 180ms cubic-bezier(.2,.7,.2,1);
+      min-width: 0;
+    }
+    .tech-pill:hover {
+      border-color: var(--indigo-7);
+      transform: translateY(-1px);
+      background: var(--surface-card);
+    }
+    .tech-pill--active {
+      background: linear-gradient(135deg, rgba(62,99,221,0.10), rgba(62,99,221,0.04));
+      border-color: var(--indigo-9);
+      box-shadow: 0 0 0 3px rgba(62,99,221,0.14);
+    }
+    .tech-pill__avatar {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--surface-interactive);
+      color: var(--text-default);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: -.02em;
+      font-family: var(--font-display);
+    }
+    .tech-pill--active .tech-pill__avatar {
+      background: var(--indigo-9);
+      color: #fff;
+    }
+    .tech-pill__main { flex: 1; min-width: 0; }
+    .tech-pill__name {
+      font-size: var(--type-body-sm-size); font-weight: 600;
+      color: var(--text-default);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tech-pill--active .tech-pill__name { color: var(--text-high); }
+    .tech-pill__team {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: .02em;
+      margin-top: 1px;
+    }
+    .tech-pill__check {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      display: grid; place-items: center;
+      color: var(--indigo-11);
+      opacity: 0;
+      transform: scale(.5);
+      transition: all 220ms cubic-bezier(.2,.7,.2,1);
+    }
+    .tech-pill--active .tech-pill__check { opacity: 1; transform: scale(1); }
+
+    /* ── Choice banner (Step 2: contextual hint after selection) ── */
+    .choice-banner {
+      margin-top: var(--spacing-4);
+      padding: var(--spacing-4) var(--spacing-5);
+      background: linear-gradient(135deg, rgba(62,99,221,0.10), rgba(62,99,221,0.03));
+      border: 1px solid rgba(62,99,221,0.32);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; gap: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+    .choice-banner__icon {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: rgba(62,99,221,0.20);
+      color: var(--indigo-11);
+      display: grid; place-items: center;
+    }
+    .choice-banner__body {
+      flex: 1; min-width: 200px;
+    }
+    .choice-banner__title {
+      font-size: var(--type-body-md-size); font-weight: 600;
+      color: var(--text-high); margin-bottom: 2px;
+    }
+    .choice-banner__sub {
+      font-size: var(--type-body-sm-size); color: var(--text-low);
+      line-height: 1.45;
+    }
+
+    /* ── Final summary card (Step 4) ───────────────────────────────── */
+    .final-summary {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: stretch;
+      padding: var(--spacing-6) var(--spacing-5);
+      background: linear-gradient(135deg,
+        rgba(62,99,221,0.04) 0%,
+        var(--surface-card) 50%,
+        rgba(76,195,138,0.04) 100%);
+    }
+    @media (max-width: 720px) {
+      .final-summary { grid-template-columns: 1fr; gap: var(--spacing-4); }
+      .final-summary__divider { display: none; }
+    }
+    .final-summary__cell {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+      padding: var(--spacing-2) var(--spacing-3);
+    }
+    .final-summary__divider {
+      width: 1px;
+      background: var(--border-subtle);
+    }
+    .final-summary__label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+    .final-summary__value {
+      font-family: var(--font-display);
+      font-size: 32px; font-weight: 700;
+      letter-spacing: -.03em; line-height: 1;
+      color: var(--text-high);
+      font-variant-numeric: tabular-nums;
+    }
+    .final-summary__cell--final .final-summary__value { font-size: 40px; }
+    .final-summary__class {
+      margin-top: 6px;
+      padding: 4px 11px;
+      border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 700; line-height: 1;
+      letter-spacing: .06em; text-transform: uppercase;
+      background: var(--surface-interactive);
+      color: var(--text-low);
+      border: 1px solid var(--border-subtle);
+    }
+    .final-summary__class--otimo   { background: rgba(76,195,138,0.16);  color: #4cc38a; border-color: rgba(76,195,138,0.32); }
+    .final-summary__class--bom     { background: rgba(82,169,255,0.16);  color: #52a9ff; border-color: rgba(82,169,255,0.32); }
+    .final-summary__class--regular { background: rgba(255,178,36,0.16);  color: #f1a10d; border-color: rgba(255,178,36,0.32); }
+    .final-summary__class--critico { background: rgba(229,72,77,0.16);   color: #ff6369; border-color: rgba(229,72,77,0.32); }
+
+    /* ── Wizard footer (sticky bottom navigation) ──────────────────── */
+    .wizard-footer {
+      position: sticky;
+      bottom: 0;
+      margin-top: var(--spacing-6);
+      padding: var(--spacing-4) var(--spacing-5);
+      display: flex; align-items: center;
+      gap: var(--spacing-3);
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+      z-index: 5;
+    }
+    .wizard-footer__progress {
+      flex: 1;
+      text-align: center;
+      font-size: var(--type-body-sm-size);
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .02em;
+      font-variant-numeric: tabular-nums;
+    }
+    @media (max-width: 540px) {
+      .wizard-footer__progress { display: none; }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       EVAL MODE TABS — Preenchimento / Edição
+       Top-level toggle, Material-style underline indicator
+    ════════════════════════════════════════════════════════════════ */
+    .eval-mode-tabs {
+      display: flex;
+      gap: var(--spacing-1);
+      border-bottom: 1px solid var(--border-default);
+      margin-bottom: var(--spacing-5);
+      padding: 0 var(--spacing-1);
+    }
+    .eval-mode-tab {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 22px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px; /* overlap parent border for active indicator */
+      color: var(--text-low);
+      font-family: inherit;
+      font-size: var(--type-label-lg-size);
+      font-weight: 600;
+      letter-spacing: .01em;
+      cursor: pointer;
+      transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+      position: relative;
+    }
+    .eval-mode-tab:hover {
+      color: var(--text-high);
+      background: var(--surface-interactive);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .eval-mode-tab--active {
+      color: var(--indigo-11);
+      border-bottom-color: var(--indigo-9);
+    }
+    .eval-mode-tab--active:hover { background: transparent; border-radius: 0; }
+    .eval-mode-tab svg { color: currentColor; }
+    .eval-mode-tab__count {
+      display: inline-grid; place-items: center;
+      min-width: 20px; height: 20px; padding: 0 6px;
+      border-radius: var(--radius-full);
+      background: var(--surface-interactive);
+      color: var(--text-low);
+      font-size: 11px; font-weight: 700; line-height: 1;
+    }
+    .eval-mode-tab--active .eval-mode-tab__count {
+      background: rgba(62,99,221,0.18);
+      color: var(--indigo-11);
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       FORMS EDITOR — Google Forms-style question cards
+    ════════════════════════════════════════════════════════════════ */
+    .forms-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--spacing-4); flex-wrap: wrap;
+      padding: var(--spacing-4) var(--spacing-5);
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-5);
+    }
+    .forms-toolbar__title {
+      font-size: var(--type-title-md-size); font-weight: 600;
+      color: var(--text-high); margin-bottom: 2px;
+    }
+    .forms-toolbar__sub {
+      font-size: var(--type-body-sm-size); color: var(--text-low);
+    }
+
+    .forms-block {
+      margin-bottom: var(--spacing-5);
+    }
+    .forms-block__head {
+      display: flex; align-items: center; gap: var(--spacing-3);
+      margin-bottom: var(--spacing-3);
+      padding: 0 4px;
+    }
+    .forms-block__pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px; font-weight: 700; letter-spacing: .02em;
+      line-height: 1;
+    }
+    .forms-block__pill--tecnico {
+      background: rgba(62,99,221,0.16); color: var(--indigo-11);
+      border: 1px solid rgba(62,99,221,0.32);
+    }
+    .forms-block__pill--comportamental {
+      background: rgba(76,195,138,0.16); color: #4cc38a;
+      border: 1px solid rgba(76,195,138,0.32);
+    }
+    .forms-block__count {
+      font-size: var(--type-body-sm-size);
+      color: var(--text-low);
+    }
+
+    .forms-questions {
+      display: flex; flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    /* ── Question card (collapsed view) ── */
+    .forms-question {
+      position: relative;
+      display: flex; align-items: stretch;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+      overflow: hidden;
+    }
+    .forms-question::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 0;
+      background: var(--indigo-9);
+      transition: width 220ms cubic-bezier(.2,.7,.2,1);
+    }
+    .forms-question:hover {
+      border-color: var(--border-default);
+      box-shadow: var(--elevation-2);
+    }
+    .forms-question--editing {
+      border-color: var(--indigo-7);
+      box-shadow: 0 4px 18px rgba(62,99,221,0.12);
+    }
+    .forms-question--editing::before { width: 4px; }
+
+    .forms-question__num {
+      flex-shrink: 0;
+      width: 36px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface-subtle);
+      border-right: 1px solid var(--border-subtle);
+    }
+    .forms-question--editing .forms-question__num {
+      color: var(--indigo-11);
+      background: rgba(62,99,221,0.10);
+      border-right-color: rgba(62,99,221,0.28);
+    }
+
+    .forms-question__main {
+      flex: 1; min-width: 0;
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: var(--spacing-3);
+    }
+    .forms-question__body {
+      flex: 1; min-width: 0;
+    }
+    .forms-question__label {
+      font-size: var(--type-body-md-size); font-weight: 500;
+      color: var(--text-default);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .forms-question__desc {
+      font-size: var(--type-body-sm-size); color: var(--text-low);
+      line-height: 1.45;
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    .forms-question__meta {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .forms-question__weight {
+      font-size: 11px; font-weight: 700; line-height: 1;
+      padding: 4px 9px; border-radius: var(--radius-full);
+      letter-spacing: .04em; text-transform: uppercase;
+      background: var(--surface-interactive);
+      color: var(--text-low);
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .forms-question__weight--3 { background: rgba(229,72,77,0.14); color: #ff8488; border-color: rgba(229,72,77,0.28); }
+    .forms-question__weight--2 { background: rgba(255,178,36,0.14); color: #f1a10d; border-color: rgba(255,178,36,0.28); }
+    .forms-question__weight--1 { background: rgba(82,169,255,0.14); color: #52a9ff; border-color: rgba(82,169,255,0.28); }
+
+    .forms-question__actions {
+      display: flex; gap: 2px; flex-shrink: 0;
+      padding-right: 10px;
+    }
+    .forms-question__btn {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      background: transparent; border: none;
+      color: var(--text-low);
+      display: grid; place-items: center; cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+    .forms-question__btn:hover {
+      background: var(--surface-interactive);
+      color: var(--text-high);
+    }
+    .forms-question__btn--danger:hover {
+      color: var(--red-11);
+      background: rgba(229,72,77,0.12);
+    }
+
+    /* ── Question card (expanded — editing) ── */
+    .forms-question--editing { flex-direction: row; }
+    .forms-question--editing .forms-question__main {
+      flex-direction: column; align-items: stretch;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4) var(--spacing-5);
+    }
+    .forms-question__edit-input {
+      width: 100%;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid var(--border-default);
+      color: var(--text-default);
+      font-family: inherit;
+      font-size: var(--type-body-md-size);
+      font-weight: 500;
+      transition: border-color 180ms ease;
+    }
+    .forms-question__edit-input:focus {
+      outline: none;
+      border-bottom-color: var(--indigo-9);
+      border-bottom-width: 2px;
+    }
+    .forms-question__edit-input::placeholder {
+      color: var(--text-placeholder);
+      font-weight: 400;
+    }
+    .forms-question__edit-desc {
+      width: 100%;
+      padding: 6px 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--border-default);
+      color: var(--text-low);
+      font-family: inherit;
+      font-size: var(--type-body-sm-size);
+      resize: vertical;
+      min-height: 32px;
+      transition: border-color 180ms ease;
+    }
+    .forms-question__edit-desc:focus {
+      outline: none;
+      border-bottom: 1.5px solid var(--indigo-9);
+    }
+    .forms-question__edit-controls {
+      display: flex; align-items: center; gap: var(--spacing-3);
+      padding-top: var(--spacing-3);
+      border-top: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+    .forms-chip-group {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .forms-chip-group__label {
+      font-size: var(--type-body-sm-size);
+      font-weight: 600;
+      color: var(--text-low);
+      margin-right: 6px;
+    }
+    .forms-chip {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      color: var(--text-low);
+      font-family: inherit;
+      font-size: 12px; font-weight: 600;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+    .forms-chip:hover {
+      border-color: var(--text-low);
+      color: var(--text-default);
+    }
+    .forms-chip--active {
+      background: var(--indigo-9);
+      border-color: var(--indigo-9);
+      color: #fff;
+    }
+    .forms-chip--active:hover {
+      background: var(--indigo-10);
+      border-color: var(--indigo-10);
+      color: #fff;
+    }
+    .forms-question__edit-buttons {
+      margin-left: auto;
+      display: flex; gap: var(--spacing-2);
+    }
+
+    /* ── Add question button (Google Forms-style outline button) ── */
+    .forms-add-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: var(--spacing-3);
+      padding: 12px 18px;
+      width: 100%;
+      justify-content: center;
+      background: transparent;
+      border: 1.5px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-low);
+      font-family: inherit;
+      font-size: var(--type-label-lg-size);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+    .forms-add-btn:hover {
+      border-color: var(--indigo-9);
+      color: var(--indigo-11);
+      background: rgba(62,99,221,0.06);
+    }
+
+    /* ── Empty state inside a block ── */
+    .forms-questions-empty {
+      padding: var(--spacing-5);
+      text-align: center;
+      color: var(--text-low);
+      font-size: var(--type-body-sm-size);
+      background: var(--surface-subtle);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    /* ── Sticky bottom action bar in edit mode ── */
+    .forms-actions {
+      display: flex; justify-content: flex-end;
+      padding-top: var(--spacing-4);
+      margin-top: var(--spacing-4);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .criterion-card--missing {
+      border-color: var(--red-9) !important;
+      box-shadow: 0 0 0 3px rgba(229,72,77,0.16);
+    }
+    @keyframes criterionShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(2px); }
+    }
+    .criterion-card--shake { animation: criterionShake 360ms cubic-bezier(.36,.07,.19,.97); }
+
     .criterion-card__top {
       display: flex;
       align-items: flex-start;
@@ -529,6 +1402,19 @@
     }
     .input:focus, .textarea:focus, .select:focus {
       box-shadow: 0 0 0 3px var(--surface-info);
+    }
+
+    /* Native <select> dropdown options — explicit colors so Firefox/older
+       browsers render readable items even when color-scheme is ignored. */
+    .select option,
+    select option {
+      background-color: var(--surface-card);
+      color: var(--text-default);
+    }
+    .select option:checked,
+    select option:checked {
+      background-color: var(--indigo-9);
+      color: var(--white, #fff);
     }
 
     /* ── Detail section titles ── */
@@ -826,6 +1712,11 @@
        has proper surface hierarchy and depth, like Linear / Vercel.
     ══════════════════════════════════════════════════════════════ */
     [data-theme="dark"] {
+      /* Tells the browser to render native form controls (select dropdowns,
+         scrollbars, date pickers) using the dark color scheme — without this,
+         <option> elements render as light-on-light and become unreadable. */
+      color-scheme: dark;
+
       /* Refined gray scale — warm charcoal with subtle blue undertone */
       --gray-1:  #0c0e13;
       --gray-2:  #111419;
@@ -851,19 +1742,22 @@
       --surface-sidebar-hover:  rgba(255,255,255,0.05);
       --surface-sidebar-active: rgba(255,255,255,0.08);
 
-      /* Borders — blue-tinted for depth */
-      --border-subtle:  rgba(100,115,180,0.14);
-      --border-default: rgba(100,115,180,0.26);
-      --border-strong:  rgba(100,115,180,0.42);
-      --border-focus:   #6b8aff;
+      /* Borders — blue-tinted for depth, bumped for visibility */
+      --border-subtle:  rgba(140,160,210,0.22);   /* ≈3:1 — meets WCAG non-text */
+      --border-default: rgba(140,160,210,0.38);
+      --border-strong:  rgba(140,160,210,0.55);
+      --border-focus:   #8aa4ff;                  /* ≥3:1 vs surface, AAA focus */
 
-      /* Text — slightly cooler white for dark surfaces */
+      /* Text — WCAG AA/AAA on #111 background
+         high  #e3e7f2 ≈ 13:1 AAA  | default #cdd3e8 ≈ 10:1 AAA
+         low   #a8b0ca ≈ 7.8:1 AAA | muted   #9da4be ≈ 7.3:1 AAA
+         placeholder #8a90a6 ≈ 5.7:1 AA */
       --text-high:        #e3e7f2;
       --text-default:     #cdd3e8;
-      --text-low:         #a0a8c2;
-      --text-muted:       #6a718a;
-      --text-placeholder: #5a6070;
-      --text-disabled:    #3a3f52;
+      --text-low:         #a8b0ca;
+      --text-muted:       #9da4be;
+      --text-placeholder: #8a90a6;
+      --text-disabled:    #5a6075;   /* ≈3:1 — clearly non-interactive */
       --text-on-solid:    #0c0e13;
 
       /* Interactive states */
@@ -878,7 +1772,7 @@
       color: var(--gray-12) !important;
     }
     [data-theme="dark"] .sidebar__item--active::before {
-      background: #4cc38a; /* PACT brand green accent */
+      background: #4cc38a; /* Sietch Metrics brand green accent */
       width: 3px;
     }
     [data-theme="dark"] .sidebar__item:hover {
@@ -1175,42 +2069,32 @@
       letter-spacing: .06em; text-transform: uppercase;
       color: var(--text-muted);
     }
-    .sidebar-user__logout {
-      display: flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px;
-      border-radius: var(--radius-sm);
-      border: none; background: transparent;
-      color: var(--text-muted); cursor: pointer; flex-shrink: 0;
-      transition: background 160ms ease, color 160ms ease;
-    }
-    .sidebar-user__logout:hover {
-      background: var(--surface-hover);
-      color: var(--text-error);
-    }
     [data-theme="dark"] .sidebar-user__avatar {
       background: rgba(100,115,180,0.2);
     }
 
     /* Role badge in sidebar */
-    .role-badge-super {
-      display: inline-block;
-      padding: 1px 7px;
-      border-radius: var(--radius-full);
-      font-size: 10px; font-weight: 700;
-      letter-spacing: .07em; text-transform: uppercase;
-      background: linear-gradient(90deg, rgba(107,138,255,0.18), rgba(29,158,117,0.18));
-      color: #6b8aff;
-      border: 1px solid rgba(107,138,255,0.28);
-    }
+    .role-badge-super,
     .role-badge-admin {
       display: inline-block;
-      padding: 1px 7px;
+      padding: 3px 8px;
       border-radius: var(--radius-full);
-      font-size: 10px; font-weight: 700;
-      letter-spacing: .07em; text-transform: uppercase;
-      background: rgba(100,115,180,0.12);
-      color: var(--text-muted);
-      border: 1px solid rgba(100,115,180,0.22);
+      font-size: 10px !important;     /* defeats the global 13px !important rule */
+      font-weight: 700;
+      line-height: 1;                  /* prevents inherited body line-height */
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+    .role-badge-super {
+      background: linear-gradient(90deg, rgba(107,138,255,0.18), rgba(29,158,117,0.18));
+      color: #9fb3ff;                  /* brighter for AA on dark */
+      border: 1px solid rgba(107,138,255,0.34);
+    }
+    .role-badge-admin {
+      background: rgba(140,160,210,0.14);
+      color: var(--text-low);
+      border: 1px solid rgba(140,160,210,0.26);
     }
 
     /* Auth loading overlay */
@@ -2065,71 +2949,33 @@
     [data-theme="dark"] .page-description { color: rgba(174,181,203,0.7); }
 
     /* ══════════════════════════════════════════════════════
-       MASCOTE SIETCH — animações
+       EMPTY STATE
     ═══════════════════════════════════════════════════════ */
-    @keyframes mascoteFloat {
-      0%, 100% { transform: translateY(0px) rotate(-1deg); }
-      50%       { transform: translateY(-9px) rotate(1deg); }
-    }
-    @keyframes mascoteGlow {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(80,170,255,0.25)) drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
-      50%       { filter: drop-shadow(0 0 18px rgba(80,170,255,0.65)) drop-shadow(0 4px 20px rgba(80,170,255,0.2)); }
-    }
-    @keyframes mascotePeekIn {
-      0%   { opacity: 0; transform: translateY(16px) scale(0.88); }
-      100% { opacity: 1; transform: translateY(0px) scale(1); }
-    }
-    @keyframes mascoteBlink {
-      0%, 92%, 100% { transform: scaleY(1); }
-      95%           { transform: scaleY(0.1); }
-    }
-
-    .mascote {
-      display: block;
-      user-select: none; pointer-events: none;
-      animation:
-        mascoteFloat  3.8s ease-in-out infinite,
-        mascoteGlow   2.6s ease-in-out infinite,
-        mascoteBlink  5s  ease-in-out infinite 2s;
-    }
-    .mascote--sm  { width: 30px;  height: 30px;  }
-    .mascote--md  { width: 72px;  height: 72px;  }
-    .mascote--lg  { width: 110px; height: 110px; }
-    .mascote--peek {
-      animation:
-        mascotePeekIn 500ms cubic-bezier(.18,.8,.18,1) forwards,
-        mascoteFloat  3.8s 500ms ease-in-out infinite,
-        mascoteGlow   2.6s ease-in-out infinite;
-    }
-
-    /* Sidebar mascot wrapper */
-    .sidebar-mascote-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 2px 0;
-    }
-
-    /* Empty state com mascote */
-    .empty-mascote-state {
+    .empty-state {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       padding: var(--spacing-12) var(--spacing-8);
       text-align: center;
+      gap: var(--spacing-2);
     }
-    .empty-mascote-state h3 {
+    .empty-state__icon {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      display: grid; place-items: center;
+      background: var(--surface-interactive);
+      color: var(--text-low);
+      margin-bottom: var(--spacing-3);
+    }
+    .empty-state h3 {
       font-size: var(--type-title-md-size);
-      font-weight: 600; color: var(--text-low);
-      margin-bottom: var(--spacing-2);
+      font-weight: 600; color: var(--text-default);
+      margin-bottom: var(--spacing-1);
     }
-    .empty-mascote-state p {
+    .empty-state p {
       font-size: var(--type-body-sm-size);
-      color: var(--text-muted);
-      max-width: 260px;
-    }
-
-    /* Floating mascote corner (Rankings/Destaques hero) */
-    .mascote-corner {
-      position: absolute; right: 0; top: -8px;
-      opacity: 0.82;
+      color: var(--text-low);
+      max-width: 320px;
+      line-height: 1.5;
     }
 
     /* ─── Blur-Fade animation system ──────────────────────────────────── */
@@ -2720,8 +3566,15 @@
       <span style="display:none; font-size:15px; font-weight:700; letter-spacing:-0.3px; color:var(--text-high);">Sietch Metrics</span>
     </div>
 
-    <!-- Nav: Visão Geral -->
-    <span class="sidebar__section-label">Visão Geral</span>
+    <!-- Nav -->
+    <button class="sidebar__item" id="nav-nova"
+            onclick="showView('evaluation')" style="width:100%; text-align:left;">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Nova Avaliação
+    </button>
 
     <button class="sidebar__item" id="nav-meu-time"
             onclick="showView('meu-time')" style="width:100%; text-align:left;">
@@ -2734,72 +3587,13 @@
       Meu Time
     </button>
 
-    <button class="sidebar__item" id="nav-setor"
-            onclick="showView('setor')" style="width:100%; text-align:left;">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <rect x="1.5" y="9.5" width="3" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
-        <rect x="6.5" y="5.5" width="3" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/>
-        <rect x="11.5" y="2" width="3" height="12.5" rx="1" stroke="currentColor" stroke-width="1.4"/>
-      </svg>
-      Por Setor
-    </button>
-
-    <!-- Nav: Análise -->
-    <span class="sidebar__section-label" style="margin-top:var(--spacing-4);">Análise</span>
-
-    <button class="sidebar__item" id="nav-destaques"
-            onclick="showView('destaques')" style="width:100%; text-align:left;">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <path d="M8 1.5L9.8 6.2H14.7L10.7 9L12.1 13.8L8 11L3.9 13.8L5.3 9L1.3 6.2H6.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-      </svg>
-      Destaques
-    </button>
-
     <button class="sidebar__item" id="nav-rankings"
             onclick="showView('rankings')" style="width:100%; text-align:left;">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <path d="M3 12h2M7 8h2M11 4h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="4" cy="6" r="2" stroke="currentColor" stroke-width="1.3"/>
-        <circle cx="12" cy="10" r="2" stroke="currentColor" stroke-width="1.3"/>
-        <path d="M5.4 5.6L10.6 10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M3 13h2V9H3v4zM7 13h2V5H7v8zM11 13h2V8h-2v5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M2 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
-      Rankings
-    </button>
-
-    <!-- Nav: Gestão -->
-    <span class="sidebar__section-label" style="margin-top:var(--spacing-4);">Gestão</span>
-
-    <button class="sidebar__item" id="nav-tecnicos"
-            onclick="showView('tecnicos')" style="width:100%; text-align:left;">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="1.3"/>
-        <path d="M14.5 13c0-1.657-1.12-3-2.5-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-      </svg>
-      Colaboradores
-    </button>
-
-    <button class="sidebar__item" id="nav-lideres"
-            onclick="showView('lideres')" style="width:100%; text-align:left;"
-            data-role="super_admin">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <path d="M8 1.5L10 6l4.5.5-3.25 3.2.75 4.3L8 11.75 3.95 14l.75-4.3L1.5 6.5 6 6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-      </svg>
-      Líderes
-    </button>
-
-    <!-- Nav: Avaliações (bottom section) -->
-    <div class="sidebar__divider" style="margin:var(--spacing-4) 0 var(--spacing-2);"></div>
-    <span class="sidebar__section-label">Avaliações</span>
-
-    <button class="sidebar__item" id="nav-nova"
-            onclick="showView('evaluation')" style="width:100%; text-align:left;">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      Nova Avaliação
+      Performance
     </button>
 
     <button class="sidebar__item" id="nav-historico"
@@ -2826,11 +3620,6 @@
           <div class="sidebar-user__name" id="user-name">Carregando…</div>
           <div class="sidebar-user__role" id="user-role-label"></div>
         </div>
-        <button class="sidebar-user__logout" onclick="logout()" title="Sair" aria-label="Sair da conta">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
       </div>
       <div class="sidebar__divider"></div>
       <button class="sidebar__item" onclick="toggleTheme()" style="width:100%; text-align:left;">
@@ -2841,10 +3630,7 @@
         </svg>
         <span id="theme-label">Modo Escuro</span>
       </button>
-      <div class="sidebar-mascote-row">
-        <img src="galeria/mascote-sietch.png" class="mascote mascote--sm" alt="">
-        <p class="sidebar__version">Sietch Metrics v1.0</p>
-      </div>
+      <p class="sidebar__version">Sietch Metrics v1.0</p>
     </div>
   </aside>
 
@@ -2870,137 +3656,324 @@
         </button>
       </div>
 
-      <!-- Welcome Banner -->
-      <div class="welcome-banner" id="welcome-banner">
-        <img src="galeria/banner.png" class="welcome-banner__bg" alt="">
-        <div class="welcome-banner__stripes"></div>
-        <div class="welcome-banner__glow"></div>
-        <div class="welcome-banner__content">
-          <div class="welcome-banner__greeting" id="banner-greeting">Olá!</div>
-          <div class="welcome-banner__sub">Bem-vindo ao Sietch Metrics</div>
-        </div>
-      </div>
-
-      <!-- Name + Nicho -->
-      <div class="card" style="margin-bottom: var(--spacing-5);">
-        <div class="form-name-row">
-          <div class="input-group" style="margin-bottom:0;">
-            <label class="input-label" for="tecnico-nome">Nome do técnico *</label>
-            <input class="input" id="tecnico-nome" type="text"
-                   placeholder="Digite o nome completo do técnico avaliado..."
-                   oninput="updateSummary()">
-          </div>
-          <div class="input-group" style="margin-bottom:0;">
-            <label class="input-label" for="tecnico-nicho">Área</label>
-            <select class="select" id="tecnico-nicho">
-              <option value="">— Área —</option>
-              <option value="dev">Dev</option>
-              <option value="design">Design</option>
-              <option value="frontend">Front-end</option>
-              <option value="backend">Back-end</option>
-              <option value="outros">Outros</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stat cards -->
-      <div class="grid stat-grid stagger" style="grid-template-columns: repeat(3,1fr); margin-bottom: var(--spacing-4);">
-        <div class="stat-card">
-          <div class="stat-icon stat-icon--tecnico">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M3.5 6h13M3.5 10h9M3.5 14h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="stat-card__body">
-            <div class="stat-card__value" id="score-tecnico">—</div>
-            <div class="stat-card__label">Nota Técnica</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon--comportamental">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M7 11.5c.8 1.8 5.2 1.8 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <circle cx="7.5" cy="8.5" r="1" fill="currentColor"/>
-              <circle cx="12.5" cy="8.5" r="1" fill="currentColor"/>
-            </svg>
-          </div>
-          <div class="stat-card__body">
-            <div class="stat-card__value" id="score-comportamental">—</div>
-            <div class="stat-card__label">Nota Comportamental</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon--final">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <polygon points="10,2 12.4,7.6 18.5,8.2 14,12.5 15.4,18.5 10,15.4 4.6,18.5 6,12.5 1.5,8.2 7.6,7.6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="stat-card__body">
-            <div class="stat-card__value" id="score-final">—</div>
-            <div class="stat-card__label">Nota Final</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Alert comportamental incompleto -->
-      <div class="alert-warning" id="alert-incompleto" style="display:none; margin-bottom:var(--spacing-4);">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0; margin-top:1px;">
-          <path d="M8 1.5L14.5 13.5H1.5L8 1.5Z" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M8 6.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="8" cy="11.5" r=".75" fill="currentColor"/>
-        </svg>
-        <span>O bloco comportamental não está completamente preenchido. A recomendação final requer avaliação em ambos os blocos.</span>
-      </div>
-
-      <!-- Tabs -->
-      <div class="card" style="padding:0; overflow:hidden;">
-        <div class="tabs" style="padding:0 var(--spacing-6);">
-          <button class="tab tab--active" id="tab-tecnico"   onclick="switchTab('tecnico')">Técnico <span style="color:var(--text-muted); font-weight:400;">(60%)</span></button>
-          <button class="tab"             id="tab-comportamental" onclick="switchTab('comportamental')">Comportamental <span style="color:var(--text-muted); font-weight:400;">(40%)</span></button>
-          <button class="tab"             id="tab-observacoes"    onclick="switchTab('observacoes')">Observações</button>
-        </div>
-
-        <div id="panel-tecnico" class="tab-panel" style="padding:var(--spacing-4) var(--spacing-5);"></div>
-
-        <div id="panel-comportamental" class="tab-panel" style="padding:var(--spacing-4) var(--spacing-5); display:none;"></div>
-
-        <div id="panel-observacoes" class="tab-panel" style="padding:var(--spacing-6); display:none;">
-          <div class="input-group" style="margin-bottom:var(--spacing-5);">
-            <label class="input-label" for="observacoes">Observações</label>
-            <textarea class="textarea" id="observacoes" rows="5"
-                      placeholder="Contexto qualitativo, situações específicas do período, pontos de destaque ou preocupação..."></textarea>
-          </div>
-
-          <div class="input-group" style="margin-bottom:var(--spacing-6);">
-            <label class="input-label" for="recomendacao">Recomendação</label>
-            <select class="select" id="recomendacao">
-              <option value="">Selecione uma recomendação...</option>
-              <option value="bonus">Elegível para bônus</option>
-              <option value="promocao">Indicado para promoção</option>
-              <option value="pdp">Plano de desenvolvimento (PDP)</option>
-              <option value="urgente">Necessita atenção urgente</option>
-            </select>
-          </div>
-
-          <div style="display:flex; gap:var(--spacing-3); flex-wrap:wrap;">
-            <button class="btn btn-filled btn-md" onclick="saveEvaluation()">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7.5L5.5 11L12 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Salvar avaliação
+      <!-- ═══════════════ WIZARD STEPPER ═══════════════ -->
+      <nav class="wizard-stepper" aria-label="Etapas da avaliação">
+        <ol class="wizard-stepper__list">
+          <li class="wizard-stepper__step wizard-stepper__step--active" data-step="1">
+            <button type="button" class="wizard-stepper__btn" onclick="wizardGoTo(1)" aria-current="step">
+              <span class="wizard-stepper__bullet" aria-hidden="true">
+                <span class="wizard-stepper__num">1</span>
+                <svg class="wizard-stepper__check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="wizard-stepper__label">
+                <span class="wizard-stepper__caption">Etapa 1</span>
+                <span class="wizard-stepper__title">Colaborador</span>
+              </span>
             </button>
-            <button class="btn btn-outlined btn-md" onclick="exportSummary()">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 1v8M4 6l3 3 3-3M1 10v1.5A1.5 1.5 0 002.5 13h9a1.5 1.5 0 001.5-1.5V10"
-                      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Exportar resumo
+          </li>
+          <li class="wizard-stepper__step" data-step="2">
+            <button type="button" class="wizard-stepper__btn" onclick="wizardGoTo(2)" disabled>
+              <span class="wizard-stepper__bullet" aria-hidden="true">
+                <span class="wizard-stepper__num">2</span>
+                <svg class="wizard-stepper__check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="wizard-stepper__label">
+                <span class="wizard-stepper__caption">Etapa 2</span>
+                <span class="wizard-stepper__title">Perguntas</span>
+              </span>
             </button>
+          </li>
+          <li class="wizard-stepper__step" data-step="3">
+            <button type="button" class="wizard-stepper__btn" onclick="wizardGoTo(3)" disabled>
+              <span class="wizard-stepper__bullet" aria-hidden="true">
+                <span class="wizard-stepper__num">3</span>
+                <svg class="wizard-stepper__check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="wizard-stepper__label">
+                <span class="wizard-stepper__caption">Etapa 3</span>
+                <span class="wizard-stepper__title">Avaliar</span>
+              </span>
+            </button>
+          </li>
+          <li class="wizard-stepper__step" data-step="4">
+            <button type="button" class="wizard-stepper__btn" onclick="wizardGoTo(4)" disabled>
+              <span class="wizard-stepper__bullet" aria-hidden="true">
+                <span class="wizard-stepper__num">4</span>
+                <svg class="wizard-stepper__check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="wizard-stepper__label">
+                <span class="wizard-stepper__caption">Etapa 4</span>
+                <span class="wizard-stepper__title">Concluir</span>
+              </span>
+            </button>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- ═══════════════ WIZARD PANELS ═══════════════ -->
+      <div class="wizard-panels">
+
+        <!-- ─── Step 1 — Colaborador ─── -->
+        <section class="wizard-panel wizard-panel--active" data-step="1" aria-labelledby="wp1-title">
+          <header class="wizard-panel__head">
+            <h2 class="wizard-panel__title" id="wp1-title">Quem você está avaliando?</h2>
+            <p class="wizard-panel__sub">Identifique o colaborador. O nome é obrigatório.</p>
+          </header>
+          <div class="wizard-panel__body">
+            <div class="card wizard-card">
+              <div class="form-name-row">
+                <div class="input-group" style="margin-bottom:0;">
+                  <label class="input-label" for="tecnico-nome">Nome do colaborador <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input class="input" id="tecnico-nome" type="text" required
+                         placeholder="Digite ou escolha abaixo"
+                         oninput="updateSummary(); markTechActiveByName()"
+                         autocomplete="off">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                  <label class="input-label" for="tecnico-nicho">Área (opcional)</label>
+                  <select class="select" id="tecnico-nicho">
+                    <option value="">— Selecione —</option>
+                    <option value="dev">Dev</option>
+                    <option value="design">Design</option>
+                    <option value="frontend">Front-end</option>
+                    <option value="backend">Back-end</option>
+                    <option value="outros">Outros</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Picker de colaboradores cadastrados -->
+            <div class="card tech-picker" id="tech-picker">
+              <div class="tech-picker__head">
+                <div>
+                  <div class="tech-picker__title">Colaboradores cadastrados</div>
+                  <div class="tech-picker__sub">Clique em um para selecionar — o nome e a área são preenchidos automaticamente.</div>
+                </div>
+                <div class="tech-picker__search-wrap">
+                  <svg class="tech-picker__search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M9.5 9.5L12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                  <input class="tech-picker__search" id="tech-search" type="search"
+                         placeholder="Filtrar por nome ou área..."
+                         oninput="filterTechPicker()">
+                </div>
+              </div>
+              <div class="tech-picker__group-bar" id="tech-team-bar"></div>
+              <div class="tech-picker__list" id="tech-picker-list">
+                <div class="tech-picker__loading">Carregando colaboradores…</div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <!-- ─── Step 2 — Perguntas ─── -->
+        <section class="wizard-panel" data-step="2" aria-labelledby="wp2-title">
+          <header class="wizard-panel__head">
+            <h2 class="wizard-panel__title" id="wp2-title">Quais perguntas usar?</h2>
+            <p class="wizard-panel__sub">Escolha um ponto de partida. Você pode personalizar tudo se quiser.</p>
+          </header>
+          <div class="wizard-panel__body">
+            <div class="choice-cards" id="choice-cards" role="radiogroup" aria-label="Conjunto de perguntas"></div>
+
+            <!-- Banner contextual: aparece dependendo da escolha -->
+            <div id="choice-banner" class="choice-banner" style="display:none;"></div>
+
+            <!-- Editor inline (Google Forms) — só aparece se "Personalizar" for escolhido -->
+            <div id="edit-mode-content" style="display:none; margin-top: var(--spacing-5);">
+              <div class="forms-toolbar">
+                <div class="forms-toolbar__info">
+                  <div class="forms-toolbar__title">Edite suas perguntas</div>
+                  <div class="forms-toolbar__sub">Cada pergunta vira um card editável. Mínimo 1 técnica + 1 comportamental.</div>
+                </div>
+                <button type="button" class="btn btn-outlined btn-sm" onclick="importSietchTemplate()">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 1.5v8M3.5 6L7 9.5 10.5 6M2 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Importar template Sietch
+                </button>
+              </div>
+
+              <section class="forms-block" aria-label="Bloco técnico">
+                <div class="forms-block__head">
+                  <span class="forms-block__pill forms-block__pill--tecnico">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3.5 5h7M3.5 8h5M3.5 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Bloco Técnico
+                  </span>
+                  <span class="forms-block__count" id="forms-count-tecnico">0 perguntas</span>
+                </div>
+                <div id="criteria-list-tecnico" class="forms-questions"></div>
+                <button type="button" class="forms-add-btn" onclick="startAddQuestion('TECNICO')">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M7 4v6M4 7h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                  Adicionar pergunta técnica
+                </button>
+              </section>
+
+              <section class="forms-block" aria-label="Bloco comportamental">
+                <div class="forms-block__head">
+                  <span class="forms-block__pill forms-block__pill--comportamental">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.5c.7 1.2 3.3 1.2 4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5.5" cy="6" r=".7" fill="currentColor"/><circle cx="8.5" cy="6" r=".7" fill="currentColor"/></svg>
+                    Bloco Comportamental
+                  </span>
+                  <span class="forms-block__count" id="forms-count-comportamental">0 perguntas</span>
+                </div>
+                <div id="criteria-list-comportamental" class="forms-questions"></div>
+                <button type="button" class="forms-add-btn" onclick="startAddQuestion('COMPORTAMENTAL')">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M7 4v6M4 7h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                  Adicionar pergunta comportamental
+                </button>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─── Step 3 — Avaliar ─── -->
+        <section class="wizard-panel" data-step="3" aria-labelledby="wp3-title">
+          <header class="wizard-panel__head">
+            <h2 class="wizard-panel__title" id="wp3-title">Avalie cada critério</h2>
+            <p class="wizard-panel__sub">Use a escala 1 (insatisfatório) a 5 (excepcional). Todas as perguntas devem ser respondidas.</p>
+          </header>
+          <div class="wizard-panel__body">
+            <!-- Stat cards (running totals) -->
+            <div class="grid stat-grid stagger" style="grid-template-columns: repeat(3,1fr); margin-bottom: var(--spacing-4);">
+              <div class="stat-card">
+                <div class="stat-icon stat-icon--tecnico">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3.5 6h13M3.5 10h9M3.5 14h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="stat-card__body">
+                  <div class="stat-card__value" id="score-tecnico">—</div>
+                  <div class="stat-card__label">Nota Técnica</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon stat-icon--comportamental">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M7 11.5c.8 1.8 5.2 1.8 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="7.5" cy="8.5" r="1" fill="currentColor"/>
+                    <circle cx="12.5" cy="8.5" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="stat-card__body">
+                  <div class="stat-card__value" id="score-comportamental">—</div>
+                  <div class="stat-card__label">Nota Comportamental</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon stat-icon--final">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <polygon points="10,2 12.4,7.6 18.5,8.2 14,12.5 15.4,18.5 10,15.4 4.6,18.5 6,12.5 1.5,8.2 7.6,7.6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="stat-card__body">
+                  <div class="stat-card__value" id="score-final">—</div>
+                  <div class="stat-card__label">Nota Final</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alert (mantido pro fluxo de score) -->
+            <div class="alert-warning" id="alert-incompleto" style="display:none; margin-bottom:var(--spacing-4);">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0; margin-top:1px;">
+                <path d="M8 1.5L14.5 13.5H1.5L8 1.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 6.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="8" cy="11.5" r=".75" fill="currentColor"/>
+              </svg>
+              <span>Preencha ambos os blocos para uma recomendação consistente.</span>
+            </div>
+
+            <!-- Sub-tabs Técnico / Comportamental -->
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div class="tabs" style="padding:0 var(--spacing-6);">
+                <button class="tab tab--active" id="tab-tecnico" onclick="switchTab('tecnico')">Técnico <span style="color:var(--text-muted); font-weight:400;">(60%)</span></button>
+                <button class="tab" id="tab-comportamental" onclick="switchTab('comportamental')">Comportamental <span style="color:var(--text-muted); font-weight:400;">(40%)</span></button>
+              </div>
+              <div id="panel-tecnico" class="tab-panel" style="padding:var(--spacing-4) var(--spacing-5);"></div>
+              <div id="panel-comportamental" class="tab-panel" style="padding:var(--spacing-4) var(--spacing-5); display:none;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─── Step 4 — Concluir ─── -->
+        <section class="wizard-panel" data-step="4" aria-labelledby="wp4-title">
+          <header class="wizard-panel__head">
+            <h2 class="wizard-panel__title" id="wp4-title">Quase lá — finalize a avaliação</h2>
+            <p class="wizard-panel__sub">Revise as notas, adicione contexto e recomendação. Depois é só salvar.</p>
+          </header>
+          <div class="wizard-panel__body">
+            <!-- Resumo final -->
+            <div class="card final-summary" id="final-summary">
+              <div class="final-summary__cell">
+                <div class="final-summary__label">Técnica (60%)</div>
+                <div class="final-summary__value" id="final-tec">—</div>
+              </div>
+              <div class="final-summary__divider" aria-hidden="true"></div>
+              <div class="final-summary__cell">
+                <div class="final-summary__label">Comportamental (40%)</div>
+                <div class="final-summary__value" id="final-beh">—</div>
+              </div>
+              <div class="final-summary__divider" aria-hidden="true"></div>
+              <div class="final-summary__cell final-summary__cell--final">
+                <div class="final-summary__label">Nota final</div>
+                <div class="final-summary__value" id="final-fin">—</div>
+                <div class="final-summary__class" id="final-class">—</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: var(--spacing-5);">
+              <div class="input-group">
+                <label class="input-label" for="observacoes">Observações</label>
+                <textarea class="textarea" id="observacoes" rows="5"
+                          placeholder="Contexto qualitativo, situações do período, pontos de destaque ou preocupação..."></textarea>
+              </div>
+              <div class="input-group" style="margin-bottom: 0;">
+                <label class="input-label" for="recomendacao">Recomendação</label>
+                <select class="select" id="recomendacao">
+                  <option value="">Selecione uma recomendação...</option>
+                  <option value="bonus">Elegível para bônus</option>
+                  <option value="promocao">Indicado para promoção</option>
+                  <option value="pdp">Plano de desenvolvimento (PDP)</option>
+                  <option value="urgente">Necessita atenção urgente</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /.wizard-panels -->
+
+      <!-- ═══════════════ WIZARD FOOTER ═══════════════ -->
+      <div class="wizard-footer">
+        <button class="btn btn-outlined btn-md" id="wizard-back" onclick="wizardBack()" disabled>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4l-3 3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Voltar
+        </button>
+        <div class="wizard-footer__progress" id="wizard-progress" aria-live="polite">Etapa 1 de 4</div>
+        <button class="btn btn-primary btn-md" id="wizard-next" onclick="wizardNext()">
+          Continuar
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-primary btn-md" id="wizard-save" onclick="saveEvaluation()" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7.5L5.5 11L12 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Salvar avaliação
+        </button>
       </div>
     </div><!-- /view-evaluation -->
 
@@ -3057,10 +4030,9 @@
     <div id="view-rankings" class="view-fade" style="display:none;">
       <div class="page-header" style="margin-bottom:var(--spacing-6); position:relative;">
         <div>
-          <h1 class="page-title">Rankings & Análise</h1>
+          <h1 class="page-title">Performance</h1>
           <p class="page-description">Desempenho dos colaboradores por área e ciclo</p>
         </div>
-        <img src="galeria/mascote-sietch.png" class="mascote mascote--sm mascote-corner" alt="" style="width:44px;height:44px;opacity:0.75;pointer-events:none;">
         <button class="btn btn-outlined btn-md" onclick="refreshRankings()">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M13.5 8A5.5 5.5 0 113 4.8M13.5 2v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3091,7 +4063,6 @@
           <h1 class="page-title">Destaques do Mês</h1>
           <p class="page-description">Os melhores colaboradores de cada ciclo mensal</p>
         </div>
-        <img src="galeria/mascote-sietch.png" class="mascote mascote-corner" alt="" style="width:44px;height:44px;opacity:0.75;pointer-events:none;">
         <div class="dest-month-nav">
           <button class="dest-month-btn" id="dest-prev" onclick="destNavMonth(1)" aria-label="Mês anterior">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3114,8 +4085,12 @@
 
       <!-- Empty state -->
       <div id="dest-empty" style="display:none;">
-        <div class="empty-mascote-state">
-          <img src="galeria/mascote-sietch.png" class="mascote mascote--lg mascote--peek" alt="" style="margin-bottom:20px;">
+        <div class="empty-state">
+          <div class="empty-state__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l2.6 7.3H22l-6 4.4 2.3 7.3L12 16.7 5.7 21l2.3-7.3-6-4.4h7.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </div>
           <h3>Sem avaliações neste período</h3>
           <p>Nenhuma avaliação encontrada para este mês ou área.</p>
         </div>
@@ -3143,8 +4118,6 @@
             </svg>
           </button>
         </div>
-        <img src="galeria/mascote-sietch.png" class="mascote mascote-corner" alt=""
-             style="width:44px;height:44px;opacity:0.75;pointer-events:none;">
       </div>
 
       <div id="team-stats-row" class="team-stats-grid"></div>
@@ -3158,8 +4131,6 @@
           <h1 class="page-title">Desempenho por Setor</h1>
           <p class="page-description">Visão geral das notas dos colaboradores por área</p>
         </div>
-        <img src="galeria/mascote-sietch.png" class="mascote mascote-corner" alt=""
-             style="width:44px;height:44px;opacity:0.75;pointer-events:none;">
       </div>
 
       <div class="setor-top-bar bf bf-1">
@@ -3296,13 +4267,794 @@ const RECOMENDACAO_LABELS = {
 // ══════════════════════════════════════════════
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:3000/api'
-  : 'https://sietch-pact-api.vercel.app/api';
+  : 'https://sietch-metrics-api.vercel.app/api';
 
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
 let scores = {};
 let currentExportText = '';
+
+// ── Avaliação: estado do wizard e dos critérios ───────────────────
+let wizardStep = 1;                                  // 1 a 4
+let wizardMaxReached = 1;                             // maior etapa já alcançada
+let wizardChoice = null;                              // 'template' | 'saved' | 'custom'
+let registeredTechs = [];                             // colaboradores cadastrados (cache)
+let techPickerFilter = { team: null, search: '' };    // filtros do picker
+let editingId = null;                                 // apiId | '__new_TECNICO__' | '__new_COMPORTAMENTAL__'
+let customCriteria = { tecnico: [], comportamental: [] };
+
+/**
+ * Critérios ativos para o bloco — depende da escolha feita no Step 2:
+ *   - 'template'  → usa o template Sietch
+ *   - 'saved'     → usa as perguntas próprias salvas no DB
+ *   - 'custom'    → usa as perguntas que o usuário está editando agora
+ *                   (mesma lista do 'saved', porém o editor está visível)
+ *   - null/default → fallback inteligente: customs se houver, senão template
+ */
+function getCurrentCriteria(block) {
+  if (wizardChoice === 'template') return CRITERIA[block] || [];
+  if (wizardChoice === 'saved' || wizardChoice === 'custom') {
+    return customCriteria[block] || [];
+  }
+  // default fallback
+  const totalCustom = (customCriteria.tecnico?.length || 0)
+                    + (customCriteria.comportamental?.length || 0);
+  if (totalCustom > 0) return customCriteria[block] || [];
+  return CRITERIA[block] || [];
+}
+
+// ──────────────────────────────────────────────────────────────────
+// CUSTOM CRITERIA — Google Forms-style editor + CRUD via /api/criteria
+// ──────────────────────────────────────────────────────────────────
+
+/** Converte item da API no formato consumido pelos painéis de pontuação. */
+function mapApiCriterion(api) {
+  const weightLabel = api.weight === 3 ? 'Alta' : api.weight === 2 ? 'Média' : 'Baixa';
+  return {
+    id:       `cc_${api.id}`,
+    apiId:    api.id,
+    block:    api.block,
+    label:    api.label,
+    desc:     api.description || '',
+    priority: weightLabel,
+    weight:   api.weight,
+    position: api.position,
+  };
+}
+
+async function loadCustomCriteria() {
+  try {
+    const res = await fetch(`${API_BASE}/criteria`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { items } = await res.json();
+    customCriteria = { tecnico: [], comportamental: [] };
+    items.forEach(it => {
+      const mapped = mapApiCriterion(it);
+      const bucket = it.block === 'TECNICO' ? 'tecnico' : 'comportamental';
+      customCriteria[bucket].push(mapped);
+    });
+  } catch (err) {
+    console.warn('[Sietch Metrics] Falha ao carregar critérios:', err);
+  }
+}
+
+// ══════════════════════════════════════════════
+// WIZARD — navegação entre as 4 etapas
+// ══════════════════════════════════════════════
+
+function validateWizardStep(step) {
+  if (step === 1) {
+    const name = document.getElementById('tecnico-nome').value.trim();
+    if (!name) {
+      showToast('Informe o nome do colaborador para continuar.', 'error');
+      const el = document.getElementById('tecnico-nome');
+      el.focus();
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    return true;
+  }
+  if (step === 2) {
+    if (!wizardChoice) {
+      showToast('Escolha um conjunto de perguntas para continuar.', 'error');
+      return false;
+    }
+    const tList = getCurrentCriteria('tecnico');
+    const bList = getCurrentCriteria('comportamental');
+    if (tList.length < 1 || bList.length < 1) {
+      showToast(
+        `Você precisa de no mínimo 1 técnica e 1 comportamental — atualmente ${tList.length}/${bList.length}.`,
+        'error'
+      );
+      return false;
+    }
+    return true;
+  }
+  if (step === 3) {
+    const tList = getCurrentCriteria('tecnico');
+    const bList = getCurrentCriteria('comportamental');
+    const tFilled = tList.filter(c => scores[c.id] != null).length;
+    const bFilled = bList.filter(c => scores[c.id] != null).length;
+    if (tFilled < tList.length) {
+      const missing = tList.length - tFilled;
+      showToast(`Faltam ${missing} pergunta${missing > 1 ? 's' : ''} técnica${missing > 1 ? 's' : ''}.`, 'error');
+      switchTab('tecnico');
+      flagUnfilled('tecnico');
+      return false;
+    }
+    if (bFilled < bList.length) {
+      const missing = bList.length - bFilled;
+      showToast(`Faltam ${missing} pergunta${missing > 1 ? 's' : ''} comportamental${missing > 1 ? 'is' : ''}.`, 'error');
+      switchTab('comportamental');
+      flagUnfilled('comportamental');
+      return false;
+    }
+    return true;
+  }
+  return true;
+}
+
+async function wizardGoTo(step) {
+  if (step < 1 || step > 4) return;
+
+  // Forward → valida step atual
+  if (step > wizardStep && !validateWizardStep(wizardStep)) return;
+
+  const goingForward = step > wizardStep;
+  wizardStep = step;
+  wizardMaxReached = Math.max(wizardMaxReached, step);
+
+  // Visual: panels (slide animation triggered by class swap)
+  document.querySelectorAll('.wizard-panel').forEach(p => {
+    const sn = parseInt(p.dataset.step, 10);
+    p.classList.toggle('wizard-panel--active', sn === step);
+  });
+
+  // Visual: stepper bullets
+  document.querySelectorAll('.wizard-stepper__step').forEach(s => {
+    const sn = parseInt(s.dataset.step, 10);
+    s.classList.remove('wizard-stepper__step--active', 'wizard-stepper__step--complete');
+    if (sn < step) s.classList.add('wizard-stepper__step--complete');
+    else if (sn === step) s.classList.add('wizard-stepper__step--active');
+    const btn = s.querySelector('button');
+    if (btn) {
+      // Etapas já visitadas continuam clicáveis para voltar
+      btn.disabled = sn > wizardMaxReached;
+      btn.setAttribute('aria-current', sn === step ? 'step' : 'false');
+    }
+  });
+
+  // Footer
+  const backBtn = document.getElementById('wizard-back');
+  const nextBtn = document.getElementById('wizard-next');
+  const saveBtn = document.getElementById('wizard-save');
+  if (backBtn) backBtn.disabled = step === 1;
+  if (nextBtn) nextBtn.style.display = step < 4 ? '' : 'none';
+  if (saveBtn) saveBtn.style.display = step === 4 ? '' : 'none';
+  const progress = document.getElementById('wizard-progress');
+  if (progress) progress.textContent = `Etapa ${step} de 4`;
+
+  // Step-specific behavior
+  if (step === 2) {
+    await loadCustomCriteria();
+    renderChoiceCards();
+    renderChoiceBanner();
+    // Editor visibility fica controlada por selectChoice
+    const editor = document.getElementById('edit-mode-content');
+    if (editor) editor.style.display = wizardChoice === 'custom' ? '' : 'none';
+    if (wizardChoice === 'custom') renderCriteriaEditor();
+  } else if (step === 3) {
+    // Render score panels com os critérios escolhidos
+    if (goingForward) scores = {}; // entrar no step 3 reseta scores
+    renderCriteriaBlock('tecnico',        'panel-tecnico',        null);
+    renderCriteriaBlock('comportamental', 'panel-comportamental', null);
+    updateSummary();
+    switchTab('tecnico');
+  } else if (step === 4) {
+    updateFinalSummary();
+  }
+
+  // Scroll to top of stepper for orientation
+  const stepperEl = document.querySelector('.wizard-stepper');
+  if (stepperEl) stepperEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function wizardNext() { wizardGoTo(wizardStep + 1); }
+function wizardBack() { wizardGoTo(Math.max(1, wizardStep - 1)); }
+
+// ─── Step 2: choice cards (template / saved / custom) ───────────────
+function renderChoiceCards() {
+  const container = document.getElementById('choice-cards');
+  if (!container) return;
+  const customTotal = customCriteria.tecnico.length + customCriteria.comportamental.length;
+  const templateTotal = CRITERIA.tecnico.length + CRITERIA.comportamental.length;
+
+  // Default selection: 'saved' if user has customs, else 'template'
+  if (!wizardChoice) {
+    wizardChoice = customTotal > 0 ? 'saved' : 'template';
+  }
+
+  const cards = [];
+  cards.push({
+    id: 'template',
+    title: 'Template Sietch',
+    desc: `${templateTotal} perguntas baseadas na metodologia da empresa. Pronto para usar.`,
+    badge: customTotal > 0 ? null : 'Recomendado',
+    icon: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+             <rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/>
+             <path d="M7 8h8M7 11h8M7 14h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+           </svg>`,
+  });
+  if (customTotal > 0) {
+    cards.push({
+      id: 'saved',
+      title: 'Minhas perguntas',
+      desc: `${customTotal} perguntas no seu modelo (${customCriteria.tecnico.length} técnicas + ${customCriteria.comportamental.length} comportamentais).`,
+      badge: 'Recomendado',
+      icon: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+               <path d="M11 3l2.5 5.5 6 .9-4.4 4.2 1 6L11 16.5 5.9 19.6l1-6L2.5 9.4l6-.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+             </svg>`,
+    });
+  }
+  cards.push({
+    id: 'custom',
+    title: 'Personalizar',
+    desc: customTotal > 0
+      ? 'Edite, adicione ou remova perguntas. Salva automaticamente.'
+      : 'Crie do zero ou parta do template Sietch e edite cada pergunta.',
+    icon: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+             <path d="M14.5 3l4.5 4.5-11 11H3.5v-4.5l11-11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+           </svg>`,
+  });
+
+  container.innerHTML = cards.map(c => `
+    <button type="button" class="choice-card ${wizardChoice === c.id ? 'choice-card--selected' : ''}"
+            data-choice="${c.id}"
+            role="radio" aria-checked="${wizardChoice === c.id}"
+            onclick="selectChoice('${c.id}')">
+      ${c.badge && wizardChoice !== c.id ? `<span class="choice-card__badge">${c.badge}</span>` : ''}
+      <span class="choice-card__check" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="choice-card__icon">${c.icon}</div>
+      <div class="choice-card__title">${c.title}</div>
+      <div class="choice-card__desc">${c.desc}</div>
+    </button>
+  `).join('');
+}
+
+async function selectChoice(choiceId) {
+  if (choiceId === wizardChoice && choiceId !== 'custom') return;
+  wizardChoice = choiceId;
+  scores = {}; // diferentes choices → IDs diferentes
+  renderChoiceCards();
+  renderChoiceBanner();
+  const editor = document.getElementById('edit-mode-content');
+  if (!editor) return;
+  if (choiceId === 'custom') {
+    editor.style.display = '';
+    await loadCustomCriteria();
+    renderCriteriaEditor();
+    setTimeout(() => editor.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  } else {
+    editor.style.display = 'none';
+  }
+}
+
+// ─── Step 1: picker de colaboradores cadastrados ───────────────────
+const TEAM_TO_NICHO = {
+  'Dev':       'dev',
+  'Design':    'design',
+  'Front-end': 'frontend',
+  'Back-end':  'backend',
+  'Outros':    'outros',
+};
+const NICHO_TO_TEAM = Object.fromEntries(
+  Object.entries(TEAM_TO_NICHO).map(([k, v]) => [v, k])
+);
+
+async function loadTechnicians() {
+  try {
+    const res = await fetch(`${API_BASE}/technicians?limit=100`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    registeredTechs = (data.items || data || []).filter(t => t.active !== false);
+    renderTechPicker();
+  } catch (err) {
+    console.warn('[Sietch Metrics] Falha ao carregar colaboradores:', err);
+    const list = document.getElementById('tech-picker-list');
+    if (list) {
+      list.innerHTML = `<div class="tech-picker__empty">Não foi possível carregar a lista. Verifique a conexão e tente recarregar a página.</div>`;
+    }
+  }
+}
+
+function initials(name) {
+  const parts = (name || '').trim().split(/\s+/);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function renderTechPicker() {
+  const list = document.getElementById('tech-picker-list');
+  const teamBar = document.getElementById('tech-team-bar');
+  if (!list || !teamBar) return;
+
+  // Team filter chips
+  const teams = [...new Set(registeredTechs.map(t => t.team).filter(Boolean))].sort();
+  teamBar.innerHTML = `
+    <button type="button" class="tech-picker__team-chip ${!techPickerFilter.team ? 'tech-picker__team-chip--active' : ''}"
+            onclick="setTechTeamFilter(null)">
+      Todos (${registeredTechs.length})
+    </button>
+    ${teams.map(team => {
+      const count = registeredTechs.filter(t => t.team === team).length;
+      const active = techPickerFilter.team === team;
+      return `<button type="button" class="tech-picker__team-chip ${active ? 'tech-picker__team-chip--active' : ''}"
+                      onclick="setTechTeamFilter('${escHtml(team)}')">${escHtml(team)} (${count})</button>`;
+    }).join('')}
+  `;
+
+  // Filtered list
+  const search = techPickerFilter.search.trim().toLowerCase();
+  const filtered = registeredTechs.filter(t => {
+    if (techPickerFilter.team && t.team !== techPickerFilter.team) return false;
+    if (search) {
+      const haystack = `${t.name} ${t.team || ''}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="tech-picker__empty">Nenhum colaborador encontrado com esse filtro.</div>`;
+    return;
+  }
+
+  // Sort alphabetically
+  filtered.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+  const currentName = (document.getElementById('tecnico-nome')?.value || '').trim().toLowerCase();
+  list.innerHTML = filtered.map(t => {
+    const isActive = t.name.toLowerCase() === currentName;
+    return `
+      <button type="button" class="tech-pill ${isActive ? 'tech-pill--active' : ''}"
+              data-name="${escHtml(t.name).replace(/"/g, '&quot;')}"
+              onclick="selectTech('${(t.id || '').replace(/'/g, "\\'")}')">
+        <span class="tech-pill__avatar">${escHtml(initials(t.name))}</span>
+        <span class="tech-pill__main">
+          <span class="tech-pill__name">${escHtml(t.name)}</span>
+          ${t.team ? `<span class="tech-pill__team">${escHtml(t.team)}</span>` : ''}
+        </span>
+        <span class="tech-pill__check">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>`;
+  }).join('');
+}
+
+function selectTech(id) {
+  const tech = registeredTechs.find(t => t.id === id);
+  if (!tech) return;
+  document.getElementById('tecnico-nome').value = tech.name;
+  if (tech.team && TEAM_TO_NICHO[tech.team]) {
+    document.getElementById('tecnico-nicho').value = TEAM_TO_NICHO[tech.team];
+  }
+  updateSummary();
+  renderTechPicker(); // re-render to highlight selected pill
+}
+
+function setTechTeamFilter(team) {
+  techPickerFilter.team = team;
+  renderTechPicker();
+}
+
+function filterTechPicker() {
+  const input = document.getElementById('tech-search');
+  techPickerFilter.search = input?.value || '';
+  renderTechPicker();
+}
+
+function markTechActiveByName() {
+  // Quando o usuário digita, atualiza o highlight do pill correspondente
+  renderTechPicker();
+}
+
+// ─── Step 2: banner contextual + ação de personalizar template ──────
+function renderChoiceBanner() {
+  const banner = document.getElementById('choice-banner');
+  if (!banner) return;
+
+  const customTotal = customCriteria.tecnico.length + customCriteria.comportamental.length;
+
+  if (wizardChoice === 'template') {
+    banner.style.display = '';
+    banner.innerHTML = `
+      <div class="choice-banner__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M11 2l5 5-9 9H2v-5l9-9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="choice-banner__body">
+        <div class="choice-banner__title">Quer ajustar antes de avaliar?</div>
+        <div class="choice-banner__sub">Importe o template como ponto de partida para o seu modelo. Você pode editar, adicionar ou remover qualquer pergunta.</div>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="customizeTemplate()">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M9.5 1.5l3 3-7 7H2.5v-3l7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        Personalizar este template
+      </button>`;
+  } else if (wizardChoice === 'custom' && customTotal === 0) {
+    banner.style.display = '';
+    banner.innerHTML = `
+      <div class="choice-banner__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M9 5v4M9 12h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="choice-banner__body">
+        <div class="choice-banner__title">Comece importando o template</div>
+        <div class="choice-banner__sub">Clique no botão "Importar template Sietch" abaixo e edite à vontade — ou crie suas próprias perguntas do zero.</div>
+      </div>`;
+  } else {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
+}
+
+async function customizeTemplate() {
+  // Importa o template (silenciosamente, com dedupe) e abre o editor
+  showToast('Importando template para você editar...', 'info');
+
+  const existingLabels = {
+    tecnico: new Set(customCriteria.tecnico.map(c => c.label.trim().toLowerCase())),
+    comportamental: new Set(customCriteria.comportamental.map(c => c.label.trim().toLowerCase())),
+  };
+
+  const requests = [];
+  ['tecnico', 'comportamental'].forEach(bucket => {
+    const apiBlock = bucket === 'tecnico' ? 'TECNICO' : 'COMPORTAMENTAL';
+    CRITERIA[bucket].forEach(c => {
+      if (existingLabels[bucket].has(c.label.trim().toLowerCase())) return;
+      requests.push({
+        block: apiBlock,
+        label: c.label,
+        description: c.desc || null,
+        weight: c.weight,
+      });
+    });
+  });
+
+  let created = 0, failed = 0;
+  for (const payload of requests) {
+    try {
+      const res = await fetch(`${API_BASE}/criteria`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) created++; else failed++;
+    } catch { failed++; }
+  }
+
+  await loadCustomCriteria();
+  // Switch to custom mode
+  wizardChoice = 'custom';
+  renderChoiceCards();
+  renderChoiceBanner();
+  renderCriteriaEditor();
+  const editor = document.getElementById('edit-mode-content');
+  if (editor) {
+    editor.style.display = '';
+    setTimeout(() => editor.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+
+  if (failed > 0) {
+    showToast(`Importação parcial: ${created} criadas, ${failed} falharam.`, 'error');
+  } else if (created > 0) {
+    showToast(`Template importado — agora você pode editar cada pergunta.`, 'success');
+  } else {
+    showToast(`Suas perguntas já contêm o template. Editor aberto.`, 'info');
+  }
+}
+
+// ─── Step 4: card resumo (notas + classificação) ────────────────────
+function updateFinalSummary() {
+  const t = calcBlock('tecnico');
+  const b = calcBlock('comportamental');
+  const f = calcFinal(t, b);
+  const cl = classify(f);
+
+  const fmt = (n) => n != null ? n.toFixed(2) : '—';
+  const tEl  = document.getElementById('final-tec');
+  const bEl  = document.getElementById('final-beh');
+  const fEl  = document.getElementById('final-fin');
+  const cEl  = document.getElementById('final-class');
+  if (tEl) tEl.textContent = fmt(t);
+  if (bEl) bEl.textContent = fmt(b);
+  if (fEl) fEl.textContent = fmt(f);
+  if (cEl) {
+    cEl.textContent = cl?.label || '—';
+    cEl.className = 'final-summary__class' + (cl ? ` final-summary__class--${cl.cls}` : '');
+  }
+}
+
+// ── Render do editor (Google Forms-style) ──────────────────────────
+function renderCriteriaEditor() {
+  ['tecnico', 'comportamental'].forEach(b => {
+    const list = customCriteria[b] || [];
+    const blockUpper = b.toUpperCase();
+
+    const countLbl = document.getElementById(`forms-count-${b}`);
+    if (countLbl) {
+      countLbl.textContent = `${list.length} pergunta${list.length !== 1 ? 's' : ''}`;
+    }
+
+    const container = document.getElementById(`criteria-list-${b}`);
+    if (!container) return;
+
+    const isAddingHere = editingId === `__new_${blockUpper}__`;
+
+    if (!list.length && !isAddingHere) {
+      container.innerHTML = `
+        <div class="forms-questions-empty">
+          Nenhuma pergunta neste bloco ainda. Use "Adicionar" abaixo
+          ou "Importar template Sietch" no topo.
+        </div>`;
+      return;
+    }
+
+    let html = list.map((c, idx) =>
+      editingId === c.apiId
+        ? renderQuestionEditing(c, idx + 1)
+        : renderQuestionView(c, idx + 1)
+    ).join('');
+
+    if (isAddingHere) {
+      html += renderQuestionEditing(
+        { apiId: null, label: '', desc: '', weight: 2, block: blockUpper },
+        list.length + 1
+      );
+    }
+
+    container.innerHTML = html;
+  });
+}
+
+function renderQuestionView(c, num) {
+  const safe = (s) => escHtml(s || '');
+  return `
+    <div class="forms-question" data-id="${c.apiId}">
+      <div class="forms-question__num">${num}</div>
+      <div class="forms-question__main">
+        <div class="forms-question__body">
+          <div class="forms-question__label">${safe(c.label)}</div>
+          ${c.desc ? `<div class="forms-question__desc">${safe(c.desc)}</div>` : ''}
+        </div>
+        <div class="forms-question__meta">
+          <span class="forms-question__weight forms-question__weight--${c.weight}">Peso ${c.weight}</span>
+        </div>
+      </div>
+      <div class="forms-question__actions">
+        <button type="button" class="forms-question__btn" title="Editar"
+                onclick="startEditQuestion('${c.apiId}')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9.5 1.5l3 3-7 7H2.5v-3l7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button type="button" class="forms-question__btn forms-question__btn--danger" title="Remover"
+                onclick="removeCriterion('${c.apiId}')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 4h8M5.5 4V2.5h3V4M4 4l.5 8h5L10 4M6 6.5v3M8 6.5v3"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderQuestionEditing(c, num) {
+  const isNew = !c.apiId;
+  const safe = (s) => escHtml(s || '');
+  const safeAttr = (s) => safe(s).replace(/"/g, '&quot;');
+  const weightChip = (w, lbl) =>
+    `<button type="button" class="forms-chip ${c.weight === w ? 'forms-chip--active' : ''}"
+             data-weight="${w}" onclick="setEditWeight(${w})">${lbl}</button>`;
+
+  return `
+    <div class="forms-question forms-question--editing" data-id="${c.apiId || 'new'}">
+      <div class="forms-question__num">${num}</div>
+      <div class="forms-question__main">
+        <input type="hidden" id="qf-id" value="${c.apiId || ''}">
+        <input type="hidden" id="qf-block" value="${c.block}">
+        <input class="forms-question__edit-input" id="qf-label"
+               type="text" maxlength="120"
+               placeholder="Pergunta"
+               value="${safeAttr(c.label)}"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();saveQuestionForm();}">
+        <textarea class="forms-question__edit-desc" id="qf-desc"
+                  rows="2" maxlength="400"
+                  placeholder="Descrição (opcional)">${safe(c.desc)}</textarea>
+        <div class="forms-question__edit-controls">
+          <div class="forms-chip-group">
+            <span class="forms-chip-group__label">Peso:</span>
+            ${weightChip(1, 'Baixo')}
+            ${weightChip(2, 'Médio')}
+            ${weightChip(3, 'Alto')}
+          </div>
+          <div class="forms-question__edit-buttons">
+            <button type="button" class="btn btn-text btn-sm" onclick="cancelEditQuestion()">Cancelar</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="saveQuestionForm()">${isNew ? 'Adicionar' : 'Salvar'}</button>
+          </div>
+        </div>
+      </div>
+      <div class="forms-question__actions">
+        ${isNew ? '' : `
+          <button type="button" class="forms-question__btn forms-question__btn--danger" title="Remover"
+                  onclick="removeCriterion('${c.apiId}')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 4h8M5.5 4V2.5h3V4M4 4l.5 8h5L10 4M6 6.5v3M8 6.5v3"
+                    stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>`}
+      </div>
+    </div>`;
+}
+
+// ── Ações de edição inline ─────────────────────────────────────────
+function startAddQuestion(block) {
+  editingId = `__new_${block}__`;
+  renderCriteriaEditor();
+  setTimeout(() => {
+    const input = document.querySelector('.forms-question--editing .forms-question__edit-input');
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
+}
+
+function startEditQuestion(apiId) {
+  editingId = apiId;
+  renderCriteriaEditor();
+  setTimeout(() => {
+    const input = document.querySelector('.forms-question--editing .forms-question__edit-input');
+    if (input) input.focus();
+  }, 50);
+}
+
+function cancelEditQuestion() {
+  editingId = null;
+  renderCriteriaEditor();
+}
+
+function setEditWeight(w) {
+  document.querySelectorAll('.forms-question--editing .forms-chip').forEach(btn => {
+    const isActive = parseInt(btn.dataset.weight, 10) === w;
+    btn.classList.toggle('forms-chip--active', isActive);
+  });
+}
+
+async function saveQuestionForm() {
+  const labelEl = document.getElementById('qf-label');
+  const descEl  = document.getElementById('qf-desc');
+  const idEl    = document.getElementById('qf-id');
+  const blockEl = document.getElementById('qf-block');
+  if (!labelEl || !blockEl) return;
+
+  const label  = labelEl.value.trim();
+  const desc   = descEl?.value.trim() || '';
+  const apiId  = idEl?.value || '';
+  const block  = blockEl.value || 'TECNICO';
+  const active = document.querySelector('.forms-question--editing .forms-chip--active');
+  const weight = active ? parseInt(active.dataset.weight, 10) : 2;
+
+  if (!label || label.length < 2) {
+    showToast('Informe um texto para a pergunta.', 'error');
+    return;
+  }
+
+  const payload = { block, label, description: desc || null, weight };
+
+  try {
+    const url    = apiId ? `${API_BASE}/criteria/${apiId}` : `${API_BASE}/criteria`;
+    const method = apiId ? 'PATCH' : 'POST';
+    const res = await fetch(url, {
+      method, credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast(apiId ? 'Pergunta atualizada.' : 'Pergunta adicionada.', 'success');
+    editingId = null;
+    await loadCustomCriteria();
+    renderCriteriaEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Não foi possível salvar a pergunta.', 'error');
+  }
+}
+
+async function removeCriterion(apiId) {
+  if (!confirm('Remover esta pergunta? Ela não aparecerá mais em novas avaliações.')) return;
+  try {
+    const res = await fetch(`${API_BASE}/criteria/${apiId}`, {
+      method: 'DELETE', credentials: 'include',
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('Pergunta removida.', 'success');
+    if (editingId === apiId) editingId = null;
+    await loadCustomCriteria();
+    renderCriteriaEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Não foi possível remover a pergunta.', 'error');
+  }
+}
+
+async function importSietchTemplate() {
+  const total    = CRITERIA.tecnico.length + CRITERIA.comportamental.length;
+  const existing = customCriteria.tecnico.length + customCriteria.comportamental.length;
+  const msg = existing > 0
+    ? `Importar ${total} perguntas do template Sietch? (Perguntas com o mesmo nome serão ignoradas.)`
+    : `Importar ${total} perguntas do template Sietch como base editável?`;
+  if (!confirm(msg)) return;
+
+  const existingLabels = {
+    tecnico:        new Set(customCriteria.tecnico.map(c => c.label.trim().toLowerCase())),
+    comportamental: new Set(customCriteria.comportamental.map(c => c.label.trim().toLowerCase())),
+  };
+
+  const requests = [];
+  ['tecnico', 'comportamental'].forEach(bucket => {
+    const apiBlock = bucket === 'tecnico' ? 'TECNICO' : 'COMPORTAMENTAL';
+    CRITERIA[bucket].forEach(c => {
+      if (existingLabels[bucket].has(c.label.trim().toLowerCase())) return;
+      requests.push({
+        block: apiBlock,
+        label: c.label,
+        description: c.desc || null,
+        weight: c.weight,
+      });
+    });
+  });
+
+  if (!requests.length) {
+    showToast('Todas as perguntas do template já estão na sua lista.', 'info');
+    return;
+  }
+
+  let created = 0, failed = 0;
+  for (const payload of requests) {
+    try {
+      const res = await fetch(`${API_BASE}/criteria`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) created++; else failed++;
+    } catch { failed++; }
+  }
+
+  await loadCustomCriteria();
+  renderCriteriaEditor();
+
+  if (failed > 0) {
+    showToast(`Importação parcial: ${created} criadas, ${failed} falharam.`, 'error');
+  } else {
+    showToast(`${created} perguntas importadas — agora você pode editar ou remover qualquer uma.`, 'success');
+  }
+}
+
 let currentUser = null;
 
 // ══════════════════════════════════════════════
@@ -3310,11 +5062,12 @@ let currentUser = null;
 // ══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   loadTheme();
-  renderCriteriaBlock('tecnico',        'panel-tecnico',        'comportamental');
-  renderCriteriaBlock('comportamental', 'panel-comportamental', 'observacoes');
+  // Score panels só são renderizados quando o usuário chega no Step 3
+  // (precisamos saber qual conjunto de critérios usar antes).
   updateSummary();
   updateHistoryBadge();
   showView('meu-time');
+  wizardGoTo(1);
   await initAuth();
 });
 
@@ -3323,17 +5076,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ══════════════════════════════════════════════
 async function initAuth() {
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+    let res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+
     if (!res.ok) {
-      window.location.href = 'login.html';
-      return;
+      // Sem sessão → cria automaticamente (sem tela de login)
+      const session = await fetch(`${API_BASE}/auth/session`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!session.ok) throw new Error(`auto-session failed: ${session.status}`);
+      const data = await session.json();
+      currentUser = data.user;
+    } else {
+      const data = await res.json();
+      currentUser = data.user;
     }
-    const data = await res.json();
-    currentUser = data.user;
+
     applyRoleUI();
     renderUserSection();
+
+    // Pré-carrega critérios próprios e colaboradores cadastrados
+    // para abastecer o wizard sem espera ao chegar nos steps 1 e 2.
+    await Promise.all([
+      loadCustomCriteria(),
+      loadTechnicians(),
+    ]);
   } catch {
-    // Se o backend não estiver rodando, deixa funcionar offline (dev mode)
     console.warn('[Sietch Metrics] Backend offline — modo local ativo. Role UI desabilitada.');
     currentUser = null;
   } finally {
@@ -3389,13 +5157,6 @@ function renderUserSection() {
   if (bannerGreeting) bannerGreeting.textContent = `Olá, ${firstName}!`;
 }
 
-async function logout() {
-  try {
-    await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' });
-  } catch { /* ignora falha de rede */ }
-  window.location.href = 'login.html';
-}
-
 function openNewTechnicianModal() {
   showToast('Em breve — conecte o banco de dados para gerenciar técnicos.', '');
 }
@@ -3404,7 +5165,7 @@ function openNewTechnicianModal() {
 // THEME
 // ══════════════════════════════════════════════
 function loadTheme() {
-  const saved = localStorage.getItem('pact_theme') || 'light';
+  const saved = localStorage.getItem('sietch_theme') || 'light';
   applyTheme(saved);
 }
 
@@ -3433,7 +5194,7 @@ function applyTheme(theme, animate = false) {
       <path d="M8 1.5V2.5M8 13.5V14.5M1.5 8H2.5M13.5 8H14.5M3.4 3.4l.7.7M11.9 11.9l.7.7M3.4 12.6l.7-.7M11.9 4.1l.7-.7"
             stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`;
   }
-  localStorage.setItem('pact_theme', theme);
+  localStorage.setItem('sietch_theme', theme);
 }
 
 function toggleTheme() {
@@ -3445,7 +5206,7 @@ function toggleTheme() {
 // NAVIGATION
 // ══════════════════════════════════════════════
 function showView(view) {
-  const views = ['evaluation', 'history', 'results', 'tecnicos', 'lideres', 'rankings', 'destaques', 'meu-time', 'setor'];
+  const views = ['evaluation', 'history', 'results', 'meu-time', 'rankings'];
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if (el) el.style.display = v === view ? '' : 'none';
@@ -3455,26 +5216,14 @@ function showView(view) {
     view === 'evaluation' || view === 'results');
   document.getElementById('nav-historico').classList.toggle('sidebar__item--active',
     view === 'history');
-  const navTec = document.getElementById('nav-tecnicos');
-  if (navTec) navTec.classList.toggle('sidebar__item--active', view === 'tecnicos');
-  const navLid = document.getElementById('nav-lideres');
-  if (navLid) navLid.classList.toggle('sidebar__item--active', view === 'lideres');
-  const navRank = document.getElementById('nav-rankings');
-  if (navRank) navRank.classList.toggle('sidebar__item--active', view === 'rankings');
-  const navDest = document.getElementById('nav-destaques');
-  if (navDest) navDest.classList.toggle('sidebar__item--active', view === 'destaques');
-  const navMeuTime = document.getElementById('nav-meu-time');
-  if (navMeuTime) navMeuTime.classList.toggle('sidebar__item--active', view === 'meu-time');
-  const navSetor = document.getElementById('nav-setor');
-  if (navSetor) navSetor.classList.toggle('sidebar__item--active', view === 'setor');
+  document.getElementById('nav-meu-time').classList.toggle('sidebar__item--active',
+    view === 'meu-time');
+  document.getElementById('nav-rankings').classList.toggle('sidebar__item--active',
+    view === 'rankings');
 
-  if (view === 'history')    renderHistory();
-  if (view === 'rankings')   renderRankings();
-  if (view === 'destaques')  renderDestaques();
-  if (view === 'meu-time')   renderMeuTime();
-  if (view === 'setor')      renderDesempenhoSetor();
-  if (view === 'tecnicos')   renderColaboradores();
-  if (view === 'lideres')    renderLideres();
+  if (view === 'history')  renderHistory();
+  if (view === 'meu-time') renderMeuTime();
+  if (view === 'rankings') renderRankings();
 
   // Retrigger fade animation
   const active = document.getElementById(`view-${view}`);
@@ -3487,8 +5236,65 @@ function showView(view) {
 // ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
+const TAB_ORDER = ['tecnico','comportamental'];
+
+function activeTab() {
+  return TAB_ORDER.find(t =>
+    document.getElementById(`tab-${t}`)?.classList.contains('tab--active')
+  ) || 'tecnico';
+}
+
+function unfilledCriteria(block) {
+  const list = (typeof getCurrentCriteria === 'function')
+    ? getCurrentCriteria(block)
+    : (CRITERIA[block] || []);
+  return list.filter(c => scores[c.id] == null);
+}
+
+function flagUnfilled(block) {
+  const missing = unfilledCriteria(block);
+  if (!missing.length) return null;
+  missing.forEach(c => {
+    const card = document.getElementById(`row-${c.id}`);
+    if (!card) return;
+    card.classList.add('criterion-card--missing');
+    card.classList.remove('criterion-card--shake');
+    void card.offsetWidth;
+    card.classList.add('criterion-card--shake');
+  });
+  // Scroll to first missing
+  const first = document.getElementById(`row-${missing[0].id}`);
+  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return missing;
+}
+
+function clearUnfilledFlags() {
+  document.querySelectorAll('.criterion-card--missing').forEach(el => {
+    el.classList.remove('criterion-card--missing', 'criterion-card--shake');
+  });
+}
+
 function switchTab(tab) {
-  ['tecnico','comportamental','observacoes'].forEach(t => {
+  // Allow only forward-validation: going BACK is always permitted.
+  const fromIdx = TAB_ORDER.indexOf(activeTab());
+  const toIdx   = TAB_ORDER.indexOf(tab);
+
+  if (toIdx > fromIdx) {
+    // Validate the source block when crossing forward
+    const sourceBlock = TAB_ORDER[fromIdx]; // 'tecnico' or 'comportamental'
+    if (sourceBlock === 'tecnico' || sourceBlock === 'comportamental') {
+      const missing = flagUnfilled(sourceBlock);
+      if (missing) {
+        const lbl = sourceBlock === 'tecnico' ? 'técnicos' : 'comportamentais';
+        showToast(`Preencha todos os critérios ${lbl} antes de prosseguir (${missing.length} restante${missing.length > 1 ? 's' : ''}).`, 'error');
+        return;
+      }
+    }
+  } else {
+    clearUnfilledFlags();
+  }
+
+  TAB_ORDER.forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('tab--active', t === tab);
     const panel = document.getElementById(`panel-${t}`);
     panel.style.display = t === tab ? '' : 'none';
@@ -3523,7 +5329,21 @@ function renderCriteriaBlock(block, containerId, nextTab) {
     </div>` : '';
 
   const container = document.getElementById(containerId);
-  container.innerHTML = CRITERIA[block].map(c => `
+  const list = getCurrentCriteria(block);
+  if (!list.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state__icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>Nenhum critério ${block === 'tecnico' ? 'técnico' : 'comportamental'}</h3>
+        <p>Use o editor acima para criar critérios personalizados.</p>
+      </div>${nextBtnHtml}`;
+    return;
+  }
+  container.innerHTML = list.map(c => `
     <div class="criterion-card" id="row-${c.id}">
       <div class="criterion-card__top">
         <div>
@@ -3563,9 +5383,12 @@ function setScore(id, val) {
   updateBtnVisual(id, val);
   updateScoreBar(id, val);
   updateSummary();
-  // Animate the card
+  // Animate the card and clear any missing flag
   const card = document.getElementById(`row-${id}`);
-  if (card) card.classList.add('has-score');
+  if (card) {
+    card.classList.add('has-score');
+    card.classList.remove('criterion-card--missing', 'criterion-card--shake');
+  }
 }
 
 function updateBtnVisual(id, val) {
@@ -3603,7 +5426,7 @@ function scoreColor(v) {
 // SCORE CALCULATION
 // ══════════════════════════════════════════════
 function calcBlock(block) {
-  const criteria = CRITERIA[block];
+  const criteria = getCurrentCriteria(block);
   let weighted = 0, totalW = 0;
   for (const c of criteria) {
     if (scores[c.id] != null) {
@@ -3664,9 +5487,11 @@ function updateSummary() {
   elF.className = `stat-card__value cl-${cl ? cl.cls : ''}`;
 
   // Alert: comportamental block has rated criteria but not all
-  const bFilled = CRITERIA.comportamental.filter(c => scores[c.id] != null).length;
-  const tFilled = CRITERIA.tecnico.filter(c => scores[c.id] != null).length;
-  const showAlert = bFilled > 0 && bFilled < CRITERIA.comportamental.length
+  const techList = getCurrentCriteria('tecnico');
+  const behavList = getCurrentCriteria('comportamental');
+  const tFilled = techList.filter(c => scores[c.id] != null).length;
+  const bFilled = behavList.filter(c => scores[c.id] != null).length;
+  const showAlert = bFilled > 0 && bFilled < behavList.length
                  || tFilled > 0 && bFilled === 0;
   document.getElementById('alert-incompleto').style.display = showAlert ? 'flex' : 'none';
 }
@@ -3676,11 +5501,14 @@ function updateSummary() {
 // ══════════════════════════════════════════════
 function startNewEvaluation() {
   scores = {};
+  wizardChoice = null;
+  wizardMaxReached = 1;
+  editingId = null;
   document.getElementById('tecnico-nome').value  = '';
   document.getElementById('tecnico-nicho').value = '';
   document.getElementById('observacoes').value   = '';
   document.getElementById('recomendacao').value  = '';
-  [...CRITERIA.tecnico, ...CRITERIA.comportamental].forEach(c => {
+  [...getCurrentCriteria('tecnico'), ...getCurrentCriteria('comportamental')].forEach(c => {
     for (let v = 1; v <= 5; v++) {
       const btn = document.getElementById(`sbtn-${c.id}-${v}`);
       if (btn) btn.classList.remove('active','score-1','score-2','score-3','score-4','score-5','btn-pop');
@@ -3689,14 +5517,14 @@ function startNewEvaluation() {
     const fill  = document.getElementById(`bar-${c.id}`);
     const label = document.getElementById(`label-${c.id}`);
     const num   = document.getElementById(`num-${c.id}`);
-    if (card)  card.classList.remove('has-score');
+    if (card)  card.classList.remove('has-score', 'criterion-card--missing', 'criterion-card--shake');
     if (fill)  fill.style.width = '0%';
     if (label) label.textContent = 'Sem avaliação';
     if (num)   { num.textContent = '—'; num.style.color = 'var(--text-muted)'; }
   });
   updateSummary();
-  switchTab('tecnico');
   showView('evaluation');
+  wizardGoTo(1);
 }
 
 function resetForm() {
@@ -3707,13 +5535,34 @@ function resetForm() {
 
 function saveEvaluation() {
   const nome = document.getElementById('tecnico-nome').value.trim();
-  if (!nome) { showToast('Informe o nome do técnico.', 'error'); switchTab('observacoes'); return; }
+  if (!nome) {
+    showToast('Informe o nome do colaborador na Etapa 1.', 'error');
+    wizardGoTo(1);
+    return;
+  }
 
-  const tFilled = CRITERIA.tecnico.filter(c => scores[c.id] != null).length;
-  const bFilled = CRITERIA.comportamental.filter(c => scores[c.id] != null).length;
+  const techList = getCurrentCriteria('tecnico');
+  const behavList = getCurrentCriteria('comportamental');
+  const tFilled = techList.filter(c => scores[c.id] != null).length;
+  const bFilled = behavList.filter(c => scores[c.id] != null).length;
   if (tFilled === 0 && bFilled === 0) {
-    showToast('Avalie pelo menos um critério antes de salvar.', 'error');
+    showToast('Volte para a Etapa 3 e avalie os critérios antes de salvar.', 'error');
+    wizardGoTo(3);
+    return;
+  }
+  // Validação completa: todos os critérios devem estar preenchidos
+  if (tFilled < techList.length) {
+    showToast(`Volte para a Etapa 3 — faltam ${techList.length - tFilled} pergunta${techList.length - tFilled > 1 ? 's' : ''} técnica${techList.length - tFilled > 1 ? 's' : ''}.`, 'error');
+    wizardGoTo(3);
     switchTab('tecnico');
+    flagUnfilled('tecnico');
+    return;
+  }
+  if (bFilled < behavList.length) {
+    showToast(`Volte para a Etapa 3 — faltam ${behavList.length - bFilled} pergunta${behavList.length - bFilled > 1 ? 's' : ''} comportamental${behavList.length - bFilled > 1 ? 'is' : ''}.`, 'error');
+    wizardGoTo(3);
+    switchTab('comportamental');
+    flagUnfilled('comportamental');
     return;
   }
 
@@ -3739,7 +5588,7 @@ function saveEvaluation() {
 
   const history = getHistory();
   history.unshift(evaluation);
-  localStorage.setItem('pact_history', JSON.stringify(history));
+  localStorage.setItem('sietch_history', JSON.stringify(history));
 
   updateHistoryBadge();
   showResults(evaluation);
@@ -3759,7 +5608,7 @@ function showResults(ev) {
   const renderResBlock = (block, title) => `
     <div class="res-block">
       <div class="res-block-title">${title}</div>
-      ${CRITERIA[block].map(c => {
+      ${getCurrentCriteria(block).map(c => {
         const s = ev.scores[c.id];
         const pct = s ? (s / 5) * 100 : 0;
         return `
@@ -3874,7 +5723,7 @@ function buildExportText(ev) {
   let rows = '';
   const renderBlock = (block, title) => {
     rows += `\n${title.toUpperCase()}\n`;
-    CRITERIA[block].forEach(c => {
+    getCurrentCriteria(block).forEach(c => {
       const s = ev.scores[c.id];
       const label = s != null ? `${s} — ${SCORE_LABELS[s]}` : '—';
       rows += `  ${c.label.padEnd(40)} ${bar(s)}  ${label}\n`;
@@ -3945,7 +5794,7 @@ function downloadExport() {
 // HISTORY
 // ══════════════════════════════════════════════
 function getHistory() {
-  try { return JSON.parse(localStorage.getItem('pact_history') || '[]'); }
+  try { return JSON.parse(localStorage.getItem('sietch_history') || '[]'); }
   catch { return []; }
 }
 
@@ -3964,8 +5813,13 @@ function renderHistory() {
 
   if (!history.length) {
     container.innerHTML = `
-      <div class="empty-mascote-state">
-        <img src="galeria/mascote-sietch.png" class="mascote mascote--md mascote--peek" alt="" style="margin-bottom:16px;">
+      <div class="empty-state">
+        <div class="empty-state__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
         <h3>Nenhuma avaliação salva</h3>
         <p>Realize e salve uma avaliação para ela aparecer aqui.</p>
       </div>`;
@@ -4036,7 +5890,7 @@ function classifyColor(score) {
 function deleteEvaluation(id) {
   if (!confirm('Excluir esta avaliação?')) return;
   const history = getHistory().filter(e => e.id !== id);
-  localStorage.setItem('pact_history', JSON.stringify(history));
+  localStorage.setItem('sietch_history', JSON.stringify(history));
   updateHistoryBadge();
   renderHistory();
   showToast('Avaliação excluída.', '');
@@ -4044,7 +5898,7 @@ function deleteEvaluation(id) {
 
 function clearHistory() {
   if (!confirm('Excluir TODAS as avaliações salvas? Esta ação não pode ser desfeita.')) return;
-  localStorage.removeItem('pact_history');
+  localStorage.removeItem('sietch_history');
   updateHistoryBadge();
   renderHistory();
   showToast('Histórico limpo.', '');
@@ -4060,7 +5914,7 @@ function viewDetail(id) {
   const renderDetailBlock = (block, title) => `
     <div style="margin-bottom:var(--spacing-6);">
       <div class="detail-section-title">${title}</div>
-      ${CRITERIA[block].map(c => {
+      ${getCurrentCriteria(block).map(c => {
         const s = ev.scores[c.id];
         const pct = s ? (s/5)*100 : 0;
         return `
@@ -4455,8 +6309,13 @@ function renderRankGrid(rankings) {
   const container = document.getElementById('rank-grid');
   if (!rankings.length) {
     container.innerHTML = `
-      <div class="rank-empty empty-mascote-state">
-        <img src="galeria/mascote-sietch.png" class="mascote mascote--md mascote--peek" alt="" style="margin-bottom:16px;">
+      <div class="rank-empty empty-state">
+        <div class="empty-state__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
         <h3>Nenhum técnico nesta área</h3>
         <p>Salve avaliações com a área selecionada para ver o ranking.</p>
       </div>`;
@@ -5448,7 +7307,7 @@ async function renderDesempenhoSetor() {
 const MOCK_COLABORADORES = [
   { id:'c1',  name:'Ana Rodrigues',   nicho:'frontend', role:'Dev Front-end Sênior',   since:'2022-03', evals:8,  avgScore:4.52, latestScore:4.52, streak:true,  bio:'Especialista em React e performance web. Lidera iniciativas de acessibilidade no time.' },
   { id:'c2',  name:'Bruno Oliveira',  nicho:'backend',  role:'Engenheiro Back-end',     since:'2023-01', evals:6,  avgScore:3.84, latestScore:3.84, streak:false, bio:'Foco em APIs REST e microsserviços com Node.js e Go.' },
-  { id:'c3',  name:'Carol Santos',    nicho:'design',   role:'Product Designer Sênior', since:'2021-08', evals:10, avgScore:4.78, latestScore:4.78, streak:true,  bio:'Referência em design systems. Conduziu a revisão completa do PACT Design System.' },
+  { id:'c3',  name:'Carol Santos',    nicho:'design',   role:'Product Designer Sênior', since:'2021-08', evals:10, avgScore:4.78, latestScore:4.78, streak:true,  bio:'Referência em design systems. Conduziu a revisão completa do Sietch Metrics Design System.' },
   { id:'c4',  name:'Diego Costa',     nicho:'dev',      role:'Desenvolvedor Full-stack', since:'2023-06', evals:5,  avgScore:3.20, latestScore:3.20, streak:false, bio:'Em desenvolvimento. Demonstra esforço em aprendizado contínuo.' },
   { id:'c5',  name:'Elena Ferreira',  nicho:'frontend', role:'Dev Front-end Pleno',     since:'2022-11', evals:7,  avgScore:4.30, latestScore:4.30, streak:true,  bio:'Forte em TypeScript e testes automatizados. Mentora de novos devs.' },
   { id:'c6',  name:'Felipe Alves',    nicho:'backend',  role:'Engenheiro Back-end Jr.', since:'2024-02', evals:4,  avgScore:2.64, latestScore:2.64, streak:false, bio:'Em acompanhamento próximo. Plano de desenvolvimento em andamento.' },

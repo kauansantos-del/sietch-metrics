@@ -1,4 +1,4 @@
-# PACT — Backend Blueprint
+# Sietch Metrics — Backend Blueprint
 
 > Documento técnico completo para implementação do backend da plataforma PACT, com autenticação Google restrita por domínio corporativo, banco Postgres e API REST consumida pelo frontend já existente.
 
@@ -32,13 +32,13 @@
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  Browser (sietch-pact.vercel.app)                              │
+│  Browser (sietch-metrics.vercel.app)                              │
 │  HTML + CSS + JS Vanilla                                       │
 └────────────────────┬───────────────────────────────────────────┘
                      │  fetch() com cookie httpOnly
                      ▼
 ┌────────────────────────────────────────────────────────────────┐
-│  Vercel Serverless Functions (api.sietch-pact.vercel.app)      │
+│  Vercel Serverless Functions (api.sietch-metrics.vercel.app)      │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  Express App                                             │  │
 │  │  ├── /api/auth/google              (inicia OAuth)        │  │
@@ -347,12 +347,12 @@ Passo a passo no console da Google:
    - Scopes: `openid`, `email`, `profile`
 4. Vá em **APIs & Services → Credentials → Create Credentials → OAuth Client ID**
    - Tipo: **Web application**
-   - Nome: `PACT Production`
+   - Nome: `Sietch Metrics Production`
    - **Authorized JavaScript origins:**
-     - `https://sietch-pact.vercel.app`
+     - `https://sietch-metrics.vercel.app`
      - `http://localhost:3000` (para dev)
    - **Authorized redirect URIs:**
-     - `https://api.sietch-pact.vercel.app/api/auth/google/callback`
+     - `https://api.sietch-metrics.vercel.app/api/auth/google/callback`
      - `http://localhost:3000/api/auth/google/callback`
 5. Copie **Client ID** e **Client Secret** — vão para as variáveis de ambiente.
 
@@ -425,7 +425,7 @@ const sessionToken = jwt.sign(
   { expiresIn: '7d' }
 );
 
-res.cookie('pact_session', sessionToken, {
+res.cookie('sietch_session', sessionToken, {
   httpOnly: true,        // não acessível via document.cookie
   secure: true,          // só via HTTPS
   sameSite: 'lax',       // bloqueia CSRF mas permite navegação normal
@@ -445,7 +445,7 @@ res.cookie('pact_session', sessionToken, {
 ## 4. Estrutura de pastas
 
 ```
-pact-backend/
+sietch-metrics-backend/
 ├── prisma/
 │   ├── schema.prisma
 │   ├── migrations/
@@ -508,19 +508,19 @@ DATABASE_URL="postgresql://user:pass@ep-xxx.neon.tech/pact?sslmode=require"
 # ─── Google OAuth ───────────────────────────────────────────────
 GOOGLE_CLIENT_ID="xxxxxxxxxx.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="GOCSPX-xxxxxxxxxxxxxx"
-GOOGLE_REDIRECT_URI="https://api.sietch-pact.vercel.app/api/auth/google/callback"
+GOOGLE_REDIRECT_URI="https://api.sietch-metrics.vercel.app/api/auth/google/callback"
 
 # ─── Restrição de domínio ───────────────────────────────────────
 ALLOWED_EMAIL_DOMAIN="suaempresa.com"
 
 # ─── Sessão ─────────────────────────────────────────────────────
 JWT_SECRET="<gere com: openssl rand -base64 64>"
-SESSION_COOKIE_NAME="pact_session"
+SESSION_COOKIE_NAME="sietch_session"
 SESSION_MAX_AGE_DAYS="7"
 
 # ─── Frontend ───────────────────────────────────────────────────
-FRONTEND_URL="https://sietch-pact.vercel.app"
-ALLOWED_ORIGINS="https://sietch-pact.vercel.app,http://localhost:3000"
+FRONTEND_URL="https://sietch-metrics.vercel.app"
+ALLOWED_ORIGINS="https://sietch-metrics.vercel.app,http://localhost:3000"
 
 # ─── App ────────────────────────────────────────────────────────
 NODE_ENV="production"
@@ -550,7 +550,7 @@ const envSchema = z.object({
   GOOGLE_REDIRECT_URI: z.string().url(),
   ALLOWED_EMAIL_DOMAIN: z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i),
   JWT_SECRET: z.string().min(32),
-  SESSION_COOKIE_NAME: z.string().default('pact_session'),
+  SESSION_COOKIE_NAME: z.string().default('sietch_session'),
   SESSION_MAX_AGE_DAYS: z.coerce.number().default(7),
   FRONTEND_URL: z.string().url(),
   ALLOWED_ORIGINS: z.string().transform(s => s.split(',')),
@@ -567,9 +567,9 @@ export const env = envSchema.parse(process.env);
 
 ### 6.1 Convenções
 
-- **Base URL produção:** `https://api.sietch-pact.vercel.app`
+- **Base URL produção:** `https://api.sietch-metrics.vercel.app`
 - **Content-Type:** `application/json`
-- **Autenticação:** cookie `pact_session` (httpOnly) — enviado automaticamente
+- **Autenticação:** cookie `sietch_session` (httpOnly) — enviado automaticamente
 - **Erros:** sempre JSON `{ error: { code, message, details? } }`
 - **Paginação:** query params `?page=1&limit=20` (cursor-based no futuro)
 - **Datas:** ISO 8601 UTC
@@ -703,7 +703,7 @@ export const env = envSchema.parse(process.env);
 
 ```json
 {
-  "name": "pact-backend",
+  "name": "sietch-metrics-backend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -801,7 +801,7 @@ import { logAudit } from '../middleware/audit';
 const router = Router();
 
 // Cookie temporário pra guardar o `state` (CSRF protection)
-const STATE_COOKIE = 'pact_oauth_state';
+const STATE_COOKIE = 'sietch_oauth_state';
 
 // ─── 1. Inicia o fluxo ──────────────────────────────────────
 router.get('/google', (req, res) => {
@@ -1220,7 +1220,7 @@ import app from './app';
 
 const port = Number(process.env.PORT) || 3000;
 app.listen(port, () => {
-  console.log(`PACT API rodando em http://localhost:${port}`);
+  console.log(`Sietch Metrics API rodando em http://localhost:${port}`);
 });
 ```
 
@@ -1258,7 +1258,7 @@ Adicionar no topo do `<script>` em `index.html`:
 ```javascript
 const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:3000/api'
-  : 'https://api.sietch-pact.vercel.app/api';
+  : 'https://api.sietch-metrics.vercel.app/api';
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -1346,7 +1346,7 @@ if (authError) {
 function saveEvaluation() {
   const evaluation = { /* ... */ };
   history.unshift(evaluation);
-  localStorage.setItem('pact_history', JSON.stringify(history));
+  localStorage.setItem('sietch_history', JSON.stringify(history));
   showResults(evaluation);
 }
 ```
@@ -1376,7 +1376,7 @@ async function saveEvaluation() {
 
 **Carregar histórico — antes:**
 ```javascript
-const history = JSON.parse(localStorage.getItem('pact_history') || '[]');
+const history = JSON.parse(localStorage.getItem('sietch_history') || '[]');
 ```
 
 **Depois:**
@@ -1393,7 +1393,7 @@ Se você já tem avaliações salvas no `localStorage` em produção, vale fazer
 
 ```javascript
 async function migrateLocalStorage() {
-  const old = JSON.parse(localStorage.getItem('pact_history') || '[]');
+  const old = JSON.parse(localStorage.getItem('sietch_history') || '[]');
   for (const ev of old) {
     try {
       await api('/evaluations', { method: 'POST', body: JSON.stringify(transformOldFormat(ev)) });
@@ -1401,14 +1401,14 @@ async function migrateLocalStorage() {
       console.warn('Falha ao migrar', ev.id, e);
     }
   }
-  localStorage.removeItem('pact_history');
+  localStorage.removeItem('sietch_history');
   showToast(`${old.length} avaliações migradas`, 'success');
 }
 ```
 
 ### 8.6 Mantendo `localStorage` apenas para tema
 
-O tema (`pact_theme`) pode continuar no `localStorage` — é só preferência visual, não precisa de servidor.
+O tema (`sietch_theme`) pode continuar no `localStorage` — é só preferência visual, não precisa de servidor.
 
 ---
 
@@ -1416,7 +1416,7 @@ O tema (`pact_theme`) pode continuar no `localStorage` — é só preferência v
 
 ### 9.1 Repositório separado vs. monorepo
 
-Recomendo **repositório separado** (`sietch-pact-api`) porque:
+Recomendo **repositório separado** (`sietch-metrics-api`) porque:
 - O frontend é estático e tem deploy próprio
 - O backend tem migrations Prisma que precisam rodar antes
 - Logs e configs ficam isolados
@@ -1443,9 +1443,9 @@ Recomendo **repositório separado** (`sietch-pact-api`) porque:
 
 ### 9.3 Configuração na Vercel UI
 
-1. Importar o repo `sietch-pact-api`
+1. Importar o repo `sietch-metrics-api`
 2. **Environment Variables** — adicionar todas do `.env.example` com valores de produção
-3. **Domain** — apontar `api.sietch-pact.vercel.app` (ou domínio próprio)
+3. **Domain** — apontar `api.sietch-metrics.vercel.app` (ou domínio próprio)
 4. **Build & Development Settings:**
    - Framework Preset: Other
    - Build command: `npm run build && npx prisma generate`
@@ -1597,7 +1597,7 @@ Reaproveitando o roadmap do README original, agora viáveis com backend:
 
 ```bash
 # Setup inicial do projeto
-mkdir pact-backend && cd pact-backend
+mkdir sietch-metrics-backend && cd sietch-metrics-backend
 npm init -y
 npm install express @prisma/client @prisma/adapter-neon @neondatabase/serverless ws \
   google-auth-library jsonwebtoken cookie-parser cors helmet express-rate-limit \
@@ -1654,4 +1654,4 @@ describe('Auth', () => {
 
 ---
 
-*Documento técnico — PACT Backend — gerado para o projeto Sietch PACT.*
+*Documento técnico — Sietch Metrics Backend — gerado para o projeto Sietch PACT.*
