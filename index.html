@@ -7287,11 +7287,12 @@ async function renderMeuTime() {
   try {
     const evRes = await fetch(`${API_BASE}/evaluations?limit=200&page=1`, { credentials: 'include' });
     if (evRes.ok) { const j = await evRes.json(); evals = j.items || []; }
-    if (!evals.length) evals = MOCK_EVALUATIONS;
+    // Fewer than 5 API evals means the DB isn't seeded yet — use mock data
+    if (evals.length < 5) evals = MOCK_EVALUATIONS;
   } catch {
     const hist = getHistory();
     evals = hist.length
-      ? hist.map(e => ({ ...e, createdAt: e.data, technician: { name: e.nome, team: e.nicho || 'outros' }, finalScore: e.notaFinal }))
+      ? hist.map(e => ({ ...e, createdAt: e.data, technician: { name: e.tecnico || e.nome, team: e.nicho || 'outros' }, finalScore: e.notaFinal }))
       : MOCK_EVALUATIONS;
   }
 
