@@ -3664,6 +3664,452 @@
 
     /* Clickable cards / rows */
     .dest-rest-tile, .podium-card, .rank-card-outer, .setor-emp-row { cursor: pointer; }
+
+    /* ══════════════════════════════════════════════════════
+       TREINAMENTOS MODULE
+    ══════════════════════════════════════════════════════ */
+    .modal-box--wide { width: min(860px, 96vw) !important; }
+
+    .trein-role-tabs {
+      display: flex; gap: 4px;
+      background: var(--gray-2); border-radius: var(--radius-md);
+      padding: 4px; margin-bottom: var(--spacing-6);
+      width: fit-content;
+    }
+    .trein-role-tab {
+      padding: 7px 18px; border-radius: calc(var(--radius-md) - 2px);
+      font-size: 14px; font-weight: 500; color: var(--text-muted);
+      cursor: pointer; border: none; background: transparent;
+      transition: all 200ms ease; white-space: nowrap;
+    }
+    .trein-role-tab:hover { color: var(--text-default); }
+    .trein-role-tab.active {
+      background: var(--surface-card); color: var(--text-high);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    }
+    .trein-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4); margin-bottom: var(--spacing-6);
+    }
+    .trein-stat {
+      background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); padding: 18px 20px;
+      cursor: pointer; transition: all 200ms ease;
+      position: relative; overflow: hidden;
+    }
+    .trein-stat:hover { border-color: var(--border-default); transform: translateY(-2px); box-shadow: var(--elevation-2); }
+    .trein-stat.active { border-color: var(--blue-6); box-shadow: 0 0 0 3px rgba(0,102,255,0.08); }
+    .trein-stat__num { font-size: 32px; font-weight: 700; line-height: 1; font-family: 'Michroma', monospace; margin-bottom: 6px; }
+    .trein-stat__label { font-size: 13px; color: var(--text-muted); }
+    .trein-stat--andamento .trein-stat__num { color: var(--blue-11); }
+    .trein-stat--pendente  .trein-stat__num { color: var(--amber-11); }
+    .trein-stat--concluido .trein-stat__num { color: var(--green-11); }
+    .trein-stat__bar { position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 var(--radius-md) var(--radius-md); }
+    .trein-filters {
+      display: flex; gap: var(--spacing-3); align-items: center;
+      margin-bottom: var(--spacing-5); flex-wrap: wrap;
+    }
+    .trein-search { flex: 1; min-width: 180px; position: relative; }
+    .trein-search input {
+      width: 100%; padding: 9px 12px 9px 36px;
+      background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--text-default);
+      outline: none; transition: border-color 180ms; font-family: var(--font-family);
+    }
+    .trein-search input:focus { border-color: var(--border-default); }
+    .trein-search__icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .trein-filter-select {
+      padding: 9px 12px; background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--text-default);
+      cursor: pointer; outline: none; font-family: var(--font-family);
+    }
+    .trein-list { display: flex; flex-direction: column; gap: var(--spacing-3); }
+    .trein-card {
+      background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); padding: 18px 20px;
+      cursor: pointer; transition: all 180ms ease; display: flex; align-items: flex-start; gap: 16px;
+    }
+    .trein-card:hover { border-color: var(--border-default); box-shadow: var(--elevation-2); transform: translateY(-1px); }
+    .trein-card__body { flex: 1; min-width: 0; }
+    .trein-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .trein-card__title { font-size: 15px; font-weight: 600; color: var(--text-high); line-height: 1.35; }
+    .trein-card__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .trein-card__assignee { font-size: 13px; color: var(--text-muted); }
+    .trein-card__deadline { font-size: 13px; }
+    .trein-card__deadline--ok   { color: var(--text-muted); }
+    .trein-card__deadline--late { color: var(--red-11); font-weight: 500; }
+    .trein-card__deadline--soon { color: var(--amber-11); }
+    .trein-progress-bar { width: 100%; height: 5px; background: var(--gray-3); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+    .trein-progress-fill { height: 100%; border-radius: 99px; transition: width 600ms ease; }
+    .trein-progress-fill--andamento { background: var(--blue-9); }
+    .trein-progress-fill--concluido { background: var(--green-9); }
+    .trein-progress-fill--atrasado  { background: var(--red-9); }
+    .trein-progress-fill--pendente  { background: var(--gray-6); }
+    .trein-progress-label { font-size: 12px; color: var(--text-muted); }
+    .trein-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .trein-card__time { font-size: 12px; color: var(--text-muted); }
+    .trein-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 99px;
+      font-size: 12px; font-weight: 500; white-space: nowrap;
+    }
+    .trein-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 12px; font-weight: 500; white-space: nowrap;
+    }
+    .trein-status--andamento  { background: var(--blue-3);  color: var(--blue-11);  border: 1px solid var(--blue-6); }
+    .trein-status--concluido  { background: var(--green-3); color: var(--green-11); border: 1px solid var(--green-6); }
+    .trein-status--atrasado   { background: var(--red-3);   color: var(--red-11);   border: 1px solid var(--red-6); }
+    .trein-status--pendente   { background: var(--gray-3);  color: var(--gray-11);  border: 1px solid var(--gray-6); }
+    .trein-status--aguardando { background: var(--amber-3); color: var(--amber-11); border: 1px solid var(--amber-6); }
+    .trein-kpis {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4); margin-bottom: var(--spacing-6);
+    }
+    .trein-kpi {
+      background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); padding: 16px 18px; position: relative;
+    }
+    .trein-kpi__val { font-size: 26px; font-weight: 700; font-family: 'Michroma', monospace; line-height: 1; margin-bottom: 5px; color: var(--text-high); }
+    .trein-kpi__label { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+    .trein-kpi--warn .trein-kpi__val { color: var(--red-11); }
+    .trein-kpi--ok   .trein-kpi__val { color: var(--green-11); }
+    .trein-kpi__badge {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--red-9); color: #fff;
+      font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
+    }
+    .trein-table { width: 100%; border-collapse: collapse; }
+    .trein-table th {
+      text-align: left; font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .07em;
+      color: var(--text-muted); padding: 10px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .trein-table td { padding: 13px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-default); vertical-align: middle; }
+    .trein-table tbody tr { transition: background 140ms; cursor: pointer; }
+    .trein-table tbody tr:last-child td { border-bottom: none; }
+    .trein-table tbody tr:hover { background: var(--gray-2); }
+    .trein-table__name { display: flex; align-items: center; gap: 10px; }
+    .trein-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-4); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+    .trein-table__name-info { display: flex; flex-direction: column; gap: 1px; }
+    .trein-table__name-main { font-weight: 500; color: var(--text-high); font-size: 14px; }
+    .trein-table__name-sub  { font-size: 12px; color: var(--text-muted); }
+    .trein-table__num { font-size: 14px; font-weight: 600; font-family: 'Michroma', monospace; }
+    .trein-table__num--warn { color: var(--red-11); }
+    .trein-table__num--ok   { color: var(--green-11); }
+    .trein-lider-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4); }
+    .trein-section-title { font-size: 15px; font-weight: 700; color: var(--text-high); margin-bottom: var(--spacing-3); }
+    .trein-queue { display: flex; flex-direction: column; gap: var(--spacing-3); margin-top: var(--spacing-5); }
+    .trein-queue-card {
+      background: var(--surface-card); border: 1px solid var(--amber-6);
+      border-left: 3px solid var(--amber-9); border-radius: var(--radius-md); padding: 16px 18px;
+    }
+    .trein-queue-card__head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; gap: 8px; }
+    .trein-queue-card__name { font-size: 14px; font-weight: 500; color: var(--text-high); }
+    .trein-queue-card__when { font-size: 12px; color: var(--text-muted); }
+    .trein-queue-card__training { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+    .trein-queue-card__actions { display: flex; gap: var(--spacing-3); flex-wrap: wrap; }
+    .trein-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-4); }
+    .trein-catalog-card {
+      background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); padding: 20px; cursor: pointer;
+      transition: all 180ms ease; display: flex; flex-direction: column; gap: 10px;
+    }
+    .trein-catalog-card:hover { border-color: var(--border-default); box-shadow: var(--elevation-2); transform: translateY(-2px); }
+    .trein-catalog-card__title { font-size: 14px; font-weight: 600; color: var(--text-high); line-height: 1.35; }
+    .trein-catalog-card__desc  { font-size: 13px; color: var(--text-muted); line-height: 1.5; flex: 1; }
+    .trein-catalog-card__foot  { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .trein-catalog-card__stats { display: flex; gap: 12px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+    .trein-catalog-mandatory { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--red-11); background: var(--red-3); border: 1px solid var(--red-6); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+    .trein-subtabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-subtle); margin-bottom: var(--spacing-5); flex-wrap: wrap; }
+    .trein-subtab {
+      padding: 10px 18px; font-size: 14px; font-weight: 500;
+      color: var(--text-muted); cursor: pointer; border: none; background: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 160ms;
+    }
+    .trein-subtab:hover { color: var(--text-default); }
+    .trein-subtab.active { color: var(--text-high); border-bottom-color: var(--blue-9); }
+    .trein-wizard-steps { display: flex; align-items: center; gap: 0; margin-bottom: var(--spacing-5); }
+    .trein-wizard-step { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+    .trein-wizard-step.active { color: var(--blue-11); }
+    .trein-wizard-step.done   { color: var(--green-11); }
+    .trein-wizard-step__num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--gray-3); color: var(--text-muted); flex-shrink: 0; }
+    .trein-wizard-step.active .trein-wizard-step__num { background: var(--blue-9); color: #fff; }
+    .trein-wizard-step.done   .trein-wizard-step__num { background: var(--green-9); color: #fff; }
+    .trein-wizard-sep { flex: 1; height: 1px; background: var(--border-subtle); min-width: 16px; }
+    .trein-collab-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+    .trein-collab-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); cursor: pointer; transition: all 150ms; }
+    .trein-collab-item:hover { background: var(--gray-2); border-color: var(--border-default); }
+    .trein-collab-item.selected { background: var(--blue-3); border-color: var(--blue-6); }
+    .trein-collab-item input[type=checkbox] { accent-color: var(--blue-9); width: 16px; height: 16px; flex-shrink: 0; }
+    .trein-collab-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-high); }
+    .trein-collab-role { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .trein-select-all { font-size: 13px; color: var(--blue-11); cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; margin-bottom: 8px; }
+    .trein-selected-count { font-size: 13px; color: var(--blue-11); padding: 6px 12px; background: var(--blue-3); border-radius: var(--radius-sm); border: 1px solid var(--blue-6); margin-top: 4px; }
+    .trein-picker-grid { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+    .trein-picker-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); cursor: pointer; transition: all 150ms; }
+    .trein-picker-item:hover { background: var(--gray-2); border-color: var(--border-default); }
+    .trein-picker-item.selected { background: var(--blue-3); border-color: var(--blue-6); }
+    .trein-picker-info { flex: 1; }
+    .trein-picker-title { font-size: 14px; font-weight: 600; color: var(--text-high); margin-bottom: 4px; }
+    .trein-picker-meta  { font-size: 12px; color: var(--text-muted); }
+    .trein-confirm-box { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 16px; font-size: 14px; color: var(--text-default); line-height: 1.7; }
+    .trein-confirm-box strong { color: var(--text-high); }
+    .trein-detail-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: var(--spacing-5); }
+    .trein-detail-icon { width: 52px; height: 52px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .trein-detail-title { font-size: 18px; font-weight: 700; color: var(--text-high); margin-bottom: 6px; }
+    .trein-detail-meta  { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .trein-modules { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--spacing-5); }
+    .trein-module-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
+    .trein-module-item.done { opacity: 0.6; }
+    .trein-module-item.done .trein-module-name { text-decoration: line-through; }
+    .trein-module-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--gray-3); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0; }
+    .trein-module-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-default); }
+    .trein-module-dur  { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .trein-empty { text-align: center; padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .trein-empty__icon  { color: var(--text-muted); opacity: 0.4; margin-bottom: 4px; }
+    .trein-empty__title { font-size: 16px; font-weight: 600; color: var(--text-high); }
+    .trein-empty__desc  { font-size: 14px; color: var(--text-muted); max-width: 360px; line-height: 1.6; }
+    .trein-report-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-4); }
+    .trein-report-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all 180ms ease; }
+    .trein-report-card:hover { border-color: var(--border-default); box-shadow: var(--elevation-2); transform: translateY(-2px); }
+    .trein-report-card__title { font-size: 14px; font-weight: 600; color: var(--text-high); margin-bottom: 6px; }
+    .trein-report-card__desc  { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    @media (max-width: 640px) {
+      .trein-kpis { grid-template-columns: repeat(2, 1fr); }
+      .trein-catalog-grid { grid-template-columns: 1fr; }
+      .trein-report-cards { grid-template-columns: 1fr; }
+      .trein-table th:nth-child(n+5), .trein-table td:nth-child(n+5) { display: none; }
+      .trein-wizard-step span:not(.trein-wizard-step__num) { display: none; }
+    }
+
+    /* ── TRAINING PLAYER OVERLAY ─────────────────────────────────── */
+    .trein-player-overlay {
+      position: fixed; inset: 0; z-index: 400;
+      background: var(--surface-app, #0c0e13);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .trein-player-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px; border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-card); flex-shrink: 0;
+    }
+    .trein-player-back {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text-muted); font-size: 13px; cursor: pointer;
+      border: none; background: none; padding: 6px 10px;
+      border-radius: var(--radius-sm); transition: background 0.15s, color 0.15s; white-space: nowrap;
+    }
+    .trein-player-back:hover { background: var(--surface-interactive); color: var(--text-default); }
+    .trein-player-title {
+      flex: 1; min-width: 0; font-size: 14px; font-weight: 600;
+      color: var(--text-high); font-family: var(--font-display);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trein-player-hprog { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .trein-player-hprog-bar {
+      width: 120px; height: 4px; background: var(--border-subtle);
+      border-radius: 2px; overflow: hidden;
+    }
+    .trein-player-hprog-fill { height: 100%; background: var(--blue-9); border-radius: 2px; transition: width 0.4s; }
+    .trein-player-body { flex: 1; display: flex; overflow: hidden; }
+    .trein-player-main { flex: 1; overflow-y: auto; padding: 32px 40px; }
+    .trein-player-sidebar {
+      width: 248px; border-left: 1px solid var(--border-subtle);
+      background: var(--surface-card); overflow-y: auto; flex-shrink: 0;
+    }
+    .trein-player-sb-title {
+      padding: 16px 18px 8px; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .trein-player-sb-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 18px;
+      cursor: pointer; transition: background 0.12s;
+      border-left: 2px solid transparent;
+    }
+    .trein-player-sb-item:hover { background: var(--surface-interactive); }
+    .trein-player-sb-item.active { background: var(--blue-3); border-left-color: var(--blue-9); }
+    .trein-player-sb-item.done { opacity: 0.6; }
+    .trein-player-sb-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--surface-interactive); border: 1.5px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0;
+    }
+    .trein-player-sb-item.done .trein-player-sb-num { background: var(--green-3); border-color: var(--green-7); color: var(--green-11); }
+    .trein-player-sb-item.active .trein-player-sb-num { background: var(--blue-9); border-color: var(--blue-9); color: #fff; }
+    .trein-player-sb-name { font-size: 13px; color: var(--text-default); line-height: 1.35; flex: 1; min-width: 0; }
+    .trein-player-sb-item.active .trein-player-sb-name { color: var(--blue-11); font-weight: 500; }
+    .trein-player-sb-type { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .trein-player-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 40px; border-top: 1px solid var(--border-subtle);
+      background: var(--surface-card); flex-shrink: 0;
+    }
+    /* Video */
+    .trein-video-wrap {
+      background: #000; border-radius: var(--radius-md); aspect-ratio: 16/9;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; margin-bottom: 16px; max-height: 380px;
+    }
+    .trein-video-ph { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; }
+    .trein-video-play {
+      width: 60px; height: 60px; background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.22); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .trein-video-ph:hover .trein-video-play { background: rgba(255,255,255,0.2); transform: scale(1.08); }
+    .trein-video-dur { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .trein-video-bar-wrap {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; background: var(--surface-card);
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      margin-bottom: 16px; font-size: 13px; color: var(--text-muted);
+    }
+    .trein-video-progress { flex: 1; height: 4px; background: var(--border-subtle); border-radius: 2px; overflow: hidden; }
+    .trein-video-progress-fill { height: 100%; background: var(--blue-9); border-radius: 2px; transition: width 0.6s; }
+    .trein-speed { display: flex; gap: 4px; }
+    .trein-speed-btn {
+      padding: 2px 7px; border-radius: 3px; border: 1px solid var(--border-subtle);
+      background: var(--surface-interactive); font-size: 11px; color: var(--text-muted); cursor: pointer;
+    }
+    .trein-speed-btn.active { background: var(--blue-3); border-color: var(--blue-6); color: var(--blue-11); }
+    /* Article */
+    .trein-article-rbar { height: 3px; background: var(--blue-9); border-radius: 0 2px 2px 0; margin: -32px -40px 28px; transition: width 0.2s; }
+    .trein-article-body {
+      font-size: 15px; line-height: 1.8; color: var(--text-default); max-width: 680px;
+    }
+    .trein-article-body h3 { font-size: 17px; font-weight: 700; color: var(--text-high); margin: 24px 0 10px; font-family: var(--font-display); }
+    .trein-article-body p { margin-bottom: 14px; }
+    .trein-article-body ul { padding-left: 20px; margin-bottom: 14px; }
+    .trein-article-body li { margin-bottom: 5px; }
+    .trein-article-body code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: var(--surface-interactive); padding: 2px 5px; border-radius: 3px; color: var(--blue-11); }
+    .trein-callout { padding: 12px 16px; border-radius: var(--radius-md); border-left: 3px solid var(--blue-9); background: var(--blue-3); color: var(--blue-11); font-size: 14px; margin: 16px 0; line-height: 1.6; }
+    /* PDF */
+    .trein-pdf-wrap { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 60px 24px; text-align: center; }
+    /* Quiz */
+    .trein-quiz-pre { max-width: 500px; margin: 0 auto; text-align: center; padding: 20px 0; }
+    .trein-quiz-pre-icon { width: 60px; height: 60px; background: var(--blue-3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+    .trein-quiz-pre h2 { font-size: 20px; font-weight: 700; color: var(--text-high); margin-bottom: 8px; font-family: var(--font-display); }
+    .trein-quiz-pre-meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+    .trein-quiz-meta-pill { display: flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 99px; font-size: 13px; color: var(--text-muted); }
+    .trein-quiz-area { max-width: 620px; margin: 0 auto; }
+    .trein-quiz-qprog { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+    .trein-quiz-qprog-bar { flex: 1; height: 4px; background: var(--border-subtle); border-radius: 2px; overflow: hidden; }
+    .trein-quiz-qprog-fill { height: 100%; background: var(--blue-9); border-radius: 2px; transition: width 0.3s; }
+    .trein-quiz-qnum { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+    .trein-quiz-qtext { font-size: 17px; font-weight: 600; color: var(--text-high); line-height: 1.55; margin-bottom: 22px; }
+    .trein-quiz-opts { display: flex; flex-direction: column; gap: 10px; }
+    .trein-quiz-opt {
+      display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+      border: 1.5px solid var(--border-subtle); border-radius: var(--radius-md);
+      cursor: pointer; font-size: 14px; color: var(--text-default); text-align: left;
+      width: 100%; background: var(--surface-card); transition: border-color 0.14s, background 0.14s;
+    }
+    .trein-quiz-opt:hover:not([disabled]) { border-color: var(--blue-8); background: var(--blue-3); }
+    .trein-quiz-opt.selected { border-color: var(--blue-9); background: var(--blue-3); color: var(--blue-11); }
+    .trein-quiz-opt.correct  { border-color: var(--green-7); background: var(--green-3); color: var(--green-11); }
+    .trein-quiz-opt.wrong    { border-color: var(--red-7);   background: var(--red-3);   color: var(--red-11); }
+    .trein-quiz-opt-letter {
+      width: 26px; height: 26px; border-radius: 50%; background: var(--surface-interactive);
+      border: 1.5px solid var(--border-subtle); display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .trein-quiz-opt.selected .trein-quiz-opt-letter { background: var(--blue-9); border-color: var(--blue-9); color: #fff; }
+    .trein-quiz-feedback { padding: 12px 14px; border-radius: var(--radius-md); font-size: 14px; line-height: 1.55; margin-top: 14px; }
+    .trein-quiz-feedback.correct { background: var(--green-3); border: 1px solid var(--green-6); color: var(--green-11); }
+    .trein-quiz-feedback.wrong   { background: var(--red-3);   border: 1px solid var(--red-6);   color: var(--red-11); }
+    .trein-quiz-result { max-width: 500px; margin: 0 auto; text-align: center; padding: 20px 0; }
+    .trein-quiz-result-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+    .trein-quiz-result-icon.pass { background: var(--green-3); border: 2px solid var(--green-7); }
+    .trein-quiz-result-icon.fail { background: var(--red-3);   border: 2px solid var(--red-7); }
+    .trein-quiz-result h2 { font-size: 21px; font-weight: 700; color: var(--text-high); margin-bottom: 6px; font-family: var(--font-display); }
+    .trein-quiz-result-score { font-size: 44px; font-weight: 800; font-family: 'Michroma', monospace; line-height: 1; }
+    .trein-quiz-result-score.pass { color: var(--green-11); }
+    .trein-quiz-result-score.fail { color: var(--red-11); }
+    .trein-quiz-result-detail { font-size: 14px; color: var(--text-muted); margin: 8px 0 22px; }
+    .trein-quiz-review { text-align: left; margin-top: 20px; }
+    .trein-quiz-rev-item { padding: 12px 14px; border-radius: var(--radius-md); margin-bottom: 8px; border: 1px solid var(--border-subtle); }
+    .trein-quiz-rev-item.correct { border-color: var(--green-6); background: var(--green-3); }
+    .trein-quiz-rev-item.wrong   { border-color: var(--red-6);   background: var(--red-3); }
+    .trein-quiz-rev-q { font-size: 13px; font-weight: 600; color: var(--text-high); margin-bottom: 4px; }
+    .trein-quiz-rev-a { font-size: 13px; color: var(--text-muted); margin-bottom: 3px; }
+    .trein-quiz-rev-f { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    /* Task */
+    .trein-task-desc { font-size: 14px; line-height: 1.75; color: var(--text-default); margin-bottom: var(--spacing-4); }
+    .trein-task-snippet { background: var(--surface-interactive); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-default); white-space: pre-wrap; overflow-x: auto; margin-bottom: 10px; }
+    .trein-task-snippet-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-family: var(--font-display); }
+    .trein-task-criteria { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--spacing-4); }
+    .trein-task-crit-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-default); border-bottom: 1px solid var(--border-subtle); }
+    .trein-task-crit-item:last-child { border-bottom: none; }
+    .trein-task-submit-box { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--spacing-4); margin-top: var(--spacing-4); }
+    .trein-task-status-box { padding: 16px; border-radius: var(--radius-md); font-size: 14px; line-height: 1.6; }
+    .trein-task-status-box.awaiting  { background: var(--amber-3); border: 1px solid var(--amber-6); color: var(--amber-11); }
+    .trein-task-status-box.approved  { background: var(--green-3); border: 1px solid var(--green-6); color: var(--green-11); }
+    .trein-task-status-box.adjusting { background: var(--blue-3);  border: 1px solid var(--blue-6);  color: var(--blue-11); }
+    /* Policy */
+    .trein-policy-scroll {
+      background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      max-height: 300px; overflow-y: auto; padding: 18px 22px;
+      font-size: 13.5px; line-height: 1.75; color: var(--text-default); margin-bottom: var(--spacing-4);
+    }
+    .trein-policy-scroll h4 { font-size: 14px; font-weight: 700; color: var(--text-high); margin: 14px 0 6px; font-family: var(--font-display); }
+    .trein-policy-scroll h4:first-child { margin-top: 0; }
+    .trein-policy-accept {
+      display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px;
+      background: var(--surface-interactive); border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md); cursor: pointer; margin-bottom: var(--spacing-4); transition: border-color 0.15s;
+    }
+    .trein-policy-accept.checked { border-color: var(--green-7); background: var(--green-3); }
+    .trein-policy-accept input[type=checkbox] { margin-top: 2px; cursor: pointer; accent-color: var(--green-9); }
+    /* Certificate */
+    .trein-cert-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .trein-cert-card {
+      width: 100%; max-width: 560px; background: var(--surface-card);
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .trein-cert-top { padding: 20px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .trein-cert-logo { font-family: 'Michroma', monospace; font-size: 15px; font-weight: 700; color: var(--text-high); letter-spacing: 0.08em; }
+    .trein-cert-stamp { font-size: 11px; color: var(--text-muted); text-align: right; line-height: 1.5; }
+    .trein-cert-body { padding: 24px; border-top: 1px solid var(--border-subtle); text-align: center; }
+    .trein-cert-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .trein-cert-name { font-size: 24px; font-weight: 700; color: var(--text-high); font-family: 'Michroma', monospace; margin-bottom: 18px; }
+    .trein-cert-training { font-size: 16px; font-weight: 600; color: var(--text-high); margin-bottom: 6px; }
+    .trein-cert-meta { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .trein-cert-bottom {
+      padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border-subtle); background: var(--surface-interactive);
+    }
+    .trein-cert-code { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; }
+    .trein-cert-qr {
+      width: 44px; height: 44px; background: var(--surface-card); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .trein-cert-valid-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+    .trein-cert-valid-pill.ok { background: var(--green-3); color: var(--green-11); border: 1px solid var(--green-6); }
+    /* Validation review */
+    .trein-val-grid { display: grid; grid-template-columns: 1fr 260px; gap: 18px; }
+    .trein-val-submission { background: var(--surface-interactive); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; font-size: 13.5px; line-height: 1.7; color: var(--text-default); min-height: 100px; }
+    .trein-val-crit-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: var(--text-default); }
+    .trein-val-crit-item:last-child { border-bottom: none; }
+    .trein-val-crit-item input[type=checkbox] { margin-top: 2px; accent-color: var(--green-9); cursor: pointer; }
+    .trein-val-days { font-size: 12px; color: var(--amber-11); font-weight: 500; }
+    /* NPS */
+    .trein-nps-stars { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 14px 0; }
+    .trein-nps-star { font-size: 28px; cursor: pointer; transition: transform 0.1s; opacity: 0.3; user-select: none; }
+    .trein-nps-star.on { opacity: 1; transform: scale(1.12); }
+    /* Responsive player */
+    @media (max-width: 768px) {
+      .trein-player-sidebar { display: none; }
+      .trein-player-main { padding: 20px 16px; }
+      .trein-player-footer { padding: 12px 16px; }
+      .trein-val-grid { grid-template-columns: 1fr; }
+      .trein-article-rbar { margin: -20px -16px 22px; }
+    }
   </style>
 </head>
 <body>
@@ -3718,6 +4164,15 @@
       </svg>
       Histórico
       <span class="nav-badge" id="history-badge" style="display:none;"></span>
+    </button>
+
+    <button class="sidebar__item" id="nav-treinamentos"
+            onclick="showView('treinamentos')" style="width:100%; text-align:left;">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M5 5.5h6M5 8h4M5 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Treinamentos
     </button>
 
     <!-- Bottom actions -->
@@ -4281,6 +4736,21 @@
           <p>Os líderes que realizarem login aparecerão aqui para gerenciamento.</p>
         </div>
       </div>
+    </div>
+
+    <!-- ══ VIEW: TREINAMENTOS ══ -->
+    <div id="view-treinamentos" class="view-fade" style="display:none;">
+      <div class="page-header" style="margin-bottom: var(--spacing-5);">
+        <div>
+          <h1 class="page-title">Treinamentos</h1>
+          <p class="page-description">Trilhas de desenvolvimento e obrigações regulatórias</p>
+        </div>
+        <div id="trein-header-action"></div>
+      </div>
+      <div id="trein-role-tabs"></div>
+      <div id="trein-view-meus"  style="display:none;"></div>
+      <div id="trein-view-lider" style="display:none;"></div>
+      <div id="trein-view-rh"    style="display:none;"></div>
     </div>
 
    </div><!-- /content-wrapper -->
@@ -5423,7 +5893,7 @@ function toggleTheme() {
 // NAVIGATION
 // ══════════════════════════════════════════════
 function showView(view) {
-  const views = ['evaluation', 'history', 'results', 'meu-time', 'rankings'];
+  const views = ['evaluation', 'history', 'results', 'meu-time', 'rankings', 'treinamentos'];
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if (el) el.style.display = v === view ? '' : 'none';
@@ -5437,10 +5907,13 @@ function showView(view) {
     view === 'meu-time');
   document.getElementById('nav-rankings').classList.toggle('sidebar__item--active',
     view === 'rankings');
+  document.getElementById('nav-treinamentos').classList.toggle('sidebar__item--active',
+    view === 'treinamentos');
 
-  if (view === 'history')  renderHistory();
-  if (view === 'meu-time') renderMeuTime();
-  if (view === 'rankings') renderRankings();
+  if (view === 'history')       renderHistory();
+  if (view === 'meu-time')      renderMeuTime();
+  if (view === 'rankings')      renderRankings();
+  if (view === 'treinamentos')  renderTreinamentos();
 
   // Retrigger fade animation
   const active = document.getElementById(`view-${view}`);
@@ -6236,6 +6709,1729 @@ function showToast(msg, type) {
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ══════════════════════════════════════════════
+// TREINAMENTOS MODULE
+// ══════════════════════════════════════════════
+const TRAINING_TRACKS = [
+  { id: 'cyber',      label: 'Cyber Security', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+  { id: 'pentest',    label: 'Pentest',         color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+  { id: 'dev-back',   label: 'Dev Backend',     color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  { id: 'dev-front',  label: 'Dev Frontend',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  { id: 'compliance', label: 'Compliance',      color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+  { id: 'antifraude', label: 'Antifraude',      color: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
+  { id: 'soft',       label: 'Soft Skills',     color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+  { id: 'ux',         label: 'UX/Design',       color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+];
+
+const TRAINING_CATALOG = [
+  { id: 'tc1', title: 'PLD/FT — Prevenção à Lavagem de Dinheiro', track: 'compliance', duration: 120, mandatory: true,  desc: 'Treinamento obrigatório sobre prevenção à lavagem de dinheiro e financiamento ao terrorismo. Essencial para conformidade regulatória Stark/Banco Central.', modules: 4, done: 312, rating: 4.7, status: 'ativo', policy: 'DOC-005' },
+  { id: 'tc2', title: 'LGPD — Lei Geral de Proteção de Dados',     track: 'compliance', duration: 90,  mandatory: true,  desc: 'Fundamentos da LGPD, direitos dos titulares, bases legais e responsabilidades do colaborador no tratamento de dados pessoais.', modules: 3, done: 287, rating: 4.5, status: 'ativo', policy: 'DOC-002' },
+  { id: 'tc3', title: 'Código de Ética e Conduta',                  track: 'compliance', duration: 60,  mandatory: true,  desc: 'Valores, princípios e condutas esperadas de todos os colaboradores. Inclui aceite digital com timestamp auditável.', modules: 2, done: 341, rating: 4.8, status: 'ativo', policy: 'DOC-001' },
+  { id: 'tc4', title: 'Fundamentos de Cyber Security',              track: 'cyber',      duration: 180, mandatory: true,  desc: 'Phishing, engenharia social, senhas seguras, 2FA, dispositivos e boas práticas de segurança no dia a dia.', modules: 6, done: 298, rating: 4.6, status: 'ativo', policy: 'A-01' },
+  { id: 'tc5', title: 'Pentest — Nível Básico',                     track: 'pentest',    duration: 240, mandatory: false, desc: 'Introdução a testes de penetração, metodologias OWASP, ferramentas básicas e reporte de vulnerabilidades.', modules: 8, done: 42, rating: 4.9, status: 'ativo' },
+  { id: 'tc6', title: 'React & TypeScript Avançado',                track: 'dev-front',  duration: 300, mandatory: false, desc: 'Padrões avançados, performance, testing e arquitetura de componentes em aplicações React enterprise.', modules: 10, done: 65, rating: 4.7, status: 'ativo' },
+  { id: 'tc7', title: 'Design System e UX Research',                track: 'ux',         duration: 150, mandatory: false, desc: 'Criação e manutenção de design systems, testes com usuários, heurísticas de Nielsen e fundamentos de UX.', modules: 5, done: 38, rating: 4.8, status: 'ativo' },
+  { id: 'tc8', title: 'Antifraude em Fintechs',                     track: 'antifraude', duration: 90,  mandatory: true,  desc: 'Padrões de fraude em pagamentos, chargeback, KYC, biometria e motores de regras.', modules: 3, done: 156, rating: 4.5, status: 'ativo', policy: 'B-10' },
+];
+
+const MY_ASSIGNMENTS = [
+  { id: 'a1', trainingId: 'tc4', title: 'Fundamentos de Cyber Security',              track: 'cyber',      status: 'andamento', progress: 60,  assignedBy: 'Rafael Andrade', deadline: '2026-05-20', duration: 180, remaining: 72 },
+  { id: 'a2', trainingId: 'tc1', title: 'PLD/FT — Prevenção à Lavagem de Dinheiro',   track: 'compliance', status: 'pendente',  progress: 0,   assignedBy: 'Camila Rocha',   deadline: '2026-05-30', duration: 120, remaining: 120 },
+  { id: 'a3', trainingId: 'tc3', title: 'Código de Ética e Conduta',                  track: 'compliance', status: 'concluido', progress: 100, assignedBy: 'Rafael Andrade', deadline: '2026-04-01', duration: 60,  remaining: 0 },
+  { id: 'a4', trainingId: 'tc8', title: 'Antifraude em Fintechs',                     track: 'antifraude', status: 'atrasado',  progress: 30,  assignedBy: 'Lucas Vieira',   deadline: '2026-04-28', duration: 90,  remaining: 63 },
+  { id: 'a5', trainingId: 'tc7', title: 'Design System e UX Research',                track: 'ux',         status: 'aguardando',progress: 100, assignedBy: 'Fernanda Lima',  deadline: '2026-05-10', duration: 150, remaining: 0 },
+];
+
+const TEAM_MEMBERS_TREIN = [
+  { id: 'tm1', name: 'Ana Paula Ferreira', role: 'Dev Backend',       avatar: 'AP', andamento: 2, atrasados: 0, concluidos: 5, proximoPrazo: '2026-05-15', ultimaConclusao: '2026-04-22' },
+  { id: 'tm2', name: 'Bruno Costa',        role: 'DevOps Engineer',   avatar: 'BC', andamento: 1, atrasados: 1, concluidos: 3, proximoPrazo: '2026-05-08', ultimaConclusao: '2026-04-10' },
+  { id: 'tm3', name: 'Carla Santos',       role: 'QA Engineer',       avatar: 'CS', andamento: 3, atrasados: 0, concluidos: 7, proximoPrazo: '2026-05-20', ultimaConclusao: '2026-05-02' },
+  { id: 'tm4', name: 'Diego Melo',         role: 'Dev Frontend',      avatar: 'DM', andamento: 0, atrasados: 2, concluidos: 2, proximoPrazo: '2026-04-30', ultimaConclusao: '2026-03-15' },
+  { id: 'tm5', name: 'Elena Rodrigues',    role: 'Data Engineer',     avatar: 'ER', andamento: 1, atrasados: 0, concluidos: 4, proximoPrazo: '2026-06-01', ultimaConclusao: '2026-04-28' },
+  { id: 'tm6', name: 'Felipe Torres',      role: 'Product Manager',   avatar: 'FT', andamento: 2, atrasados: 0, concluidos: 6, proximoPrazo: '2026-05-25', ultimaConclusao: '2026-05-01' },
+];
+
+const VALIDATION_QUEUE = [
+  { id: 'vq1', collaborator: 'Ana Paula Ferreira', training: 'Fundamentos de Cyber Security', completedAt: '2026-05-03', evidence: true },
+  { id: 'vq2', collaborator: 'Felipe Torres',       training: 'Design System e UX Research',  completedAt: '2026-05-01', evidence: false },
+];
+
+let treinCurrentRole = 'meus';
+let treinFilterStatus = 'todos';
+let treinFilterTrack  = 'todos';
+let treinSearchQuery  = '';
+let assignWizardCurrentStep = 1;
+let assignSelectedCollabs   = [];
+let assignSelectedTraining  = null;
+let assignDeadline = '';
+let assignMandatory = false;
+let assignMessage   = '';
+let rhCurrentSubTab = 'catalogo';
+
+function getTrainTrack(id) {
+  return TRAINING_TRACKS.find(t => t.id === id) || { label: id, color: '#6b7280', bg: 'rgba(107,114,128,0.1)' };
+}
+
+function treinOpenModal(opts) {
+  document.getElementById('modal-title').textContent = opts.title || '';
+  document.getElementById('modal-body').innerHTML = opts.body || '';
+  if (opts.footer === false) {
+    document.getElementById('modal-footer').style.display = 'none';
+  } else {
+    document.getElementById('modal-footer').style.display = '';
+    document.getElementById('modal-footer').innerHTML = opts.footer ||
+      '<button class="btn btn-text btn-md" onclick="closeModal()">Fechar</button>';
+  }
+  if (opts.wide) {
+    document.querySelector('.modal-box').classList.add('modal-box--wide');
+  } else {
+    document.querySelector('.modal-box').classList.remove('modal-box--wide');
+  }
+  openModal();
+}
+
+function renderTreinamentos() {
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+  const isAdmin = currentUser?.role === 'ADMIN' || isSuperAdmin;
+  const tabs = [{ id: 'meus', label: 'Meus treinamentos' }];
+  if (isAdmin)      tabs.push({ id: 'lider', label: 'Da minha equipe' });
+  if (isSuperAdmin) tabs.push({ id: 'rh',    label: 'Administração' });
+
+  const tabsEl = document.getElementById('trein-role-tabs');
+  tabsEl.innerHTML = tabs.length > 1
+    ? `<div class="trein-role-tabs">${tabs.map(t => `
+        <button class="trein-role-tab${treinCurrentRole === t.id ? ' active' : ''}" onclick="switchTreinRole('${t.id}')">${t.label}</button>
+      `).join('')}</div>`
+    : '';
+
+  renderTreinSubView();
+}
+
+function switchTreinRole(role) {
+  treinCurrentRole = role;
+  renderTreinamentos();
+}
+
+function renderTreinSubView() {
+  document.getElementById('trein-view-meus').style.display  = treinCurrentRole === 'meus'  ? '' : 'none';
+  document.getElementById('trein-view-lider').style.display = treinCurrentRole === 'lider' ? '' : 'none';
+  document.getElementById('trein-view-rh').style.display    = treinCurrentRole === 'rh'    ? '' : 'none';
+  if (treinCurrentRole === 'meus')  renderMeusView();
+  if (treinCurrentRole === 'lider') renderLiderView();
+  if (treinCurrentRole === 'rh')    renderRHView();
+}
+
+function renderMeusView() {
+  const el = document.getElementById('trein-view-meus');
+  const filtered = MY_ASSIGNMENTS.filter(a => {
+    const matchStatus = treinFilterStatus === 'todos' || a.status === treinFilterStatus;
+    const matchTrack  = treinFilterTrack  === 'todos' || a.track  === treinFilterTrack;
+    const matchSearch = !treinSearchQuery || a.title.toLowerCase().includes(treinSearchQuery.toLowerCase());
+    return matchStatus && matchTrack && matchSearch;
+  });
+
+  const andamento = MY_ASSIGNMENTS.filter(a => a.status === 'andamento').length;
+  const pendentes  = MY_ASSIGNMENTS.filter(a => a.status === 'pendente' || a.status === 'atrasado').length;
+  const concluidos = MY_ASSIGNMENTS.filter(a => a.status === 'concluido').length;
+
+  const isActiveAnd = treinFilterStatus === 'andamento';
+  const isActivePen = treinFilterStatus === 'pendente' || treinFilterStatus === 'atrasado';
+  const isActiveCon = treinFilterStatus === 'concluido';
+
+  el.innerHTML = `
+    <div class="trein-stats stagger">
+      <div class="trein-stat trein-stat--andamento${isActiveAnd ? ' active' : ''}" onclick="filterTreinStatus('andamento')">
+        <div class="trein-stat__num">${andamento}</div>
+        <div class="trein-stat__label">treinamentos em curso</div>
+        <div class="trein-stat__bar" style="background:var(--blue-6);"></div>
+      </div>
+      <div class="trein-stat trein-stat--pendente${isActivePen ? ' active' : ''}" onclick="filterTreinStatus('pendente')">
+        <div class="trein-stat__num">${pendentes}</div>
+        <div class="trein-stat__label">aguardando você começar</div>
+        <div class="trein-stat__bar" style="background:var(--amber-6);"></div>
+      </div>
+      <div class="trein-stat trein-stat--concluido${isActiveCon ? ' active' : ''}" onclick="filterTreinStatus('concluido')">
+        <div class="trein-stat__num">${concluidos}</div>
+        <div class="trein-stat__label">concluídos no total</div>
+        <div class="trein-stat__bar" style="background:var(--green-6);"></div>
+      </div>
+    </div>
+
+    <div class="trein-filters">
+      <div class="trein-search">
+        <svg class="trein-search__icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" placeholder="Buscar treinamento…" value="${treinSearchQuery}"
+          oninput="treinSearchQuery=this.value; renderMeusView()">
+      </div>
+      <select class="trein-filter-select" onchange="treinFilterTrack=this.value; renderMeusView()">
+        <option value="todos">Todas as trilhas</option>
+        ${TRAINING_TRACKS.map(t => `<option value="${t.id}"${treinFilterTrack===t.id?' selected':''}>${t.label}</option>`).join('')}
+      </select>
+      <select class="trein-filter-select" onchange="treinFilterStatus=this.value; renderMeusView()">
+        <option value="todos">Todos os status</option>
+        <option value="andamento"${treinFilterStatus==='andamento'?' selected':''}>Em andamento</option>
+        <option value="pendente"${treinFilterStatus==='pendente'?' selected':''}>Não iniciado</option>
+        <option value="concluido"${treinFilterStatus==='concluido'?' selected':''}>Concluído</option>
+        <option value="atrasado"${treinFilterStatus==='atrasado'?' selected':''}>Atrasado</option>
+        <option value="aguardando"${treinFilterStatus==='aguardando'?' selected':''}>Aguardando validação</option>
+      </select>
+    </div>
+
+    <div class="trein-list">
+      ${filtered.length === 0 ? `
+        <div class="trein-empty">
+          <svg class="trein-empty__icon" width="52" height="52" viewBox="0 0 52 52" fill="none">
+            <rect x="8" y="8" width="36" height="36" rx="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M18 20h16M18 26h10M18 32h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="trein-empty__title">${treinSearchQuery || treinFilterStatus !== 'todos' || treinFilterTrack !== 'todos'
+            ? 'Nenhum resultado encontrado'
+            : 'Você ainda não tem treinamentos atribuídos'}</div>
+          <div class="trein-empty__desc">${treinSearchQuery || treinFilterStatus !== 'todos' || treinFilterTrack !== 'todos'
+            ? 'Tente ajustar os filtros ou termos de busca.'
+            : 'Quando sua liderança aplicar um treinamento, ele aparece aqui.'}</div>
+        </div>
+      ` : filtered.map(a => renderTrainingCard(a)).join('')}
+    </div>
+  `;
+}
+
+function renderTrainingCard(a) {
+  const track = getTrainTrack(a.track);
+  const statusLabels = { andamento: 'Em andamento', pendente: 'Não iniciado', concluido: 'Concluído', atrasado: 'Atrasado', aguardando: 'Aguardando validação' };
+  const progClass = { andamento: 'andamento', concluido: 'concluido', atrasado: 'atrasado', pendente: 'pendente', aguardando: 'concluido' }[a.status] || 'pendente';
+
+  let deadlineHtml = '';
+  if (a.status === 'concluido') {
+    deadlineHtml = `<span class="trein-card__deadline trein-card__deadline--ok">Concluído</span>`;
+  } else if (a.status === 'atrasado') {
+    const days = Math.max(1, Math.floor((new Date() - new Date(a.deadline)) / 86400000));
+    deadlineHtml = `<span class="trein-card__deadline trein-card__deadline--late">Atrasado há ${days} dia${days !== 1 ? 's' : ''}</span>`;
+  } else {
+    const dl = new Date(a.deadline + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const daysLeft = Math.ceil((dl - today) / 86400000);
+    const cls = daysLeft <= 7 ? 'trein-card__deadline--soon' : 'trein-card__deadline--ok';
+    deadlineHtml = `<span class="trein-card__deadline ${cls}">Até ${dl.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>`;
+  }
+
+  let actionBtn = '';
+  if (a.status === 'concluido')  actionBtn = `<button class="btn btn-sm btn-outlined" onclick="event.stopPropagation();openTrainingDetail('${a.id}')">Ver certificado</button>`;
+  else if (a.status === 'andamento')  actionBtn = `<button class="btn btn-sm btn-primary"  onclick="event.stopPropagation();openTrainingDetail('${a.id}')">Continuar</button>`;
+  else if (a.status === 'aguardando') actionBtn = `<button class="btn btn-sm btn-outlined" onclick="event.stopPropagation();openTrainingDetail('${a.id}')">Ver status</button>`;
+  else actionBtn = `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openTrainingDetail('${a.id}')">Iniciar</button>`;
+
+  return `
+    <div class="trein-card" onclick="openTrainingDetail('${a.id}')">
+      <div class="trein-card__body">
+        <div class="trein-card__head">
+          <span class="trein-card__title">${a.title}</span>
+          <span class="trein-status trein-status--${a.status}">${statusLabels[a.status]}</span>
+        </div>
+        <div class="trein-card__meta">
+          <span class="trein-badge" style="background:${track.bg};color:${track.color};">${track.label}</span>
+          <span class="trein-card__assignee">Atribuído por ${a.assignedBy}</span>
+          ${deadlineHtml}
+        </div>
+        <div class="trein-card__progress">
+          <div class="trein-progress-bar">
+            <div class="trein-progress-fill trein-progress-fill--${progClass}" style="width:${a.progress}%;"></div>
+          </div>
+          <span class="trein-progress-label">${a.progress}% concluído</span>
+        </div>
+        <div class="trein-card__footer">
+          <span class="trein-card__time">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align:middle;margin-right:3px;opacity:.6;">
+              <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            ${a.remaining > 0 ? `${a.remaining} min restantes` : `${a.duration} min totais`}
+          </span>
+          <div>${actionBtn}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function filterTreinStatus(status) {
+  treinFilterStatus = treinFilterStatus === status ? 'todos' : status;
+  renderMeusView();
+}
+
+function openTrainingDetail(assignmentId) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === assignmentId);
+  if (!a) return;
+  const catalog = TRAINING_CATALOG.find(c => c.id === a.trainingId) || {};
+  const track = getTrainTrack(a.track);
+
+  const modules = [
+    { name: 'Introdução e contexto',    type: 'video', dur: 15, done: a.progress >= 20 },
+    { name: 'Conceitos fundamentais',   type: 'video', dur: 25, done: a.progress >= 40 },
+    { name: 'Aplicação prática',        type: 'pdf',   dur: 30, done: a.progress >= 60 },
+    { name: 'Exercícios e quiz',        type: 'quiz',  dur: 20, done: a.progress >= 80 },
+    { name: 'Avaliação final',          type: 'quiz',  dur: 10, done: a.progress >= 100 },
+  ];
+  const typeIcons = {
+    video: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polygon points="3,1.5 12,7 3,12.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" opacity=".5"/></svg>`,
+    pdf:   `<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 5h4M5 7.5h4M5 10h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>`,
+    quiz:  `<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 5.5c0-1 .75-1.5 1.5-1.5s1.5.5 1.5 1.5-1.5 1.5-1.5 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10" r=".7" fill="currentColor"/></svg>`,
+  };
+  const statusLabels = { andamento: 'Em andamento', pendente: 'Não iniciado', concluido: 'Concluído', atrasado: 'Atrasado', aguardando: 'Aguardando validação do líder' };
+
+  treinOpenModal({
+    title: '',
+    body: `
+      <div class="trein-detail-header">
+        <div class="trein-detail-icon" style="background:${track.bg};">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="3" stroke="${track.color}" stroke-width="1.5"/>
+            <path d="M7 8h10M7 12h7M7 16h9" stroke="${track.color}" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="trein-detail-title">${a.title}</div>
+          <div class="trein-detail-meta">
+            <span class="trein-badge" style="background:${track.bg};color:${track.color};">${track.label}</span>
+            <span class="trein-status trein-status--${a.status}">${statusLabels[a.status]}</span>
+            <span style="font-size:13px;color:var(--text-muted);">${catalog.duration || a.duration} min</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:var(--spacing-4);">
+        <div class="trein-progress-bar" style="height:7px;">
+          <div class="trein-progress-fill trein-progress-fill--andamento" style="width:${a.progress}%;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:13px;color:var(--text-muted);">${a.progress}% concluído</span>
+          <span style="font-size:13px;color:var(--text-muted);">Atribuído por ${a.assignedBy}</span>
+        </div>
+      </div>
+      ${catalog.desc ? `<p style="font-size:14px;color:var(--text-default);line-height:1.65;margin-bottom:var(--spacing-4);">${catalog.desc}</p>` : ''}
+      <div style="margin-bottom:var(--spacing-4);">
+        <div class="trein-section-title">Módulos</div>
+        <div class="trein-modules">
+          ${modules.map(m => `
+            <div class="trein-module-item${m.done ? ' done' : ''}">
+              <div class="trein-module-icon">${typeIcons[m.type] || ''}</div>
+              <span class="trein-module-name">${m.name}</span>
+              <span class="trein-module-dur">${m.dur} min</span>
+              ${m.done ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="color:var(--green-9);flex-shrink:0;"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ${a.status === 'concluido' ? `
+        <div style="text-align:center;padding:20px;background:var(--green-3);border:1px solid var(--green-6);border-radius:var(--radius-md);">
+          <div style="font-size:15px;font-weight:600;color:var(--green-11);margin-bottom:12px;">Concluído. Bom trabalho.</div>
+          <button class="btn btn-sm btn-outlined" onclick="closeModal()">Baixar certificado</button>
+        </div>
+      ` : a.status === 'aguardando' ? `
+        <div style="padding:16px;background:var(--amber-3);border:1px solid var(--amber-6);border-radius:var(--radius-md);font-size:14px;color:var(--amber-11);">
+          Aguardando validação do seu líder. Você será notificado quando aprovado.
+        </div>
+      ` : `
+        <div style="text-align:center;">
+          <button class="btn btn-primary" onclick="closeModal()">${a.progress > 0 ? 'Continuar treinamento' : 'Iniciar treinamento'}</button>
+        </div>
+      `}
+    `,
+    footer: false,
+    wide: true,
+  });
+}
+
+function renderLiderView() {
+  const el = document.getElementById('trein-view-lider');
+  const totalAtrasados = TEAM_MEMBERS_TREIN.reduce((s, m) => s + m.atrasados, 0);
+  const emDia = TEAM_MEMBERS_TREIN.filter(m => m.atrasados === 0).length;
+
+  el.innerHTML = `
+    <div class="trein-kpis stagger">
+      <div class="trein-kpi">
+        <div class="trein-kpi__val">${TEAM_MEMBERS_TREIN.length}</div>
+        <div class="trein-kpi__label">colaboradores diretos</div>
+      </div>
+      <div class="trein-kpi trein-kpi--ok">
+        <div class="trein-kpi__val">${emDia}</div>
+        <div class="trein-kpi__label">com treinamentos em dia</div>
+      </div>
+      <div class="trein-kpi${totalAtrasados > 0 ? ' trein-kpi--warn' : ''}">
+        <div class="trein-kpi__val">${totalAtrasados}</div>
+        <div class="trein-kpi__label">atrasados na equipe</div>
+      </div>
+      <div class="trein-kpi" style="position:relative;">
+        <div class="trein-kpi__val" style="color:var(--amber-11);">${VALIDATION_QUEUE.length}</div>
+        <div class="trein-kpi__label">aguardando sua validação</div>
+        ${VALIDATION_QUEUE.length > 0 ? `<span class="trein-kpi__badge">${VALIDATION_QUEUE.length}</span>` : ''}
+      </div>
+    </div>
+
+    <div class="trein-lider-head">
+      <div class="trein-section-title" style="margin:0;">Equipe</div>
+      <button class="btn btn-primary btn-md" onclick="openAssignWizard()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Atribuir treinamento
+      </button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--spacing-5);">
+      <table class="trein-table">
+        <thead><tr>
+          <th>Colaborador</th>
+          <th>Em andamento</th>
+          <th>Atrasados</th>
+          <th>Concluídos</th>
+          <th>Próximo prazo</th>
+          <th style="text-align:right;">Ações</th>
+        </tr></thead>
+        <tbody>
+          ${TEAM_MEMBERS_TREIN.map(m => `
+            <tr onclick="openMemberDetail('${m.id}')">
+              <td>
+                <div class="trein-table__name">
+                  <div class="trein-avatar">${m.avatar}</div>
+                  <div class="trein-table__name-info">
+                    <span class="trein-table__name-main">${m.name}</span>
+                    <span class="trein-table__name-sub">${m.role}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="trein-table__num">${m.andamento}</span></td>
+              <td><span class="trein-table__num${m.atrasados > 0 ? ' trein-table__num--warn' : ' trein-table__num--ok'}">${m.atrasados}</span></td>
+              <td><span class="trein-table__num">${m.concluidos}</span></td>
+              <td style="font-size:13px;color:var(--text-muted);">${new Date(m.proximoPrazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</td>
+              <td style="text-align:right;">
+                <button class="btn btn-sm btn-outlined" onclick="event.stopPropagation();openMemberDetail('${m.id}')">Ver detalhes</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${VALIDATION_QUEUE.length > 0 ? `
+      <div class="trein-section-title">Aguardando validação</div>
+      <div class="trein-queue">
+        ${VALIDATION_QUEUE.map(v => `
+          <div class="trein-queue-card">
+            <div class="trein-queue-card__head">
+              <div class="trein-queue-card__name">${v.collaborator} concluiu <strong>${v.training}</strong></div>
+              <div class="trein-queue-card__when">${new Date(v.completedAt+'T00:00:00').toLocaleDateString('pt-BR')}</div>
+            </div>
+            <div class="trein-queue-card__training">${v.evidence ? '📎 Evidência enviada' : 'Sem evidência anexada'}</div>
+            <div class="trein-queue-card__actions">
+              <button class="btn btn-sm btn-primary" onclick="openValidationReview('${v.id}')">Revisar entrega</button>
+              <button class="btn btn-sm btn-outlined" onclick="validateTraining('${v.id}', false)">Pedir refazer</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+function openMemberDetail(memberId) {
+  const m = TEAM_MEMBERS_TREIN.find(x => x.id === memberId);
+  if (!m) return;
+  treinOpenModal({
+    title: m.name,
+    body: `
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:var(--spacing-4);">${m.role}</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:var(--spacing-5);">
+        <div style="text-align:center;padding:16px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+          <div style="font-size:22px;font-weight:700;color:var(--blue-11);font-family:'Michroma',monospace;">${m.andamento}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Em andamento</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+          <div style="font-size:22px;font-weight:700;color:${m.atrasados > 0 ? 'var(--red-11)' : 'var(--green-11)'};font-family:'Michroma',monospace;">${m.atrasados}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Atrasados</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+          <div style="font-size:22px;font-weight:700;color:var(--green-11);font-family:'Michroma',monospace;">${m.concluidos}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Concluídos</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">
+        Última conclusão: ${new Date(m.ultimaConclusao+'T00:00:00').toLocaleDateString('pt-BR')} · Próximo prazo: ${new Date(m.proximoPrazo+'T00:00:00').toLocaleDateString('pt-BR')}
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-primary btn-md" onclick="openAssignWizard('${m.id}');closeModal()">Atribuir treinamento</button>
+      <button class="btn btn-text btn-md" onclick="closeModal()">Fechar</button>
+    `
+  });
+}
+
+function validateTraining(queueId, approved) {
+  if (approved) {
+    const idx = VALIDATION_QUEUE.findIndex(v => v.id === queueId);
+    if (idx !== -1) VALIDATION_QUEUE.splice(idx, 1);
+    renderLiderView();
+    showToast('Conclusão validada.', 'success');
+  } else {
+    const item = VALIDATION_QUEUE.find(v => v.id === queueId);
+    const firstName = item?.collaborator?.split(' ')[0] || 'o colaborador';
+    treinOpenModal({
+      title: 'Pedir para refazer',
+      body: `
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:var(--spacing-4);">Conta pra ${firstName} por que precisa refazer:</p>
+        <textarea id="refazer-msg" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:100px;resize:vertical;font-family:var(--font-family);" placeholder="Descreva o que precisa ser corrigido…"></textarea>
+      `,
+      footer: `
+        <button class="btn btn-primary btn-md" onclick="confirmRefazer('${queueId}')">Enviar</button>
+        <button class="btn btn-text btn-md" onclick="closeModal()">Cancelar</button>
+      `
+    });
+  }
+}
+
+function confirmRefazer(queueId) {
+  const msg = document.getElementById('refazer-msg')?.value?.trim();
+  if (!msg) { showToast('Por favor, descreva o motivo.', 'error'); return; }
+  const idx = VALIDATION_QUEUE.findIndex(v => v.id === queueId);
+  if (idx !== -1) VALIDATION_QUEUE.splice(idx, 1);
+  closeModal();
+  renderLiderView();
+  showToast('Solicitação enviada ao colaborador.', 'success');
+}
+
+function renderRHView() {
+  const el = document.getElementById('trein-view-rh');
+  el.innerHTML = `
+    <div class="trein-subtabs">
+      <button class="trein-subtab${rhCurrentSubTab==='catalogo'   ?' active':''}" onclick="switchRHTab('catalogo')">Catálogo</button>
+      <button class="trein-subtab${rhCurrentSubTab==='atribuicoes'?' active':''}" onclick="switchRHTab('atribuicoes')">Atribuições</button>
+      <button class="trein-subtab${rhCurrentSubTab==='relatorios' ?' active':''}" onclick="switchRHTab('relatorios')">Relatórios</button>
+      <button class="trein-subtab${rhCurrentSubTab==='config'     ?' active':''}" onclick="switchRHTab('config')">Configurações</button>
+    </div>
+    <div id="trein-rh-content"></div>
+  `;
+  renderRHContent();
+}
+
+function switchRHTab(tab) {
+  rhCurrentSubTab = tab;
+  document.querySelectorAll('.trein-subtab').forEach((btn, i) => {
+    const tabIds = ['catalogo','atribuicoes','relatorios','config'];
+    btn.classList.toggle('active', tabIds[i] === tab);
+  });
+  renderRHContent();
+}
+
+function renderRHContent() {
+  const el = document.getElementById('trein-rh-content');
+  if (!el) return;
+
+  if (rhCurrentSubTab === 'catalogo') {
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-4);">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-high);">Catálogo de treinamentos</div>
+          <div style="font-size:13px;color:var(--text-muted);">${TRAINING_CATALOG.length} treinamentos ativos</div>
+        </div>
+        <button class="btn btn-primary btn-md" onclick="openCreateTraining()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Criar treinamento
+        </button>
+      </div>
+      <div class="trein-catalog-grid">
+        ${TRAINING_CATALOG.map(t => {
+          const tr = getTrainTrack(t.track);
+          return `
+            <div class="trein-catalog-card">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <span class="trein-badge" style="background:${tr.bg};color:${tr.color};">${tr.label}</span>
+                ${t.mandatory ? `<span class="trein-catalog-mandatory">Obrigatório</span>` : ''}
+              </div>
+              <div class="trein-catalog-card__title">${t.title}</div>
+              <div class="trein-catalog-card__desc">${t.desc}</div>
+              <div class="trein-catalog-card__foot">
+                <div class="trein-catalog-card__stats">
+                  <span>${t.modules} módulos</span>
+                  <span>${t.duration} min</span>
+                  <span>${t.done} concluídos</span>
+                </div>
+                <div style="font-size:12px;color:var(--amber-11);font-weight:600;">★ ${t.rating}</div>
+              </div>
+              ${t.policy ? `<div style="font-size:11px;color:var(--text-muted);padding-top:8px;border-top:1px solid var(--border-subtle);">Política: ${t.policy}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else if (rhCurrentSubTab === 'atribuicoes') {
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-4);">
+        <div style="font-size:15px;font-weight:700;color:var(--text-high);">Atribuições ativas</div>
+        <button class="btn btn-outlined btn-sm">Exportar CSV</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="trein-table">
+          <thead><tr>
+            <th>Colaborador</th>
+            <th>Treinamento</th>
+            <th>Status</th>
+            <th>Prazo</th>
+            <th>Progresso</th>
+          </tr></thead>
+          <tbody>
+            ${MY_ASSIGNMENTS.map(a => {
+              const statusLabels = { andamento:'Em andamento', pendente:'Não iniciado', concluido:'Concluído', atrasado:'Atrasado', aguardando:'Aguardando' };
+              return `<tr>
+                <td><div class="trein-table__name"><div class="trein-avatar">U</div><span style="font-size:14px;color:var(--text-high);">Colaborador</span></div></td>
+                <td style="font-size:13px;max-width:200px;">${a.title}</td>
+                <td><span class="trein-status trein-status--${a.status}">${statusLabels[a.status]}</span></td>
+                <td style="font-size:13px;color:var(--text-muted);">${new Date(a.deadline+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="trein-progress-bar" style="width:80px;"><div class="trein-progress-fill trein-progress-fill--andamento" style="width:${a.progress}%;"></div></div>
+                    <span style="font-size:12px;color:var(--text-muted);">${a.progress}%</span>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (rhCurrentSubTab === 'relatorios') {
+    el.innerHTML = `
+      <div style="font-size:15px;font-weight:700;color:var(--text-high);margin-bottom:var(--spacing-4);">Relatórios e evidências</div>
+      <div class="trein-report-cards">
+        ${[
+          { icon:'📊', title:'Cobertura por trilha',         desc:'% de colaboradores que concluíram cada treinamento obrigatório por área e cargo.' },
+          { icon:'⚠️', title:'Relatório de atrasos',         desc:'Quem está em atraso, há quanto tempo e com quais treinamentos. Para ação imediata.' },
+          { icon:'📋', title:'Lista de presença / aceite',    desc:'Exportável em PDF e CSV com nome, data de conclusão e hash de aceite. Para auditoria.' },
+          { icon:'🔏', title:'Histórico de aceite — Código de Ética', desc:'Timestamp e versão do documento aceito por cada colaborador. Acesso permanente.' },
+          { icon:'📦', title:'Pacote de evidências',          desc:'ZIP com PDFs de listas, certificados e políticas vinculadas. Identificação com timestamp.' },
+          { icon:'🔍', title:'Trilha auditável',              desc:'Log de toda ação: criação, edição, atribuição, validação. Registros imutáveis.' },
+        ].map(r => `
+          <div class="trein-report-card">
+            <div style="font-size:22px;margin-bottom:10px;">${r.icon}</div>
+            <div class="trein-report-card__title">${r.title}</div>
+            <div class="trein-report-card__desc">${r.desc}</div>
+            <div style="margin-top:14px;">
+              <button class="btn btn-sm btn-outlined">Gerar relatório</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else if (rhCurrentSubTab === 'config') {
+    el.innerHTML = `
+      <div style="font-size:15px;font-weight:700;color:var(--text-high);margin-bottom:var(--spacing-4);">Configurações</div>
+      <div style="display:flex;flex-direction:column;gap:var(--spacing-3);">
+        ${[
+          { title:'Trilhas e categorias',       desc:'Gerencie as trilhas de treinamento disponíveis na plataforma.' },
+          { title:'Templates de certificado',   desc:'Configure o modelo visual dos certificados emitidos.' },
+          { title:'Políticas de notificação',   desc:'Configure lembretes automáticos e canais de comunicação padrão.' },
+          { title:'Permissões e papéis',         desc:'Defina quem pode criar, atribuir e validar treinamentos.' },
+          { title:'Integrações',                 desc:'Conecte com Slack, Microsoft Teams, e-mail corporativo e SSO.' },
+        ].map(s => `
+          <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:border-color 160ms;"
+               onmouseover="this.style.borderColor='var(--border-default)'" onmouseout="this.style.borderColor=''">
+            <div>
+              <div style="font-size:14px;font-weight:600;color:var(--text-high);">${s.title}</div>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${s.desc}</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="color:var(--text-muted);flex-shrink:0;">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
+
+function openCreateTraining() {
+  treinOpenModal({
+    title: 'Criar treinamento',
+    body: `
+      <div style="display:flex;flex-direction:column;gap:var(--spacing-4);">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Título *</label>
+          <input type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);" placeholder="Ex: Fundamentos de Cyber Security">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Trilha *</label>
+            <select style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);">
+              <option value="">Selecionar…</option>
+              ${TRAINING_TRACKS.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Carga horária (min)</label>
+            <input type="number" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="60">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Descrição curta</label>
+          <textarea style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:80px;resize:vertical;font-family:var(--font-family);" placeholder="Até 200 caracteres — aparece nos cards de listagem"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" id="trein-mandatory-new" style="width:16px;height:16px;accent-color:var(--blue-9);">
+          <label for="trein-mandatory-new" style="font-size:14px;color:var(--text-default);cursor:pointer;">Treinamento obrigatório por política</label>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Política vinculada</label>
+          <input type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="Ex: DOC-005">
+        </div>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-primary btn-md" onclick="closeModal();showToast('Treinamento criado.','success')">Criar treinamento</button>
+      <button class="btn btn-text btn-md" onclick="closeModal()">Cancelar</button>
+    `,
+    wide: true,
+  });
+}
+
+function openAssignWizard(preselectedMemberId) {
+  assignWizardCurrentStep = 1;
+  assignSelectedCollabs   = preselectedMemberId ? [preselectedMemberId] : [];
+  assignSelectedTraining  = null;
+  assignDeadline  = '';
+  assignMandatory = false;
+  assignMessage   = '';
+  renderAssignWizard();
+}
+
+function renderAssignWizard() {
+  const steps = [{ num:1, label:'Quem recebe' }, { num:2, label:'Qual treinamento' }, { num:3, label:'Quando e como' }];
+  const stepsHtml = `
+    <div class="trein-wizard-steps">
+      ${steps.map((s, i) => `
+        ${i > 0 ? '<div class="trein-wizard-sep"></div>' : ''}
+        <div class="trein-wizard-step${assignWizardCurrentStep===s.num?' active':assignWizardCurrentStep>s.num?' done':''}">
+          <div class="trein-wizard-step__num">
+            ${assignWizardCurrentStep > s.num
+              ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+              : s.num}
+          </div>
+          <span>${s.label}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  let body = '', footer = '';
+
+  if (assignWizardCurrentStep === 1) {
+    body = `
+      ${stepsHtml}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--spacing-3);">
+        <button class="trein-select-all" onclick="toggleSelectAllCollabs()">
+          ${assignSelectedCollabs.length === TEAM_MEMBERS_TREIN.length ? 'Desmarcar todos' : 'Selecionar toda a equipe'}
+        </button>
+        ${assignSelectedCollabs.length > 0
+          ? `<span class="trein-selected-count">${assignSelectedCollabs.length} selecionado${assignSelectedCollabs.length !== 1 ? 's' : ''}</span>`
+          : ''}
+      </div>
+      <div class="trein-collab-list">
+        ${TEAM_MEMBERS_TREIN.map(m => `
+          <div class="trein-collab-item${assignSelectedCollabs.includes(m.id)?' selected':''}" onclick="toggleCollab('${m.id}')">
+            <input type="checkbox" ${assignSelectedCollabs.includes(m.id)?'checked':''} onclick="event.stopPropagation();toggleCollab('${m.id}')">
+            <div class="trein-avatar">${m.avatar}</div>
+            <span class="trein-collab-name">${m.name}</span>
+            <span class="trein-collab-role">${m.role}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    footer = `
+      <button class="btn btn-primary btn-md" onclick="assignWizardNext()" ${assignSelectedCollabs.length===0?'disabled':''}>Próximo</button>
+      <button class="btn btn-text btn-md" onclick="closeModal()">Cancelar</button>
+    `;
+  } else if (assignWizardCurrentStep === 2) {
+    body = `
+      ${stepsHtml}
+      <div class="trein-picker-grid">
+        ${TRAINING_CATALOG.map(t => {
+          const tr = getTrainTrack(t.track);
+          return `
+            <div class="trein-picker-item${assignSelectedTraining===t.id?' selected':''}" onclick="selectTrainingForAssign('${t.id}')">
+              <input type="radio" name="assign-tr" ${assignSelectedTraining===t.id?'checked':''} style="accent-color:var(--blue-9);width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+              <div class="trein-picker-info">
+                <div class="trein-picker-title">${t.title}</div>
+                <div class="trein-picker-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                  <span class="trein-badge" style="background:${tr.bg};color:${tr.color};">${tr.label}</span>
+                  <span>${t.duration} min</span>
+                  <span>${t.modules} módulos</span>
+                  ${t.mandatory ? '<span style="color:var(--red-11);font-weight:600;font-size:12px;">Obrigatório</span>' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    footer = `
+      <button class="btn btn-primary btn-md" onclick="assignWizardNext()" ${!assignSelectedTraining?'disabled':''}>Próximo</button>
+      <button class="btn btn-outlined btn-md" onclick="assignWizardBack()">Voltar</button>
+    `;
+  } else if (assignWizardCurrentStep === 3) {
+    body = `
+      ${stepsHtml}
+      <div style="display:flex;flex-direction:column;gap:var(--spacing-4);">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:8px;">Prazo de conclusão</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button class="btn btn-sm btn-outlined" onclick="setAssignDeadline(7)">Em 7 dias</button>
+            <button class="btn btn-sm btn-outlined" onclick="setAssignDeadline(30)">Em 30 dias</button>
+            <button class="btn btn-sm btn-outlined" onclick="setAssignDeadline(90)">Em 90 dias</button>
+            <button class="btn btn-sm btn-outlined" onclick="setAssignDeadline(0)">Sem prazo</button>
+          </div>
+          <input type="date" id="assign-deadline-input" value="${assignDeadline}"
+            onchange="assignDeadline=this.value;updateAssignPreview()"
+            style="padding:9px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" id="assign-mandatory-chk" ${assignMandatory?'checked':''} onchange="assignMandatory=this.checked;updateAssignPreview()" style="width:16px;height:16px;accent-color:var(--blue-9);">
+          <label for="assign-mandatory-chk" style="font-size:14px;color:var(--text-default);cursor:pointer;">Marcar como obrigatório</label>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Mensagem para o colaborador <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
+          <textarea id="assign-msg-input" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:80px;resize:vertical;font-family:var(--font-family);"
+            placeholder="Ex: Esse treinamento é importante para o projeto que começa em junho…" onchange="assignMessage=this.value">${assignMessage}</textarea>
+        </div>
+        <div id="assign-preview-box" class="trein-confirm-box">${buildAssignPreview()}</div>
+      </div>
+    `;
+    footer = `
+      <button class="btn btn-primary btn-md" onclick="confirmAssign()">Atribuir treinamento</button>
+      <button class="btn btn-outlined btn-md" onclick="assignWizardBack()">Voltar</button>
+    `;
+  }
+
+  treinOpenModal({ title: 'Atribuir treinamento', body, footer, wide: true });
+}
+
+function buildAssignPreview() {
+  const training = TRAINING_CATALOG.find(t => t.id === assignSelectedTraining);
+  const n = assignSelectedCollabs.length;
+  const dl = assignDeadline
+    ? `até <strong>${new Date(assignDeadline+'T00:00:00').toLocaleDateString('pt-BR')}</strong>`
+    : 'sem prazo definido';
+  return `Você vai atribuir <strong>${training?.title || '—'}</strong> a <strong>${n} colaborador${n!==1?'es':''}</strong> ${dl}. Eles serão notificados por e-mail.`;
+}
+
+function updateAssignPreview() {
+  const el = document.getElementById('assign-preview-box');
+  if (el) el.innerHTML = buildAssignPreview();
+}
+
+function setAssignDeadline(days) {
+  if (days === 0) {
+    assignDeadline = '';
+  } else {
+    const d = new Date(); d.setDate(d.getDate() + days);
+    assignDeadline = d.toISOString().split('T')[0];
+  }
+  const inp = document.getElementById('assign-deadline-input');
+  if (inp) inp.value = assignDeadline;
+  updateAssignPreview();
+}
+
+function toggleCollab(id) {
+  const idx = assignSelectedCollabs.indexOf(id);
+  if (idx === -1) assignSelectedCollabs.push(id); else assignSelectedCollabs.splice(idx, 1);
+  renderAssignWizard();
+}
+
+function toggleSelectAllCollabs() {
+  assignSelectedCollabs = assignSelectedCollabs.length === TEAM_MEMBERS_TREIN.length
+    ? [] : TEAM_MEMBERS_TREIN.map(m => m.id);
+  renderAssignWizard();
+}
+
+function selectTrainingForAssign(id) {
+  assignSelectedTraining = id;
+  renderAssignWizard();
+}
+
+function assignWizardNext() {
+  if (assignWizardCurrentStep < 3) { assignWizardCurrentStep++; renderAssignWizard(); }
+}
+
+function assignWizardBack() {
+  if (assignWizardCurrentStep > 1) { assignWizardCurrentStep--; renderAssignWizard(); }
+}
+
+function confirmAssign() {
+  const training = TRAINING_CATALOG.find(t => t.id === assignSelectedTraining);
+  const n = assignSelectedCollabs.length;
+  closeModal();
+  renderLiderView();
+  showToast(`${training?.title} atribuído a ${n} colaborador${n!==1?'es':''}. Notificações enviadas.`, 'success');
+}
+
+// ══════════════════════════════════════════════
+// TRAINING PLAYER — module definitions & flows
+// ══════════════════════════════════════════════
+
+const MODULES_BY_TRAINING = {
+  tc4: [
+    { id:'tc4_m1', type:'video',   name:'Introdução à Cyber Security',           dur:15, desc:'Visão geral de segurança da informação no contexto de fintechs.' },
+    { id:'tc4_m2', type:'article', name:'OWASP Top 10',                          dur:20, readingTime:8,
+      content:`<h3>O que é o OWASP Top 10?</h3><p>O OWASP Top 10 é a lista das 10 vulnerabilidades mais críticas em aplicações web, mantida pela Open Web Application Security Project e revisada a cada 3–4 anos.</p><h3>As vulnerabilidades mais relevantes para a Sietch</h3><ul><li><strong>A01 — Quebra de Controle de Acesso:</strong> Usuários acessam recursos além das suas permissões. Ex.: ver dados de outros clientes via manipulação de ID na URL.</li><li><strong>A03 — Injeção (SQL/NoSQL):</strong> Dados não confiáveis enviados como comandos ao banco de dados. Um campo de busca sem sanitização pode deletar tabelas inteiras.</li><li><strong>A02 — Falhas Criptográficas:</strong> Dados sensíveis (CPF, cartão) trafegando em texto puro ou criptografados com algoritmos fracos (MD5, SHA-1).</li><li><strong>A07 — Falhas de Autenticação:</strong> Senhas fracas, ausência de rate limiting em login, sessões que não expiram.</li></ul><div class="trein-callout">No contexto Sietch, A01 e A03 são as mais frequentes em code reviews de PRs de APIs de pagamento. Priorize esses controles antes de subir para produção.</div><h3>Como aplicar no dia a dia</h3><p>Antes de cada PR: (1) inputs do usuário são sanitizados? (2) o endpoint valida permissão além de autenticação? (3) dados sensíveis estão mascarados nos logs?</p>` },
+    { id:'tc4_m3', type:'video',   name:'Casos reais: ataques a fintechs',        dur:22, desc:'Análise de 4 incidentes reais em fintechs brasileiras e internacionais.' },
+    { id:'tc4_m4', type:'quiz',    name:'Verificação de conhecimentos',            dur:20, minScore:70, maxAttempts:3,
+      questions:[
+        { q:'Qual alternativa representa um vetor de phishing?', opts:['E-mail com link falso solicitando credenciais','Atualização automática do SO','Login com autenticação 2FA','Uso de VPN corporativa'], correct:0, feedback:'Phishing usa comunicações falsas para roubar credenciais. E-mail é o principal vetor — sempre verifique o remetente e nunca clique em links não solicitados.' },
+        { q:'Segundo o OWASP Top 10 (2021), qual vulnerabilidade ocupa o primeiro lugar?', opts:['Injeção de SQL','Quebra de Controle de Acesso','Falhas Criptográficas','Design Inseguro'], correct:1, feedback:'Quebra de Controle de Acesso (A01) assumiu o topo em 2021 por sua altíssima prevalência — presente em 94% das aplicações testadas.' },
+        { q:'Você recebe um e-mail da "TI Sietch" pedindo sua senha para "manutenção". O que fazer?', opts:['Enviar, porque a TI precisa','Ignorar o e-mail','Reportar ao #security e não enviar a senha','Trocar a senha e enviar a nova'], correct:2, feedback:'TI legítima nunca pede senha por e-mail. Reporte ao #security — você pode estar ajudando a detectar um ataque em andamento.' },
+        { q:'O que é autenticação de dois fatores (2FA)?', opts:['Usar dois computadores diferentes','Combinar senha (algo que sabe) com token/app (algo que tem)','Logar duas vezes na mesma sessão','Usar dois e-mails diferentes'], correct:1, feedback:'2FA combina dois fatores distintos: conhecimento (senha) + posse (app autenticador) ou biometria, tornando o acesso indevido muito mais difícil.' },
+        { q:'Por que não se deve reutilizar senhas em sistemas diferentes?', opts:['Não importa se a senha for forte','Se um sistema vazar, todos com a mesma senha ficam expostos','Só é problema em sistemas legados','Reutilizar é seguro com gerenciador de senhas'], correct:1, feedback:'Credential stuffing: atacantes pegam listas de credenciais vazadas e testam em outros serviços. Senhas únicas por serviço são a defesa mais simples e eficaz.' },
+      ]
+    },
+    { id:'tc4_m5', type:'task',    name:'Análise de código: vulnerabilidades',    dur:30,
+      desc:'Analise os trechos abaixo e, para cada um, identifique: (1) o tipo de vulnerabilidade, (2) o risco para o negócio/dados, e (3) uma correção técnica válida.',
+      snippets:[
+        { label:'Trecho 1 — API de busca de pagamentos', code:`router.get('/payment/:id', (req, res) => {\n  const query = "SELECT * FROM payments WHERE id = " + req.params.id;\n  db.query(query, (err, r) => res.json(r));\n});` },
+        { label:'Trecho 2 — Autenticação', code:`app.post('/login', (req, res) => {\n  const { email, password } = req.body;\n  if (email === 'admin' && password === 'sietch123') {\n    res.cookie('session', 'authenticated');\n    res.redirect('/dashboard');\n  }\n});` },
+        { label:'Trecho 3 — Exibição de dados do usuário', code:`app.get('/profile', (req, res) => {\n  res.send('<h1>Bem-vindo, ' + req.query.name + '!</h1>');\n});` },
+      ],
+      criteria:['Identificou a vulnerabilidade em cada trecho com o nome correto','Explicou o risco para negócio/dados de forma clara','Propôs correção técnica válida para cada trecho'],
+      delivery:'text', validatedBy:'Rafael Andrade', daysReview:3 },
+    { id:'tc4_m6', type:'policy',  name:'Aceite — Política de Segurança A-01',    dur:8, version:'2.1', docRef:'A-01', effectiveDate:'2026-01-15',
+      content:`<h4>1. Objetivo</h4><p>Esta política define os requisitos mínimos de segurança que todos os colaboradores Sietch devem observar.</p><h4>2. Senhas e autenticação</h4><p>Senhas devem ter mínimo de 12 caracteres. 2FA é obrigatório em sistemas críticos. É proibido compartilhar credenciais com qualquer pessoa, incluindo gestores.</p><h4>3. Dispositivos e acesso remoto</h4><p>Apenas dispositivos aprovados pelo time de TI podem acessar sistemas corporativos. VPN é obrigatória fora da rede da empresa. Telas devem ser bloqueadas ao se afastar.</p><h4>4. Incidentes de segurança</h4><p>Qualquer suspeita de incidente deve ser reportada imediatamente ao #security no Slack. Colaboradores que reportarem vulnerabilidades serão reconhecidos.</p><h4>5. Penalidades</h4><p>O descumprimento pode resultar em medidas disciplinares, incluindo desligamento e responsabilização legal em casos de dolo ou negligência grave.</p>` },
+  ],
+  tc1: [
+    { id:'tc1_m1', type:'video',   name:'Fundamentos de PLD/FT',                  dur:25, desc:'Conceitos de lavagem de dinheiro, fases (colocação, ocultação, integração) e financiamento ao terrorismo.' },
+    { id:'tc1_m2', type:'pdf',     name:'Manual PLD — Banco Central (Circular 3.978)', dur:40, desc:'Circular BACEN 3.978/2020 — requisitos de prevenção à lavagem de dinheiro para instituições financeiras.' },
+    { id:'tc1_m3', type:'quiz',    name:'Identificação de operações suspeitas',    dur:20, minScore:80, maxAttempts:3,
+      questions:[
+        { q:'O que caracteriza uma "operação suspeita" segundo o BACEN?', opts:['Qualquer transação acima de R$ 10.000','Operação inconsistente com o perfil do cliente ou sem fundamento econômico aparente','Transações internacionais acima de R$ 5.000','Saques em espécie de qualquer valor'], correct:1, feedback:'Operações suspeitas são definidas por inconsistência com o perfil do cliente, independente do valor. A análise comportamental é o principal indicador.' },
+        { q:'O prazo para comunicar operações suspeitas ao COAF é:', opts:['24 horas após identificação','3 dias úteis','5 dias corridos','No primeiro dia útil do mês seguinte'], correct:0, feedback:'A Resolução BACEN exige comunicação em até 24 horas após a identificação da suspeita. Atraso pode configurar descumprimento regulatório.' },
+        { q:'Qual situação é um red flag clássico de PLD?', opts:['Cliente PF com compras regulares no supermercado','Empresa recém-aberta movimentando milhões sem justificativa de negócio','Pagamento de salário via TED para conta corrente','Múltiplos PIX de pequeno valor para familiar'], correct:1, feedback:'Empresa nova com movimentação desproporcional ao porte e sem justificativa econômica é um indicador clássico de lavagem (fase de integração).' },
+      ]
+    },
+    { id:'tc1_m4', type:'policy',  name:'Aceite — Política PLD/FT DOC-005',       dur:10, version:'3.2', docRef:'DOC-005', effectiveDate:'2026-03-01',
+      content:`<h4>1. Comprometimento</h4><p>Ao aceitar, declaro ter compreendido as obrigações relativas à prevenção à lavagem de dinheiro e ao financiamento do terrorismo, conforme Lei 9.613/98 e regulamentações do BACEN.</p><h4>2. Obrigações do colaborador</h4><p>2.1 Reportar imediatamente qualquer operação suspeita ao compliance@sietch.com.br ou #compliance. 2.2 Não alertar o cliente sobre suspeita de reporte ao COAF (crime de tipping-off). 2.3 Manter sigilo sobre investigações em curso.</p><h4>3. Treinamento periódico</h4><p>Este treinamento é obrigatório anualmente. O não cumprimento no prazo gera suspensão de acesso a sistemas de crédito até regularização.</p>` },
+  ],
+  tc3: [
+    { id:'tc3_m1', type:'video',   name:'Valores e missão Sietch',                 dur:20, desc:'A história, missão e os valores que guiam as decisões na Sietch.' },
+    { id:'tc3_m2', type:'policy',  name:'Aceite — Código de Ética DOC-001',        dur:10, version:'4.0', docRef:'DOC-001', effectiveDate:'2026-01-01',
+      content:`<h4>1. Integridade</h4><p>Agimos com honestidade em todas as relações. Não toleramos desonestidade, falsificação ou omissão de informações relevantes.</p><h4>2. Conflito de interesses</h4><p>Colaboradores devem declarar qualquer situação que gere conflito entre interesses pessoais e os da empresa. Decisões de negócio priorizam o interesse da empresa e de seus clientes.</p><h4>3. Confidencialidade</h4><p>Informações de clientes, estratégias e dados financeiros são confidenciais. Vazamento intencional ou por negligência sujeita a medidas disciplinares e responsabilidade civil.</p><h4>4. Respeito e diversidade</h4><p>Não toleramos qualquer forma de discriminação, assédio ou bullying. Todos têm direito a um ambiente seguro, respeitoso e inclusivo.</p>` },
+  ],
+  tc8: [
+    { id:'tc8_m1', type:'video',   name:'Fraude em pagamentos — padrões e evolução', dur:20, desc:'Account takeover, synthetic identity, friendly fraud: os principais tipos em fintechs.' },
+    { id:'tc8_m2', type:'article', name:'KYC, biometria e motores de regras',      dur:25, readingTime:10,
+      content:`<h3>Know Your Customer (KYC)</h3><p>KYC é o processo de verificar a identidade do cliente para prevenir fraude e lavagem de dinheiro. Na Sietch: validação de documentos, liveness detection facial e cruzamento com bases públicas (Receita Federal, SERASA).</p><h3>Biometria comportamental</h3><p>Além da biometria no onboarding, usamos biometria comportamental em tempo real: velocidade de digitação, padrão de toque, forma de segurar o dispositivo. Desvios disparam alertas de fraude sem atrito para o usuário legítimo.</p><div class="trein-callout">O motor de regras Sietch processa mais de 40 variáveis por transação em menos de 80ms. Entender como regras são construídas ajuda a identificar edge cases que passam despercebidos.</div><h3>Chargeback e estratégias de defesa</h3><p>Chargeback é quando o titular contesta uma transação. Taxa acima de 1% pode levar ao descredenciamento pela bandeira. Nossas defesas: 3DS2, evidência de entrega, monitoramento comportamental e contestação documentada.</p>` },
+    { id:'tc8_m3', type:'task',    name:'Análise de caso prático de fraude',       dur:30,
+      desc:'Você recebeu o seguinte alerta:\n\n"Transação de R$ 4.800 — conta criada há 3 dias, sem histórico anterior, CPF com score baixo, IP diferente do cadastro, device fingerprint novo, 3 tentativas de biometria."\n\nAnalise e descreva: (1) sua hipótese sobre o tipo de fraude, (2) quais dados adicionais você solicitaria e por quê, (3) aprovaria ou recusaria a transação com justificativa técnica.',
+      snippets:[], criteria:['Identificou corretamente o tipo de fraude mais provável','Listou dados adicionais relevantes com justificativa','Tomou decisão com justificativa técnica consistente'],
+      delivery:'text', validatedBy:'Lucas Vieira', daysReview:2 },
+  ],
+  tc7: [
+    { id:'tc7_m1', type:'video',   name:'Design Systems — fundamentos',             dur:30, desc:'O que é, por que importa e como Airbnb, Spotify e IBM construíram seus design systems.' },
+    { id:'tc7_m2', type:'article', name:'UX Research Methods',                      dur:40, readingTime:15,
+      content:`<h3>Por que pesquisa importa?</h3><p>UX Research evita construir a coisa certa do jeito errado — ou a coisa errada por completo. Dados de comportamento real substituem suposições e reduzem retrabalho em ordens de magnitude.</p><h3>Quantitativo vs qualitativo</h3><p>Quantitativo responde "quanto" e "o quê": analytics, A/B test, surveys de NPS. Qualitativo responde "por quê": entrevistas, teste de usabilidade, diário do usuário. Os dois são complementares, não concorrentes.</p><div class="trein-callout">Na Sietch usamos entrevistas exploratórias (Jobs-to-be-done) no início do ciclo e testes de usabilidade antes do lançamento. Analytics complementa, não substitui o contato com o usuário real.</div><h3>Heurísticas de Nielsen</h3><p>Jakob Nielsen definiu 10 heurísticas de usabilidade que continuam sendo o framework de avaliação mais prático: visibilidade do status do sistema, correspondência com o mundo real, controle e liberdade do usuário, consistência e padrões, prevenção de erros, reconhecimento em vez de memorização, flexibilidade e eficiência, design estético e minimalista, recuperação de erros, ajuda e documentação.</p>` },
+    { id:'tc7_m3', type:'quiz',    name:'Heurísticas de Nielsen',                   dur:20, minScore:70, maxAttempts:2,
+      questions:[
+        { q:'Qual heurística se aplica quando um usuário não consegue desfazer uma ação realizada por engano?', opts:['Visibilidade do status do sistema','Controle e liberdade do usuário','Prevenção de erros','Ajuda e documentação'], correct:1, feedback:'Controle e liberdade do usuário garante "saídas de emergência" — desfazer, cancelar, voltar — para quando o usuário age por engano.' },
+        { q:'Um formulário que valida campos em tempo real enquanto o usuário digita aplica qual heurística?', opts:['Consistência e padrões','Prevenção de erros','Reconhecimento em vez de memorização','Correspondência com o mundo real'], correct:1, feedback:'Prevenção de erros é melhor que boas mensagens de erro — o sistema ajuda o usuário a não errar antes que ele erre.' },
+        { q:'Usar ícones universalmente reconhecíveis (lixeira = deletar, envelope = e-mail) aplica qual heurística?', opts:['Design estético e minimalista','Flexibilidade e eficiência','Correspondência com o mundo real','Consistência e padrões'], correct:2, feedback:'Correspondência com o mundo real usa metáforas familiares do mundo físico para tornar a interface intuitiva sem curva de aprendizado.' },
+        { q:'Carregamento sem indicador visual viola qual heurística?', opts:['Design estético e minimalista','Visibilidade do status do sistema','Prevenção de erros','Controle e liberdade'], correct:1, feedback:'Visibilidade do status do sistema: o usuário sempre deve saber o que está acontecendo — spinners, barras de progresso, mensagens de confirmação.' },
+      ]
+    },
+    { id:'tc7_m4', type:'task',    name:'Avaliação heurística — proposta de melhoria', dur:60,
+      desc:'Escolha um fluxo do sistema atual (cadastro, avaliação, ou dashboard) e faça uma avaliação heurística usando as 10 heurísticas de Nielsen. Documente: (1) 3 problemas de usabilidade com a heurística violada identificada, (2) proposta de melhoria concreta para cada, (3) priorização por impacto com justificativa.',
+      snippets:[], criteria:['3 problemas com heurística corretamente mapeada','Proposta de melhoria concreta e factível para cada','Priorizou por impacto com justificativa clara'],
+      delivery:'text', validatedBy:'Fernanda Lima', daysReview:5 },
+  ],
+};
+
+// Player state
+let playerState = null;
+let quizSession = null;
+let taskSessions = {};
+let policyAccepted = new Set();
+let npsRating = 0;
+
+function getModulesForAssignment(a) {
+  return MODULES_BY_TRAINING[a.trainingId] || [];
+}
+
+function getModuleDoneCount(a) {
+  const mods = getModulesForAssignment(a);
+  if (!mods.length) return 0;
+  return mods.filter((_, i) => isModuleDone(a, i)).length;
+}
+
+function isModuleDone(a, idx) {
+  const mods = getModulesForAssignment(a);
+  const m = mods[idx];
+  if (!m) return false;
+  const threshPct = ((idx + 1) / mods.length) * 100;
+  if (a.status === 'concluido') return true;
+  if (m.type === 'policy') return policyAccepted.has(m.id);
+  if (m.type === 'task') {
+    const ts = taskSessions[m.id];
+    return ts && (ts.status === 'approved');
+  }
+  if (m.type === 'quiz') {
+    const qs = quizSession?.moduleId === m.id ? quizSession : null;
+    return qs?.passed === true;
+  }
+  return a.progress >= threshPct;
+}
+
+// ── Open player ────────────────────────────────────────────────
+function openTrainingPlayer(assignmentId) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === assignmentId);
+  if (!a) return;
+  if (a.status === 'concluido') { openCertificateView(assignmentId); return; }
+  const mods = getModulesForAssignment(a);
+  let startIdx = 0;
+  for (let i = 0; i < mods.length; i++) {
+    if (isModuleDone(a, i)) startIdx = i + 1;
+    else { startIdx = i; break; }
+  }
+  startIdx = Math.min(startIdx, mods.length - 1);
+  playerState = { assignmentId, currentIdx: startIdx };
+  renderPlayerOverlay();
+}
+
+function renderPlayerOverlay() {
+  let el = document.getElementById('trein-player-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'trein-player-overlay';
+    el.className = 'trein-player-overlay';
+    document.body.appendChild(el);
+  }
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const idx = playerState.currentIdx;
+  const doneCnt = mods.filter((_, i) => isModuleDone(a, i)).length;
+  const pct = mods.length ? Math.round((doneCnt / mods.length) * 100) : 0;
+  const typeLabel = { video:'Vídeo', article:'Artigo', pdf:'PDF', quiz:'Quiz', task:'Tarefa', policy:'Política', link:'Link' };
+
+  el.innerHTML = `
+    <div class="trein-player-header">
+      <button class="trein-player-back" onclick="closePlayerOverlay()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Treinamentos
+      </button>
+      <div class="trein-player-title">${a.title}</div>
+      <div class="trein-player-hprog">
+        <span style="font-size:12px;color:var(--text-muted);">${doneCnt}/${mods.length}</span>
+        <div class="trein-player-hprog-bar"><div class="trein-player-hprog-fill" style="width:${pct}%"></div></div>
+        <span style="font-size:12px;color:var(--text-muted);">${pct}%</span>
+      </div>
+    </div>
+    <div class="trein-player-body">
+      <div class="trein-player-main" id="trein-player-main-area"></div>
+      <div class="trein-player-sidebar">
+        <div class="trein-player-sb-title">Módulos</div>
+        ${mods.map((m, i) => `
+          <div class="trein-player-sb-item${i===idx?' active':''}${isModuleDone(a,i)?' done':''}" onclick="playerNavTo(${i})">
+            <div class="trein-player-sb-num">
+              ${isModuleDone(a,i)
+                ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                : i+1}
+            </div>
+            <div>
+              <div class="trein-player-sb-name">${m.name}</div>
+              <div class="trein-player-sb-type">${typeLabel[m.type]||m.type} · ${m.dur} min</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="trein-player-footer" id="trein-player-footer"></div>
+  `;
+  renderPlayerModule(idx);
+}
+
+function renderPlayerModule(idx) {
+  playerState.currentIdx = idx;
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const m = mods[idx];
+  if (!m) return;
+  const area = document.getElementById('trein-player-main-area');
+  const footer = document.getElementById('trein-player-footer');
+  const hasPrev = idx > 0;
+  const hasNext = idx < mods.length - 1;
+  const isDone = isModuleDone(a, idx);
+
+  footer.innerHTML = `
+    <button class="btn btn-outlined btn-md" onclick="playerNavTo(${idx-1})" ${!hasPrev?'disabled':''}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Anterior
+    </button>
+    <div id="trein-player-footer-mid"></div>
+    <button class="btn btn-primary btn-md" id="trein-player-next-btn" onclick="playerNavTo(${idx+1})" ${!hasNext||!isDone?'disabled':''}>
+      Próximo
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  `;
+
+  if (m.type === 'video')   { area.innerHTML = renderVideoModule(m, idx, a); simulateVideoProgress(m.id); }
+  else if (m.type === 'article') { area.innerHTML = renderArticleModule(m); setupArticleScroll(); }
+  else if (m.type === 'pdf')     { area.innerHTML = renderPdfModule(m); }
+  else if (m.type === 'quiz')    { renderQuizPre(m, idx, a); }
+  else if (m.type === 'task')    { area.innerHTML = renderTaskModule(m, a); }
+  else if (m.type === 'policy')  { area.innerHTML = renderPolicyModule(m, idx, a); }
+}
+
+function playerNavTo(idx) {
+  if (idx < 0) return;
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId);
+  const mods = getModulesForAssignment(a);
+  if (idx >= mods.length) return;
+  // re-render sidebar active state
+  document.querySelectorAll('.trein-player-sb-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+  renderPlayerModule(idx);
+}
+
+function closePlayerOverlay() {
+  const el = document.getElementById('trein-player-overlay');
+  if (el) el.remove();
+  playerState = null;
+  renderMeusView();
+}
+
+// ── Video module ────────────────────────────────────────────────
+function renderVideoModule(m, idx, a) {
+  const watched = isModuleDone(a, idx);
+  return `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Vídeo · ${m.dur} min</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;line-height:1.35;">${m.name}</div>
+    ${m.desc ? `<p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.65;">${m.desc}</p>` : ''}
+    <div class="trein-video-wrap" id="tvid_${m.id}">
+      <div class="trein-video-ph" onclick="playVideo('${m.id}')">
+        <div class="trein-video-play">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><polygon points="7,4 18,11 7,18" fill="rgba(255,255,255,0.85)"/></svg>
+        </div>
+        <span class="trein-video-dur">${m.dur} minutos</span>
+      </div>
+    </div>
+    <div class="trein-video-bar-wrap">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="color:var(--text-muted);flex-shrink:0;"><polygon points="3,1.5 11,6.5 3,11.5" stroke="currentColor" stroke-width="1.2" fill="currentColor" opacity=".5"/></svg>
+      <div class="trein-video-progress"><div class="trein-video-progress-fill" id="tvid_prog_${m.id}" style="width:${watched?'100':'0'}%"></div></div>
+      <div class="trein-speed">
+        ${['0.75x','1x','1.5x','2x'].map(s=>`<button class="trein-speed-btn${s==='1x'?' active':''}" onclick="setSpeed(this,'${m.id}')">${s}</button>`).join('')}
+      </div>
+      <span id="tvid_pct_${m.id}" style="font-size:12px;white-space:nowrap;">${watched?'Assistido':'0%'}</span>
+    </div>
+    ${watched ? `<div style="padding:12px 14px;background:var(--green-3);border:1px solid var(--green-6);border-radius:var(--radius-md);font-size:14px;color:var(--green-11);">Vídeo assistido. Você pode avançar para o próximo módulo.</div>` : ''}
+  `;
+}
+
+let _videoTimers = {};
+function simulateVideoProgress(moduleId) {
+  if (_videoTimers[moduleId]) return;
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+  if (!a) return;
+  const mods = getModulesForAssignment(a);
+  const mIdx = mods.findIndex(m => m.id === moduleId);
+  if (isModuleDone(a, mIdx)) return;
+  let pct = 0;
+  _videoTimers[moduleId] = setInterval(() => {
+    pct = Math.min(pct + 5, 100);
+    const fill = document.getElementById('tvid_prog_' + moduleId);
+    const label = document.getElementById('tvid_pct_' + moduleId);
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = pct + '%';
+    if (pct >= 90) {
+      clearInterval(_videoTimers[moduleId]);
+      delete _videoTimers[moduleId];
+      if (label) label.textContent = 'Assistido';
+      markModuleDoneAndRefresh(mIdx);
+    }
+  }, 400);
+}
+
+function playVideo(moduleId) {
+  const ph = document.querySelector('#tvid_' + moduleId + ' .trein-video-ph');
+  if (ph) {
+    ph.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="rgba(255,255,255,0.7)"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="rgba(255,255,255,0.7)"/></svg><span class="trein-video-dur">Reproduzindo...</span>`;
+  }
+}
+
+function setSpeed(btn, moduleId) {
+  btn.closest('.trein-speed').querySelectorAll('.trein-speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function markModuleDoneAndRefresh(mIdx) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+  if (!a) return;
+  const mods = getModulesForAssignment(a);
+  const pct = Math.round(((mIdx + 1) / mods.length) * 100);
+  a.progress = Math.max(a.progress, pct);
+  if (a.status === 'pendente') a.status = 'andamento';
+  const nextBtn = document.getElementById('trein-player-next-btn');
+  if (nextBtn) nextBtn.disabled = false;
+  // refresh header progress
+  const hfill = document.querySelector('.trein-player-hprog-fill');
+  if (hfill) {
+    const doneCnt = mods.filter((_, i) => isModuleDone(a, i)).length;
+    const newPct = Math.round((doneCnt / mods.length) * 100);
+    hfill.style.width = newPct + '%';
+    const spans = document.querySelectorAll('.trein-player-hprog span');
+    if (spans[0]) spans[0].textContent = doneCnt + '/' + mods.length;
+    if (spans[1]) spans[1].textContent = newPct + '%';
+  }
+  // sidebar
+  const sbItems = document.querySelectorAll('.trein-player-sb-item');
+  if (sbItems[mIdx]) {
+    sbItems[mIdx].classList.add('done');
+    sbItems[mIdx].querySelector('.trein-player-sb-num').innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  if (mIdx === mods.length - 1) triggerCompletion(a);
+}
+
+function triggerCompletion(a) {
+  a.status = 'concluido'; a.progress = 100;
+  setTimeout(() => {
+    closePlayerOverlay();
+    openCertificateView(a.id);
+  }, 800);
+}
+
+// ── Article module ──────────────────────────────────────────────
+function renderArticleModule(m) {
+  return `
+    <div class="trein-article-rbar" id="art_rbar_${m.id}" style="width:0%"></div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px;">Artigo · Leitura de ${m.readingTime||10} minutos</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:20px;line-height:1.35;">${m.name}</div>
+    <div class="trein-article-body" id="art_body_${m.id}">${m.content||''}</div>
+  `;
+}
+
+function setupArticleScroll() {
+  const main = document.getElementById('trein-player-main-area');
+  if (!main) return;
+  const rbarId = main.querySelector('[id^="art_rbar_"]')?.id;
+  if (!rbarId) return;
+  const moduleId = rbarId.replace('art_rbar_', '');
+  main.onscroll = () => {
+    const pct = main.scrollTop / (main.scrollHeight - main.clientHeight) * 100;
+    const rbar = document.getElementById('art_rbar_' + moduleId);
+    if (rbar) rbar.style.width = Math.min(pct, 100) + '%';
+    if (pct >= 90) {
+      main.onscroll = null;
+      const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+      if (!a) return;
+      const mods = getModulesForAssignment(a);
+      const mIdx = mods.findIndex(m => m.id === moduleId);
+      if (!isModuleDone(a, mIdx)) markModuleDoneAndRefresh(mIdx);
+    }
+  };
+}
+
+// ── PDF module ──────────────────────────────────────────────────
+function renderPdfModule(m) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const mIdx = mods.findIndex(x => x.id === m.id);
+  const done = isModuleDone(a, mIdx);
+  return `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">PDF · ${m.dur} min</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;">${m.name}</div>
+    ${m.desc ? `<p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.65;">${m.desc}</p>` : ''}
+    <div class="trein-pdf-wrap">
+      <svg width="48" height="60" viewBox="0 0 48 60" fill="none" style="margin-bottom:16px;"><rect x="2" y="2" width="44" height="56" rx="4" stroke="var(--border-subtle)" stroke-width="2"/><path d="M13 18h22M13 26h22M13 34h16" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/><rect x="30" y="30" width="12" height="16" rx="2" fill="var(--red-3)" stroke="var(--red-6)" stroke-width="1.5"/><path d="M33 36h6M33 40h4" stroke="var(--red-9)" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <div style="font-size:15px;font-weight:600;color:var(--text-high);margin-bottom:8px;">${m.name}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">${m.dur} minutos de leitura estimada</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-primary btn-md" onclick="markPdfRead('${m.id}',${mIdx})" ${done?'disabled':''}>Marcar como lido</button>
+        <button class="btn btn-outlined btn-md">Baixar PDF</button>
+      </div>
+    </div>
+    ${done ? `<div style="margin-top:16px;padding:12px 14px;background:var(--green-3);border:1px solid var(--green-6);border-radius:var(--radius-md);font-size:14px;color:var(--green-11);">PDF marcado como lido. Pode avançar.</div>` : ''}
+  `;
+}
+
+function markPdfRead(moduleId, mIdx) {
+  markModuleDoneAndRefresh(mIdx);
+  const area = document.getElementById('trein-player-main-area');
+  if (area) {
+    const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+    const mods = getModulesForAssignment(a);
+    area.innerHTML = renderPdfModule(mods[mIdx], a);
+  }
+}
+
+// ── Quiz flow ───────────────────────────────────────────────────
+function renderQuizPre(m, idx, a) {
+  const existing = quizSession?.moduleId === m.id ? quizSession : null;
+  const attempts = existing?.attempts || 0;
+  const area = document.getElementById('trein-player-main-area');
+  const footer = document.getElementById('trein-player-footer');
+  footer.innerHTML = `
+    <button class="btn btn-outlined btn-md" onclick="playerNavTo(${idx-1})" ${idx===0?'disabled':''}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Anterior
+    </button>
+    <div></div>
+    <button class="btn btn-primary btn-md" onclick="startQuiz('${m.id}',${idx})" ${attempts >= m.maxAttempts && !(quizSession?.moduleId===m.id&&quizSession?.passed)?'disabled':''}>
+      ${attempts === 0 ? 'Iniciar quiz' : 'Tentar novamente'}
+    </button>
+  `;
+  const lastScore = existing?.score ?? null;
+  area.innerHTML = `
+    <div class="trein-quiz-pre">
+      <div class="trein-quiz-pre-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="10" stroke="var(--blue-9)" stroke-width="1.5"/><path d="M10 10.5c0-1.5 1-2.5 3-2.5s3 1 3 2.5-3 2.5-3 3.5" stroke="var(--blue-9)" stroke-width="1.5" stroke-linecap="round"/><circle cx="13" cy="18" r="1" fill="var(--blue-9)"/></svg>
+      </div>
+      <h2>${m.name}</h2>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6;">${m.questions.length} perguntas · Nota mínima: ${m.minScore}% · ${m.maxAttempts} tentativas</p>
+      <div class="trein-quiz-pre-meta">
+        <span class="trein-quiz-meta-pill">⏱ ${m.dur} min</span>
+        <span class="trein-quiz-meta-pill">✓ ${m.minScore}% pra passar</span>
+        <span class="trein-quiz-meta-pill">${m.maxAttempts - attempts} tentativa${m.maxAttempts - attempts !== 1 ? 's' : ''} restante${m.maxAttempts - attempts !== 1 ? 's' : ''}</span>
+      </div>
+      ${lastScore !== null ? `<div style="margin-bottom:14px;font-size:14px;color:${quizSession.passed?'var(--green-11)':'var(--red-11)'};">Última tentativa: ${lastScore}% — ${quizSession.passed?'Aprovado':'Reprovado'}</div>` : ''}
+      ${attempts >= m.maxAttempts && !(quizSession?.passed) ? `<div style="padding:12px 16px;background:var(--red-3);border:1px solid var(--red-6);border-radius:var(--radius-md);font-size:14px;color:var(--red-11);">Você esgotou suas tentativas. Sua liderança vai te procurar pra alinhar o próximo passo.</div>` : ''}
+    </div>
+  `;
+}
+
+function startQuiz(moduleId, modIdx) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const m = mods[modIdx];
+  const prevAttempts = quizSession?.moduleId === moduleId ? quizSession.attempts : 0;
+  const isLast = prevAttempts + 1 >= m.maxAttempts;
+  quizSession = {
+    moduleId, modIdx,
+    questions: [...m.questions],
+    currentQ: 0,
+    answers: new Array(m.questions.length).fill(null),
+    revealed: new Array(m.questions.length).fill(false),
+    attempts: prevAttempts + 1,
+    maxAttempts: m.maxAttempts,
+    minScore: m.minScore,
+    score: null, passed: null,
+    isLastAttempt: isLast,
+  };
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const qs = quizSession;
+  const q = qs.questions[qs.currentQ];
+  const area = document.getElementById('trein-player-main-area');
+  const footer = document.getElementById('trein-player-footer');
+  const answered = qs.answers[qs.currentQ] !== null;
+  const revealed = qs.revealed[qs.currentQ];
+  const pct = Math.round((qs.currentQ / qs.questions.length) * 100);
+  const letters = ['A','B','C','D','E'];
+
+  const feedbackHtml = revealed
+    ? `<div class="trein-quiz-feedback ${qs.answers[qs.currentQ] === q.correct ? 'correct' : 'wrong'}">
+        <strong>${qs.answers[qs.currentQ] === q.correct ? 'Correto.' : 'Incorreto.'}</strong> ${q.feedback}
+       </div>` : '';
+
+  area.innerHTML = `
+    <div class="trein-quiz-area">
+      ${qs.isLastAttempt ? `<div style="padding:8px 12px;background:var(--red-3);border:1px solid var(--red-6);border-radius:var(--radius-md);font-size:13px;color:var(--red-11);margin-bottom:18px;">Esta é sua última tentativa.</div>` : ''}
+      <div class="trein-quiz-qprog">
+        <div class="trein-quiz-qprog-bar"><div class="trein-quiz-qprog-fill" style="width:${pct}%"></div></div>
+        <span class="trein-quiz-qnum">Pergunta ${qs.currentQ+1} de ${qs.questions.length}</span>
+      </div>
+      <div class="trein-quiz-qtext">${q.q}</div>
+      <div class="trein-quiz-opts">
+        ${q.opts.map((opt, i) => {
+          let cls = '';
+          if (revealed) {
+            if (i === q.correct) cls = 'correct';
+            else if (i === qs.answers[qs.currentQ]) cls = 'wrong';
+          } else if (qs.answers[qs.currentQ] === i) cls = 'selected';
+          return `<button class="trein-quiz-opt ${cls}" onclick="selectQuizAnswer(${i})" ${revealed?'disabled':''}>
+            <span class="trein-quiz-opt-letter">${letters[i]}</span>${opt}
+          </button>`;
+        }).join('')}
+      </div>
+      ${feedbackHtml}
+    </div>
+  `;
+
+  footer.innerHTML = `
+    <button class="btn btn-outlined btn-md" onclick="quizBack()" ${qs.currentQ===0?'disabled':''}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Anterior
+    </button>
+    <div id="trein-quiz-save" style="font-size:12px;color:var(--text-muted);">Respostas salvas automaticamente</div>
+    ${revealed
+      ? qs.currentQ < qs.questions.length - 1
+        ? `<button class="btn btn-primary btn-md" onclick="quizNext()">Próxima <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+        : `<button class="btn btn-primary btn-md" onclick="finishQuiz()">Ver resultado</button>`
+      : `<button class="btn btn-primary btn-md" onclick="revealQuizAnswer()" ${!answered?'disabled':''}>Confirmar</button>`
+    }
+  `;
+}
+
+function selectQuizAnswer(optIdx) {
+  if (quizSession.revealed[quizSession.currentQ]) return;
+  quizSession.answers[quizSession.currentQ] = optIdx;
+  renderQuizQuestion();
+}
+
+function revealQuizAnswer() {
+  quizSession.revealed[quizSession.currentQ] = true;
+  renderQuizQuestion();
+}
+
+function quizNext() {
+  if (quizSession.currentQ < quizSession.questions.length - 1) {
+    quizSession.currentQ++;
+    renderQuizQuestion();
+  }
+}
+
+function quizBack() {
+  if (quizSession.currentQ > 0) { quizSession.currentQ--; renderQuizQuestion(); }
+}
+
+function finishQuiz() {
+  const qs = quizSession;
+  const correct = qs.answers.filter((a, i) => a === qs.questions[i].correct).length;
+  const score = Math.round((correct / qs.questions.length) * 100);
+  qs.score = score;
+  qs.passed = score >= qs.minScore;
+  if (qs.passed) {
+    markModuleDoneAndRefresh(qs.modIdx);
+  }
+  renderQuizResult();
+}
+
+function renderQuizResult() {
+  const qs = quizSession;
+  const area = document.getElementById('trein-player-main-area');
+  const footer = document.getElementById('trein-player-footer');
+  const mods = getModulesForAssignment(MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId));
+  const hasNext = qs.modIdx < mods.length - 1;
+  const canRetry = !qs.passed && qs.attempts < qs.maxAttempts;
+
+  footer.innerHTML = `
+    <div></div>
+    <div></div>
+    ${qs.passed
+      ? hasNext ? `<button class="btn btn-primary btn-md" onclick="playerNavTo(${qs.modIdx+1})">Próximo módulo <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+                : `<button class="btn btn-primary btn-md" onclick="closePlayerOverlay()">Concluir</button>`
+      : canRetry ? `<button class="btn btn-primary btn-md" onclick="startQuiz('${qs.moduleId}',${qs.modIdx})">Tentar novamente</button>`
+                 : `<button class="btn btn-outlined btn-md" onclick="playerNavTo(${qs.modIdx})">Ver detalhes</button>`
+    }
+  `;
+
+  area.innerHTML = `
+    <div class="trein-quiz-result">
+      <div class="trein-quiz-result-icon ${qs.passed?'pass':'fail'}">
+        ${qs.passed
+          ? `<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M7 16l6 6 12-12" stroke="var(--green-11)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+          : `<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M10 10l12 12M22 10l-12 12" stroke="var(--red-11)" stroke-width="2.5" stroke-linecap="round"/></svg>`}
+      </div>
+      <div class="trein-quiz-result-score ${qs.passed?'pass':'fail'}">${qs.score}%</div>
+      <h2>${qs.passed ? 'Aprovado.' : 'Não foi dessa vez.'}</h2>
+      <div class="trein-quiz-result-detail">
+        Você acertou ${qs.answers.filter((a,i)=>a===qs.questions[i].correct).length} de ${qs.questions.length} perguntas · Mínimo: ${qs.minScore}%
+        ${!qs.passed && canRetry ? `<br>Você tem ${qs.maxAttempts - qs.attempts} tentativa${qs.maxAttempts-qs.attempts!==1?'s':''} restante${qs.maxAttempts-qs.attempts!==1?'s':''}.` : ''}
+        ${!qs.passed && !canRetry ? `<br>Suas tentativas foram esgotadas. Sua liderança vai te procurar.` : ''}
+      </div>
+      <div class="trein-quiz-review">
+        <div style="font-size:14px;font-weight:600;color:var(--text-high);margin-bottom:12px;">Revisão</div>
+        ${qs.questions.map((q, i) => {
+          const ok = qs.answers[i] === q.correct;
+          return `<div class="trein-quiz-rev-item ${ok?'correct':'wrong'}">
+            <div class="trein-quiz-rev-q">${i+1}. ${q.q}</div>
+            <div class="trein-quiz-rev-a">Sua resposta: ${q.opts[qs.answers[i]] || '—'}</div>
+            ${!ok ? `<div class="trein-quiz-rev-a">Correta: ${q.opts[q.correct]}</div>` : ''}
+            <div class="trein-quiz-rev-f">${q.feedback}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ── Task module ─────────────────────────────────────────────────
+function renderTaskModule(m, a) {
+  const ts = taskSessions[m.id];
+  const status = ts?.status || 'draft';
+  const mods = getModulesForAssignment(a);
+  const mIdx = mods.findIndex(x => x.id === m.id);
+
+  if (status === 'awaiting') {
+    const submitted = new Date(ts.submittedAt);
+    const daysAgo = Math.floor((Date.now() - submitted.getTime()) / 86400000);
+    return `
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Tarefa prática · ${m.dur} min</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;">${m.name}</div>
+      <div class="trein-task-status-box awaiting">
+        <strong>Aguardando revisão de ${m.validatedBy}.</strong><br>
+        Resposta esperada em até ${m.daysReview} dias úteis. Aguardando há ${daysAgo} dia${daysAgo!==1?'s':''}.
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Sua entrega</div>
+        <div class="trein-val-submission">${ts.submission}</div>
+      </div>
+    `;
+  }
+
+  if (status === 'adjustment') {
+    return `
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Tarefa prática · ${m.dur} min</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;">${m.name}</div>
+      <div class="trein-task-status-box adjusting" style="margin-bottom:16px;">
+        <strong>${m.validatedBy} pediu ajustes.</strong><br>
+        <em style="font-style:normal;display:block;margin-top:8px;">"${ts.feedback}"</em>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-high);margin-bottom:8px;">Reescreva sua entrega</div>
+      <textarea id="task_input_${m.id}" style="width:100%;padding:12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:160px;resize:vertical;font-family:var(--font-family);outline:none;" placeholder="Escreva sua resposta aqui...">${ts.submission}</textarea>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="btn btn-primary btn-md" onclick="submitTask('${m.id}',${mIdx})">Reenviar entrega</button>
+      </div>
+    `;
+  }
+
+  if (status === 'approved') {
+    return `
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Tarefa prática · ${m.dur} min</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;">${m.name}</div>
+      <div class="trein-task-status-box approved">Aprovado por ${m.validatedBy}. Pode avançar.</div>
+    `;
+  }
+
+  // draft / not started
+  return `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Tarefa prática · ${m.dur} min</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:16px;">${m.name}</div>
+    <div class="trein-task-desc">${m.desc.replace(/\n/g,'<br>')}</div>
+    ${m.snippets?.length ? `<div style="margin-bottom:var(--spacing-4);">${m.snippets.map(s=>`<div class="trein-task-snippet-label">${s.label}</div><pre class="trein-task-snippet">${s.code}</pre>`).join('')}</div>` : ''}
+    <div class="trein-section-title" style="margin-bottom:8px;">Critérios de aceitação</div>
+    <div class="trein-task-criteria">
+      ${m.criteria.map(c=>`<div class="trein-task-crit-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:var(--blue-9);flex-shrink:0;"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 7l1.5 1.5 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>${c}</div>`).join('')}
+    </div>
+    <div class="trein-task-submit-box">
+      <div style="font-size:13px;font-weight:600;color:var(--text-high);margin-bottom:10px;">Sua resposta</div>
+      <textarea id="task_input_${m.id}" style="width:100%;padding:12px;background:var(--surface-interactive);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:160px;resize:vertical;font-family:var(--font-family);outline:none;" placeholder="Escreva sua análise aqui..."></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <span style="font-size:12px;color:var(--text-muted);">Validado por ${m.validatedBy} · Resposta em até ${m.daysReview} dias úteis</span>
+        <button class="btn btn-primary btn-md" onclick="submitTask('${m.id}',${mIdx})">Enviar entrega</button>
+      </div>
+    </div>
+  `;
+}
+
+function submitTask(moduleId, mIdx) {
+  const input = document.getElementById('task_input_' + moduleId);
+  const val = input?.value?.trim();
+  if (!val) { showToast('Escreva sua resposta antes de enviar.', 'error'); return; }
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const m = mods[mIdx];
+  taskSessions[moduleId] = { status:'awaiting', submission:val, feedback:null, submittedAt:new Date().toISOString() };
+  if (a.status === 'pendente') a.status = 'andamento';
+  if (a.progress >= 80) a.status = 'aguardando';
+  showToast(`Entrega enviada para ${m.validatedBy}. Resposta em até ${m.daysReview} dias.`, 'success');
+  const area = document.getElementById('trein-player-main-area');
+  if (area) area.innerHTML = renderTaskModule(m, a);
+}
+
+// ── Policy module ───────────────────────────────────────────────
+function renderPolicyModule(m, mIdx, a) {
+  const accepted = policyAccepted.has(m.id);
+  return `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Política / Aceite obrigatório · ${m.dur} min</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-high);font-family:var(--font-display);margin-bottom:6px;">${m.name}</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">${m.docRef} · Versão ${m.version} · Vigência: ${m.effectiveDate}</div>
+    ${!accepted ? `<div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">Leia o documento até o fim antes de aceitar.</div>` : ''}
+    <div class="trein-policy-scroll" id="policy_scroll_${m.id}" onscroll="checkPolicyScroll('${m.id}',${mIdx})">${m.content}</div>
+    <label class="trein-policy-accept${accepted?' checked':''}" id="policy_label_${m.id}">
+      <input type="checkbox" id="policy_cb_${m.id}" ${accepted?'checked':''} onchange="togglePolicyAccept('${m.id}',${mIdx})" ${accepted?'':'disabled'}>
+      <span style="font-size:14px;color:var(--text-default);line-height:1.55;">Li e concordo com o <strong>${m.docRef}</strong> — versão ${m.version}, vigente desde ${m.effectiveDate}.</span>
+    </label>
+    ${accepted ? `<div style="padding:12px 14px;background:var(--green-3);border:1px solid var(--green-6);border-radius:var(--radius-md);font-size:14px;color:var(--green-11);">Aceite registrado com timestamp auditável. Pode avançar.</div>` : ''}
+  `;
+}
+
+function checkPolicyScroll(moduleId, mIdx) {
+  const el = document.getElementById('policy_scroll_' + moduleId);
+  const cb = document.getElementById('policy_cb_' + moduleId);
+  if (!el || !cb) return;
+  if ((el.scrollTop + el.clientHeight) >= (el.scrollHeight - 20)) cb.disabled = false;
+}
+
+function togglePolicyAccept(moduleId, mIdx) {
+  const cb = document.getElementById('policy_cb_' + moduleId);
+  const label = document.getElementById('policy_label_' + moduleId);
+  if (!cb?.checked) { policyAccepted.delete(moduleId); label.classList.remove('checked'); return; }
+  policyAccepted.add(moduleId);
+  label.classList.add('checked');
+  markModuleDoneAndRefresh(mIdx);
+  const a = MY_ASSIGNMENTS.find(x => x.id === playerState?.assignmentId);
+  const mods = getModulesForAssignment(a);
+  const area = document.getElementById('trein-player-main-area');
+  if (area) area.innerHTML = renderPolicyModule(mods[mIdx], mIdx, a);
+}
+
+// ── Certificate view ────────────────────────────────────────────
+function openCertificateView(assignmentId) {
+  const a = MY_ASSIGNMENTS.find(x => x.id === assignmentId);
+  if (!a) return;
+  const track = getTrainTrack(a.track);
+  const catalog = TRAINING_CATALOG.find(c => c.id === a.trainingId) || {};
+  const code = 'SIETCH-2026-' + assignmentId.toUpperCase() + 'X1';
+  const validUntil = catalog.mandatory ? '2027-04-30' : null;
+  npsRating = 0;
+
+  treinOpenModal({
+    title: '',
+    wide: true,
+    body: `
+      <div class="trein-cert-wrap">
+        <div style="font-size:13px;color:var(--green-11);font-weight:600;text-align:center;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:-3px;margin-right:5px;"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Treinamento concluído. Bom trabalho.
+        </div>
+        <div class="trein-cert-card">
+          <div class="trein-cert-top">
+            <div class="trein-cert-logo">SIETCH METRICS</div>
+            <div class="trein-cert-stamp">
+              Certificado de conclusão<br>
+              ${new Date(a.deadline+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}
+            </div>
+          </div>
+          <div class="trein-cert-body">
+            <div class="trein-cert-label">Certificamos que</div>
+            <div class="trein-cert-name">${currentUser?.name || 'Colaborador Sietch'}</div>
+            <div class="trein-cert-training">${a.title}</div>
+            <div class="trein-cert-meta">
+              <span class="trein-badge" style="background:${track.bg};color:${track.color};">${track.label}</span>
+              <span>·</span>
+              <span>${catalog.duration || a.duration} horas</span>
+              <span>·</span>
+              ${validUntil
+                ? `<span class="trein-cert-valid-pill ok"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1"/></svg>Válido até ${new Date(validUntil+'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+                : `<span class="trein-cert-valid-pill ok">Sem vencimento</span>`}
+            </div>
+          </div>
+          <div class="trein-cert-bottom">
+            <div>
+              <div class="trein-cert-code">${code}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">sietch.app/cert/${code.toLowerCase()}</div>
+            </div>
+            <div class="trein-cert-qr">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="10" height="10" rx="1" stroke="var(--text-muted)" stroke-width="1.2"/><rect x="16" y="2" width="10" height="10" rx="1" stroke="var(--text-muted)" stroke-width="1.2"/><rect x="2" y="16" width="10" height="10" rx="1" stroke="var(--text-muted)" stroke-width="1.2"/><rect x="16" y="16" width="10" height="10" rx="1" stroke="var(--text-muted)" stroke-width="1.2"/><rect x="4.5" y="4.5" width="5" height="5" rx=".5" fill="var(--text-muted)"/><rect x="18.5" y="4.5" width="5" height="5" rx=".5" fill="var(--text-muted)"/><rect x="4.5" y="18.5" width="5" height="5" rx=".5" fill="var(--text-muted)"/><rect x="18.5" y="18.5" width="5" height="5" rx=".5" fill="var(--text-muted)"/></svg>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:14px;font-weight:600;color:var(--text-high);margin-bottom:4px;">Numa escala de 1 a 5, o quanto você recomendaria este treinamento?</div>
+          <div class="trein-nps-stars" id="trein-nps-stars">
+            ${[1,2,3,4,5].map(n=>`<span class="trein-nps-star" onclick="setNpsRating(${n})">★</span>`).join('')}
+          </div>
+          <textarea id="trein-nps-txt" style="width:100%;max-width:440px;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:13px;color:var(--text-default);font-family:var(--font-family);resize:vertical;min-height:70px;outline:none;" placeholder="Conta o porquê (opcional)"></textarea>
+        </div>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-primary btn-md" onclick="downloadCert('${assignmentId}')">Baixar certificado PDF</button>
+      <button class="btn btn-text btn-md" onclick="submitNps();closeModal()">Fechar</button>
+    `
+  });
+}
+
+function setNpsRating(n) {
+  npsRating = n;
+  document.querySelectorAll('.trein-nps-star').forEach((s, i) => s.classList.toggle('on', i < n));
+}
+
+function downloadCert(assignmentId) {
+  showToast('Certificado PDF gerado e baixado.', 'success');
+  closeModal();
+}
+
+function submitNps() {
+  if (npsRating > 0) showToast('Avaliação registrada. Obrigado!', 'success');
+}
+
+// ── Redirect openTrainingDetail to player ───────────────────────
+// Override existing function to use player
+const _origOpenDetail = openTrainingDetail;
+function openTrainingDetail(assignmentId) {
+  openTrainingPlayer(assignmentId);
+}
+
+// ── Enhanced validation review for leaders ─────────────────────
+function openValidationReview(queueId) {
+  const v = VALIDATION_QUEUE.find(x => x.id === queueId);
+  if (!v) return;
+  const submitted = new Date(v.completedAt+'T00:00:00');
+  const daysAgo = Math.floor((Date.now() - submitted.getTime()) / 86400000);
+  // find task module for this training if available
+  const relA = MY_ASSIGNMENTS.find(a => a.title === v.training) ||
+               { trainingId:'tc4', title: v.training, track:'cyber' };
+  const mods = MODULES_BY_TRAINING[relA.trainingId] || [];
+  const taskMod = mods.find(m => m.type === 'task');
+  const criteria = taskMod?.criteria || ['Demonstrou compreensão do conteúdo','Entrega dentro do prazo e formato solicitado'];
+  const submission = v.submission || 'Entrega enviada pelo colaborador. Conteúdo aguardando revisão.';
+
+  treinOpenModal({
+    title: `Revisar entrega — ${v.collaborator}`,
+    wide: true,
+    body: `
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:var(--spacing-4);">${v.training} · Submetido ${new Date(v.completedAt+'T00:00:00').toLocaleDateString('pt-BR')} <span class="trein-val-days">· Aguardando há ${daysAgo} dia${daysAgo!==1?'s':''}</span></p>
+      <div class="trein-val-grid">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Entrega do colaborador</div>
+          <div class="trein-val-submission">${submission}</div>
+          ${v.evidence ? `<div style="margin-top:10px;padding:8px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:13px;color:var(--text-muted);">📎 Evidência anexada</div>` : ''}
+          <div style="margin-top:16px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Feedback (obrigatório se pedir ajuste)</div>
+            <textarea id="val_feedback_${queueId}" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:13px;color:var(--text-default);min-height:90px;resize:vertical;font-family:var(--font-family);outline:none;" placeholder="Descreva o que está bom, o que precisa melhorar, ou o motivo do ajuste..."></textarea>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Critérios de aceitação</div>
+          <div class="trein-val-criteria">
+            ${criteria.map((c,i)=>`
+              <div class="trein-val-crit-item">
+                <input type="checkbox" class="trein-val-crit-cb" id="val_crit_${queueId}_${i}">
+                <label for="val_crit_${queueId}_${i}" style="cursor:pointer;">${c}</label>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-primary btn-md" onclick="submitValidationDecision('${queueId}','approve')">Aprovar</button>
+      <button class="btn btn-outlined btn-md" onclick="submitValidationDecision('${queueId}','adjust')">Pedir ajuste</button>
+      <button class="btn btn-text btn-md" onclick="closeModal()">Cancelar</button>
+    `
+  });
+}
+
+function submitValidationDecision(queueId, decision) {
+  const v = VALIDATION_QUEUE.find(x => x.id === queueId);
+  if (!v) return;
+  if (decision === 'adjust') {
+    const fb = document.getElementById('val_feedback_' + queueId)?.value?.trim();
+    if (!fb) { showToast('Descreva o que precisa ser ajustado antes de enviar.', 'error'); return; }
+  }
+  const idx = VALIDATION_QUEUE.findIndex(x => x.id === queueId);
+  if (idx !== -1) VALIDATION_QUEUE.splice(idx, 1);
+  closeModal();
+  renderLiderView();
+  showToast(decision === 'approve' ? 'Aprovado. Colaborador notificado.' : 'Ajuste solicitado. Colaborador notificado.', 'success');
+}
+
+// Update validation queue cards to use new review modal
+// (existing validateTraining kept for backward compat, but queue cards now call openValidationReview)
 
 // ══════════════════════════════════════════════
 // RANKINGS & ANALYTICS

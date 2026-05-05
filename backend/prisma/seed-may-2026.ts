@@ -3,8 +3,6 @@ import { calculateScores } from '../src/utils/classification';
 
 const prisma = new PrismaClient();
 
-// ─── Critérios (mesma estrutura do seed.ts principal) ────────────────────────
-
 const TECH_CRITERIA = [
   { criterionKey: 'qualidade_tecnica',        block: 'TECNICO' as const, weight: 3 },
   { criterionKey: 'resolucao_problemas',      block: 'TECNICO' as const, weight: 3 },
@@ -57,97 +55,113 @@ type EvalSpec = {
   observations?:   string;
 };
 
-// ─── Avaliações de Maio/2026 — 16 de 20 técnicos ─────────────────────────────
-// Hoje é 2026-05-04. Datas distribuídas entre 01 e 04 de maio.
-// Continuam os arcos narrativos do seed principal.
+// ─── Avaliações de Maio/2026 — 20 colaboradores ───────────────────────────────
 
 const MAY_EVALS: EvalSpec[] = [
 
   // ── DESTAQUES (OTIMO) ──────────────────────────────────────────────────────
-  { technician: 'Mateus Costa', evaluator: 'Ana Lima', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-02T10:30:00Z'), profile: 'OTIMO_MAX',
+  { technician: 'Eperson Cardoso Mayrink Xavier Filho', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-02T10:30:00Z'), profile: 'OTIMO_ALTO',
     recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: promoção para Tech Lead aprovada pela diretoria. Mantém nota máxima e referência absoluta.' },
+    observations: 'Maio: promoção encaminhada. Liderou sprint de entrega crítica com nota máxima do time.' },
 
-  { technician: 'Isabela Martins', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
+  { technician: 'Gustavo de Jesus Carneiro', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
     createdAt: new Date('2026-05-02T14:00:00Z'), profile: 'OTIMO_MAX',
     recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: assumiu liderança formal do capítulo de Design. Nota máxima sustentada.' },
+    observations: 'Maio: note máxima sustentada. Assumiu liderança informal do capítulo de Design.' },
 
-  { technician: 'Thiago Alves', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
+  { technician: 'Gustavo Rafael de Oliveira Iotti', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
     createdAt: new Date('2026-05-03T09:15:00Z'), profile: 'OTIMO_ALTO',
     recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: liderança do projeto de migração para Vite concluída sem regressões. Promoção a Tech Lead Front-end em análise final.' },
+    observations: 'Maio: candidato a Tech Lead Front-end em avaliação final pela diretoria.' },
 
-  { technician: 'João Pinto', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
+  { technician: 'Richard Caetano dos Santos', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
     createdAt: new Date('2026-05-01T16:00:00Z'), profile: 'OTIMO_ALTO',
-    recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: efetivado como Tech Lead Back-end. Já mentora 4 desenvolvedores ativamente.' },
-
-  { technician: 'Marina Gomes', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-03T11:00:00Z'), profile: 'OTIMO_MEDIO',
-    recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: promoção para Sênior aprovada. Atua como referência informal em qualidade de código no time.' },
-
-  { technician: 'Amanda Souza', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-04T10:00:00Z'), profile: 'OTIMO_MEDIO',
-    recommendation: 'INDICADO_PROMOCAO',
-    observations: 'Maio: promoção para Sênior em revisão final. Liderança em UX consolidada no Q2.' },
-
-  { technician: 'Beatriz Lima', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-04T14:30:00Z'), profile: 'OTIMO_BAIXO',
     recommendation: 'ELEGIVEL_BONUS',
-    observations: 'Maio: spike de microserviços aprovado, projeto seguirá no Q3. Elegível para bônus de performance.' },
+    observations: 'Maio: segundo ciclo no Ótimo. Documentação Swagger completa sem revisão. Elegível para bônus.' },
+
+  { technician: 'Pedro Teodoro Varolo', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-04T11:00:00Z'), profile: 'OTIMO_ALTO',
+    recommendation: 'INDICADO_PROMOCAO',
+    observations: 'Maio: promoção para sênior aprovada. Passa a mentorear o time de back-end junior.' },
+
+  { technician: 'Mário Luiz Marchetti Alves', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-04T14:30:00Z'), profile: 'OTIMO_MEDIO',
+    recommendation: 'ELEGIVEL_BONUS',
+    observations: 'Maio: terceiro ciclo consecutivo no Ótimo. Reeleito colaborador do mês.' },
 
   // ── BOM ────────────────────────────────────────────────────────────────────
-  { technician: 'Lucas Andrade', evaluator: 'Ana Lima', cycle: '2026-Q2',
+  { technician: 'Vanilson Lima', evaluator: 'Ana Lima', cycle: '2026-Q2',
     createdAt: new Date('2026-05-02T15:30:00Z'), profile: 'BOM_ALTO',
     recommendation: 'ELEGIVEL_BONUS',
-    observations: 'Maio: consolidou-se no nível BOM_ALTO. Indicação para promoção será reavaliada no fechamento do Q2.' },
+    observations: 'Maio: quarto ciclo em BOM_ALTO. Confiabilidade reconhecida pelo gestor.' },
 
-  { technician: 'Gabriel Morais', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
+  { technician: 'Alexandre Takeshi', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-03T10:00:00Z'), profile: 'OTIMO_MEDIO',
+    recommendation: 'ELEGIVEL_BONUS',
+    observations: 'Maio: mantém Ótimo. Nova contribuição em arquitetura do módulo de relatórios.' },
+
+  { technician: 'Kauan Carvalho dos Santos', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
     createdAt: new Date('2026-05-03T13:00:00Z'), profile: 'BOM_ALTO',
     recommendation: 'ELEGIVEL_BONUS',
-    observations: 'Maio: terceiro ciclo consecutivo de evolução. Já é tratado como pleno apesar do tempo de casa.' },
+    observations: 'Maio: passou a auxiliar reviews de componentes dos juniores. BOM_ALTO consolidado.' },
 
-  { technician: 'Larissa Dias', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-01T11:30:00Z'), profile: 'BOM_MEDIO',
+  { technician: 'Lucas Bueno e Silva Vigatto', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-01T11:30:00Z'), profile: 'OTIMO_MEDIO',
     recommendation: 'ELEGIVEL_BONUS',
-    observations: 'Maio: jornada de recuperação reconhecida formalmente. Mentora informal de uma nova contratação.' },
+    observations: 'Maio: workshop de UX facilita comparado por ele reconhecido como melhor iniciativa do mês.' },
 
-  { technician: 'Alexandre Nunes', evaluator: 'Ana Lima', cycle: '2026-Q2',
+  { technician: 'Gabriel Marques Gallo', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
     createdAt: new Date('2026-05-04T09:00:00Z'), profile: 'BOM_ALTO',
     recommendation: 'ELEGIVEL_BONUS',
-    observations: 'Maio: nova automação proposta economizou mais 2h/semana. Reeleito colaborador do mês pelo time.' },
+    observations: 'Maio: primeiro ciclo em BOM_ALTO. Jornada de melhoria reconhecida formalmente.' },
 
-  // ── REGULAR ────────────────────────────────────────────────────────────────
-  { technician: 'Felipe Rezende', evaluator: 'Carlos Mendes', cycle: '2026-Q2',
+  { technician: 'Wander Gabriel de Souza Lima', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-02T11:00:00Z'), profile: 'BOM_ALTO',
+    recommendation: 'ELEGIVEL_BONUS',
+    observations: 'Maio: spike de microserviços aprovado, projeto seguirá no Q3. Elegível para bônus.' },
+
+  { technician: 'Rafael Mendes Maciel', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-05T10:00:00Z'), profile: 'BOM_ALTO',
+    recommendation: 'ELEGIVEL_BONUS',
+    observations: 'Maio: nova automação proposta economizou mais 2h/semana. Consistência reconhecida.' },
+
+  { technician: 'Jéssica Laine Conde', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-05T14:00:00Z'), profile: 'BOM_ALTO',
+    observations: 'Maio: terceiro ciclo em BOM_ALTO. Referência em trabalho em equipe.' },
+
+  // ── REGULAR / PDI ──────────────────────────────────────────────────────────
+  { technician: 'Caio Henrique Queiroz dos Santos', evaluator: 'Ana Lima', cycle: '2026-Q2',
     createdAt: new Date('2026-05-01T14:00:00Z'), profile: 'REGULAR_ALTO',
     recommendation: 'PLANO_DESENVOLVIMENTO',
-    observations: 'Maio: PDI continua, leve melhora em comprometimento. Próximo checkpoint no fim de maio definirá continuidade.' },
+    observations: 'Maio: PDI em andamento. Leve melhora em comprometimento. Próximo checkpoint ao fim de maio.' },
 
-  { technician: 'Rodrigo Fernandes', evaluator: 'Ana Lima', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-02T16:30:00Z'), profile: 'REGULAR_ALTO',
+  { technician: 'Luiz Gustavo Roberto Romanini', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-02T16:30:00Z'), profile: 'REGULAR_MEDIO',
     recommendation: 'PLANO_DESENVOLVIMENTO',
-    observations: 'Maio: primeira reunião de PDI realizada. Carga reduzida para 70% temporariamente. Acompanhamento quinzenal.' },
+    observations: 'Maio: primeira reunião de PDI realizada. Carga reduzida temporariamente. Acompanhamento quinzenal.' },
 
-  { technician: 'Camila Torres', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
-    createdAt: new Date('2026-05-03T15:00:00Z'), profile: 'REGULAR_BAIXO',
+  { technician: 'Luis Otávio Borba', evaluator: 'Juliana Ferreira', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-03T15:00:00Z'), profile: 'REGULAR_ALTO',
     recommendation: 'PLANO_DESENVOLVIMENTO',
-    observations: 'Maio: estabilizou em REGULAR_BAIXO sem recuar. PDI prorrogado por mais 60 dias com nova mentoria.' },
+    observations: 'Maio: estabilizou em REGULAR sem recuar. PDI prorrogado por 60 dias com nova mentoria.' },
 
-  { technician: 'Sofia Barbosa', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
+  { technician: 'Matheus de Lima Benini', evaluator: 'Ana Lima', cycle: '2026-Q2',
     createdAt: new Date('2026-05-04T11:30:00Z'), profile: 'REGULAR_ALTO',
-    observations: 'Maio: trajetória de recuperação se mantém estável. PDI próximo da conclusão formal.' },
+    recommendation: 'PLANO_DESENVOLVIMENTO',
+    observations: 'Maio: PDI próximo da conclusão formal. Trajetória de melhora mantida.' },
 
   // ── CRITICO ────────────────────────────────────────────────────────────────
-  { technician: 'Daniel Ferreira', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
+  { technician: 'Giovanni Rosa Marcomini', evaluator: 'Roberto Nunes', cycle: '2026-Q2',
     createdAt: new Date('2026-05-01T17:00:00Z'), profile: 'CRITICO_ALTO',
     recommendation: 'ATENCAO_URGENTE',
     observations: 'Maio: regrediu após melhora pontual em abril. Reunião com RH agendada. Decisão sobre continuidade até fim do Q2.' },
-];
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+  { technician: 'Victor Zanfelice', evaluator: 'Ana Lima', cycle: '2026-Q2',
+    createdAt: new Date('2026-05-05T09:00:00Z'), profile: 'REGULAR_MEDIO',
+    recommendation: 'PLANO_DESENVOLVIMENTO',
+    observations: 'Maio: sem avanço no PDI. Reunião trilateral (colaborador, gestor, RH) agendada para a próxima semana.' },
+];
 
 async function main() {
   console.log('[seed-may] Populando avaliações de Maio/2026...\n');
@@ -170,7 +184,6 @@ async function main() {
       continue;
     }
 
-    // Idempotência: pula se já existe avaliação deste técnico em maio/2026
     const existing = await prisma.evaluation.findFirst({
       where: {
         technicianId,
@@ -210,13 +223,13 @@ async function main() {
     });
 
     created++;
-    console.log(`[seed-may] ${spec.technician.padEnd(20)} | ${calc.classification.padEnd(7)} | nota ${calc.finalScore} | ${spec.createdAt.toISOString().slice(0,10)}`);
+    console.log(`[seed-may] ${spec.technician.padEnd(42)} | ${calc.classification.padEnd(7)} | ${calc.finalScore}`);
   }
 
   console.log(`
 [seed-may] ──────────────────────────────────────
 [seed-may] ✓ Concluído!
-[seed-may]   ${created} avaliações de maio criadas  (${skipped} já existiam — ignoradas)
+[seed-may]   ${created} avaliações criadas  (${skipped} já existiam — ignoradas)
 [seed-may] ──────────────────────────────────────
   `);
 }
