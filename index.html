@@ -802,16 +802,18 @@
     }
     .tech-pill__main { flex: 1; min-width: 0; }
     .tech-pill__name {
+      display: block;
       font-size: var(--type-body-sm-size); font-weight: 600;
       color: var(--text-default);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .tech-pill--active .tech-pill__name { color: var(--text-high); }
     .tech-pill__team {
+      display: block;
       font-size: 11px;
       color: var(--text-muted);
       letter-spacing: .02em;
-      margin-top: 1px;
+      margin-top: 1px; white-space: nowrap;
     }
     .tech-pill__check {
       flex-shrink: 0;
@@ -852,6 +854,62 @@
     .choice-banner__sub {
       font-size: var(--type-body-sm-size); color: var(--text-low);
       line-height: 1.45;
+    }
+
+    /* ── Questions preview (Step 2: inline list after card selection) ── */
+    .qpreview {
+      margin-top: var(--spacing-5);
+      animation: wizardEnter 280ms cubic-bezier(.2,.7,.2,1) both;
+    }
+    .qpreview__block {
+      margin-bottom: var(--spacing-4);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .qpreview__block-head {
+      display: flex; align-items: center; gap: var(--spacing-2);
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--surface-interactive);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .qpreview__pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .qpreview__pill--tecnico   { background: rgba(62,99,221,.15); color: var(--indigo-11); }
+    .qpreview__pill--comportamental { background: rgba(168,85,247,.15); color: #a855f7; }
+    .qpreview__count {
+      margin-left: auto;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .qpreview__list { padding: var(--spacing-1) 0; }
+    .qpreview__item {
+      display: flex; align-items: center; gap: var(--spacing-3);
+      padding: var(--spacing-2) var(--spacing-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .qpreview__item:last-child { border-bottom: none; }
+    .qpreview__num {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--surface-interactive);
+      display: grid; place-items: center;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+    }
+    .qpreview__label {
+      flex: 1;
+      font-size: var(--type-body-sm-size); color: var(--text-default);
+    }
+    .qpreview__weight {
+      flex-shrink: 0;
+      font-size: 11px; color: var(--text-muted);
+      background: var(--surface-interactive);
+      border-radius: var(--radius-sm);
+      padding: 1px 7px;
     }
 
     /* ── Final summary card (Step 4) ───────────────────────────────── */
@@ -3017,6 +3075,7 @@
       padding: 22px 16px 18px;
       display: flex; flex-direction: column; align-items: center; gap: 8px;
       cursor: pointer; position: relative; overflow: visible;
+      min-height: 210px;
       transition: transform 220ms cubic-bezier(.2,.7,.2,1),
                   border-color 220ms ease, box-shadow 220ms ease;
     }
@@ -3045,7 +3104,9 @@
     .team-member-name {
       font-size: 13px; font-weight: 700; color: var(--gray-12);
       text-align: center; line-height: 1.35;
-      max-width: 100%; word-break: break-word;
+      max-width: 100%;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; word-break: break-word;
     }
     .team-member-score {
       font-size: 24px; font-weight: 900; font-family: var(--font-display);
@@ -3057,7 +3118,7 @@
     .team-member-niche {
       font-size: 12px; font-weight: 600;
       padding: 3px 10px; border-radius: 100px;
-      margin-top: 2px;
+      margin-top: 2px; white-space: nowrap;
     }
     .team-member-empty {
       grid-column: 1 / -1; text-align: center;
@@ -3387,11 +3448,6 @@
       cursor: pointer;
     }
     .team-stat-card:hover { transform: translateY(-3px); }
-    .team-stat-card::after {
-      content: ''; position: absolute; top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-    }
     .team-stat-card__icon {
       width: 48px; height: 48px; border-radius: var(--radius-sm);
       display: flex; align-items: center; justify-content: center;
@@ -3400,39 +3456,97 @@
     .team-stat-card__value {
       font-size: 32px !important; font-weight: 800;
       font-family: var(--font-display); letter-spacing: -0.04em;
-      line-height: 1; color: #fff;
+      line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-    .team-stat-card__label { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+    .team-stat-card__label { font-size: 13px; margin-top: 3px; }
 
+    /* ── Light mode — saturated tints, dark text ── */
     .team-stat-card--indigo {
-      background: linear-gradient(135deg, rgba(62,99,221,0.20) 0%, rgba(62,99,221,0.08) 100%);
-      border-color: var(--indigo-7);
-      box-shadow: 0 6px 24px rgba(62,99,221,0.25);
+      background: linear-gradient(135deg, #e1e9ff 0%, #edf2fe 100%);
+      border-color: var(--indigo-6);
+      box-shadow: 0 4px 16px rgba(62,99,221,0.14);
     }
-    .team-stat-card--indigo .team-stat-card__icon { background: rgba(62,99,221,0.25); }
-    .team-stat-card--indigo:hover { box-shadow: 0 12px 36px rgba(62,99,221,0.42); }
+    .team-stat-card--indigo .team-stat-card__icon { background: rgba(62,99,221,0.16); color: var(--indigo-11); }
+    .team-stat-card--indigo .team-stat-card__value { color: var(--indigo-12); }
+    .team-stat-card--indigo .team-stat-card__label { color: var(--indigo-11); }
+    .team-stat-card--indigo:hover { box-shadow: 0 10px 28px rgba(62,99,221,0.26); }
+
     .team-stat-card--green {
-      background: linear-gradient(135deg, rgba(48,164,108,0.20) 0%, rgba(48,164,108,0.08) 100%);
-      border-color: var(--green-7);
-      box-shadow: 0 6px 24px rgba(48,164,108,0.22);
+      background: linear-gradient(135deg, #ccebd7 0%, #ddf3e4 100%);
+      border-color: var(--green-6);
+      box-shadow: 0 4px 16px rgba(48,164,108,0.14);
     }
-    .team-stat-card--green .team-stat-card__icon { background: rgba(48,164,108,0.25); }
-    .team-stat-card--green:hover { box-shadow: 0 12px 36px rgba(48,164,108,0.38); }
+    .team-stat-card--green .team-stat-card__icon { background: rgba(48,164,108,0.18); color: var(--green-11); }
+    .team-stat-card--green .team-stat-card__value { color: var(--green-12); }
+    .team-stat-card--green .team-stat-card__label { color: var(--green-11); }
+    .team-stat-card--green:hover { box-shadow: 0 10px 28px rgba(48,164,108,0.28); }
+
     .team-stat-card--amber {
-      background: linear-gradient(135deg, rgba(255,178,36,0.18) 0%, rgba(255,178,36,0.06) 100%);
-      border-color: var(--amber-7);
-      box-shadow: 0 6px 24px rgba(255,178,36,0.20);
+      background: linear-gradient(135deg, #ffecbc 0%, #fff4d5 100%);
+      border-color: var(--amber-6);
+      box-shadow: 0 4px 16px rgba(173,87,0,0.14);
     }
-    .team-stat-card--amber .team-stat-card__icon { background: rgba(255,178,36,0.22); }
-    .team-stat-card--amber:hover { box-shadow: 0 12px 36px rgba(255,178,36,0.35); }
+    .team-stat-card--amber .team-stat-card__icon { background: rgba(255,178,36,0.28); color: var(--amber-11); }
+    .team-stat-card--amber .team-stat-card__value { color: var(--amber-12); }
+    .team-stat-card--amber .team-stat-card__label { color: var(--amber-11); }
+    .team-stat-card--amber:hover { box-shadow: 0 10px 28px rgba(173,87,0,0.22); }
+
     .team-stat-card--rose {
-      background: linear-gradient(135deg, rgba(229,72,77,0.18) 0%, rgba(229,72,77,0.06) 100%);
-      border-color: var(--red-7);
-      box-shadow: 0 6px 24px rgba(229,72,77,0.22);
+      background: linear-gradient(135deg, #ffe5e5 0%, #ffefef 100%);
+      border-color: var(--red-6);
+      box-shadow: 0 4px 16px rgba(229,72,77,0.14);
     }
-    .team-stat-card--rose .team-stat-card__icon { background: rgba(229,72,77,0.22); }
-    .team-stat-card--rose:hover { box-shadow: 0 12px 36px rgba(229,72,77,0.38); }
+    .team-stat-card--rose .team-stat-card__icon { background: rgba(229,72,77,0.14); color: var(--red-11); }
+    .team-stat-card--rose .team-stat-card__value { color: var(--red-12); }
+    .team-stat-card--rose .team-stat-card__label { color: var(--red-11); }
+    .team-stat-card--rose:hover { box-shadow: 0 10px 28px rgba(229,72,77,0.28); }
+
+    /* ── Dark mode overrides — glassy gradients, white text ── */
+    [data-theme="dark"] .team-stat-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    }
+    [data-theme="dark"] .team-stat-card--indigo {
+      background: linear-gradient(135deg, rgba(62,99,221,0.28) 0%, rgba(62,99,221,0.10) 100%);
+      border-color: rgba(62,99,221,0.45);
+      box-shadow: 0 6px 24px rgba(62,99,221,0.30);
+    }
+    [data-theme="dark"] .team-stat-card--indigo .team-stat-card__icon { background: rgba(62,99,221,0.30); color: #a5b8ff; }
+    [data-theme="dark"] .team-stat-card--indigo .team-stat-card__value { color: #fff; }
+    [data-theme="dark"] .team-stat-card--indigo .team-stat-card__label { color: rgba(165,184,255,0.75); }
+    [data-theme="dark"] .team-stat-card--indigo:hover { box-shadow: 0 12px 36px rgba(62,99,221,0.48); }
+
+    [data-theme="dark"] .team-stat-card--green {
+      background: linear-gradient(135deg, rgba(48,164,108,0.28) 0%, rgba(48,164,108,0.10) 100%);
+      border-color: rgba(48,164,108,0.42);
+      box-shadow: 0 6px 24px rgba(48,164,108,0.26);
+    }
+    [data-theme="dark"] .team-stat-card--green .team-stat-card__icon { background: rgba(48,164,108,0.30); color: #6ed9a0; }
+    [data-theme="dark"] .team-stat-card--green .team-stat-card__value { color: #fff; }
+    [data-theme="dark"] .team-stat-card--green .team-stat-card__label { color: rgba(110,217,160,0.75); }
+    [data-theme="dark"] .team-stat-card--green:hover { box-shadow: 0 12px 36px rgba(48,164,108,0.44); }
+
+    [data-theme="dark"] .team-stat-card--amber {
+      background: linear-gradient(135deg, rgba(255,178,36,0.24) 0%, rgba(255,178,36,0.08) 100%);
+      border-color: rgba(255,178,36,0.38);
+      box-shadow: 0 6px 24px rgba(255,178,36,0.24);
+    }
+    [data-theme="dark"] .team-stat-card--amber .team-stat-card__icon { background: rgba(255,178,36,0.28); color: #ffc14d; }
+    [data-theme="dark"] .team-stat-card--amber .team-stat-card__value { color: #fff; }
+    [data-theme="dark"] .team-stat-card--amber .team-stat-card__label { color: rgba(255,193,77,0.75); }
+    [data-theme="dark"] .team-stat-card--amber:hover { box-shadow: 0 12px 36px rgba(255,178,36,0.40); }
+
+    [data-theme="dark"] .team-stat-card--rose {
+      background: linear-gradient(135deg, rgba(229,72,77,0.26) 0%, rgba(229,72,77,0.08) 100%);
+      border-color: rgba(229,72,77,0.40);
+      box-shadow: 0 6px 24px rgba(229,72,77,0.26);
+    }
+    [data-theme="dark"] .team-stat-card--rose .team-stat-card__icon { background: rgba(229,72,77,0.26); color: #ff8a8e; }
+    [data-theme="dark"] .team-stat-card--rose .team-stat-card__value { color: #fff; }
+    [data-theme="dark"] .team-stat-card--rose .team-stat-card__label { color: rgba(255,138,142,0.75); }
+    [data-theme="dark"] .team-stat-card--rose:hover { box-shadow: 0 12px 36px rgba(229,72,77,0.44); }
 
     /* ── Card tooltip ───────────────────────────────────────────── */
     #cal-tip {
@@ -3608,19 +3722,6 @@
 
     <!-- Bottom actions -->
     <div class="sidebar-bottom" style="margin-top:auto;">
-      <!-- Usuário logado -->
-      <div class="sidebar-user" id="sidebar-user">
-        <div class="sidebar-user__avatar" id="user-avatar">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" opacity=".5">
-            <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M2 13.5c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="sidebar-user__info">
-          <div class="sidebar-user__name" id="user-name">Carregando…</div>
-          <div class="sidebar-user__role" id="user-role-label"></div>
-        </div>
-      </div>
       <div class="sidebar__divider"></div>
       <button class="sidebar__item" onclick="toggleTheme()" style="width:100%; text-align:left;">
         <svg id="theme-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -3784,6 +3885,9 @@
           </header>
           <div class="wizard-panel__body">
             <div class="choice-cards" id="choice-cards" role="radiogroup" aria-label="Conjunto de perguntas"></div>
+
+            <!-- Preview de perguntas: aparece ao selecionar Template ou Minhas Perguntas -->
+            <div id="questions-preview" class="qpreview" style="display:none;"></div>
 
             <!-- Banner contextual: aparece dependendo da escolha -->
             <div id="choice-banner" class="choice-banner" style="display:none;"></div>
@@ -4486,14 +4590,15 @@ function renderChoiceCards() {
              <path d="M7 8h8M7 11h8M7 14h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
            </svg>`,
   });
-  if (customTotal > 0) {
+  if (customTotal > 0 && localStorage.getItem('sietch_eval_done')) {
     cards.push({
       id: 'saved',
       title: 'Minhas perguntas',
       desc: `${customTotal} perguntas no seu modelo (${customCriteria.tecnico.length} técnicas + ${customCriteria.comportamental.length} comportamentais).`,
       badge: 'Recomendado',
       icon: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-               <path d="M11 3l2.5 5.5 6 .9-4.4 4.2 1 6L11 16.5 5.9 19.6l1-6L2.5 9.4l6-.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+               <path d="M5 3h12a1 1 0 0 1 1 1v15l-6-3-6 3V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+               <path d="M8 8h6M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
              </svg>`,
     });
   }
@@ -4708,6 +4813,48 @@ function renderChoiceBanner() {
     banner.style.display = 'none';
     banner.innerHTML = '';
   }
+
+  renderQuestionsPreview();
+}
+
+function renderQuestionsPreview() {
+  const el = document.getElementById('questions-preview');
+  if (!el) return;
+
+  let tech = [], behav = [];
+  if (wizardChoice === 'template') {
+    tech  = CRITERIA.tecnico        || [];
+    behav = CRITERIA.comportamental || [];
+  } else if (wizardChoice === 'saved') {
+    tech  = customCriteria.tecnico        || [];
+    behav = customCriteria.comportamental || [];
+  } else {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+
+  const block = (list, label, mod, startNum) => {
+    const items = list.map((c, i) => `
+      <div class="qpreview__item">
+        <span class="qpreview__num">${startNum + i}</span>
+        <span class="qpreview__label">${c.label}</span>
+        <span class="qpreview__weight">peso ${c.weight}</span>
+      </div>`).join('');
+    return `
+      <div class="qpreview__block">
+        <div class="qpreview__block-head">
+          <span class="qpreview__pill qpreview__pill--${mod}">${label}</span>
+          <span class="qpreview__count">${list.length} perguntas</span>
+        </div>
+        <div class="qpreview__list">${items}</div>
+      </div>`;
+  };
+
+  el.style.display = '';
+  el.innerHTML =
+    block(tech,  'Bloco Técnico',        'tecnico',        1) +
+    block(behav, 'Bloco Comportamental', 'comportamental', tech.length + 1);
 }
 
 async function customizeTemplate() {
@@ -5060,13 +5207,83 @@ let currentUser = null;
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+function seedDemoHistory() {
+  if (localStorage.getItem('sietch_history')) return;
+  const entries = [
+    { id:'h1',  tecnico:'Gustavo de Jesus Carneiro',            nicho:'design',   data:'2026-05-02T14:00:00Z',
+      scores:{t_qualidade:5,t_resolucao:5,t_produtividade:5,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:5,c_postura:5,c_iniciativa:5},
+      notaTecnica:5.00, notaComportamental:5.00, notaFinal:5.00, classificacao:'Ótimo', classificacaoCls:'otimo',
+      recomendacao:'promocao', observacoes:'Nota máxima em todos os critérios. Destaque absoluto do mês no Design.' },
+    { id:'h2',  tecnico:'Eperson Cardoso Mayrink Xavier Filho', nicho:'dev',       data:'2026-05-01T10:30:00Z',
+      scores:{t_qualidade:5,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4},
+      notaTecnica:4.75, notaComportamental:4.62, notaFinal:4.70, classificacao:'Ótimo', classificacaoCls:'otimo',
+      recomendacao:'promocao', observacoes:'Promoção encaminhada. Liderou sprint de entrega crítica com nota máxima do time.' },
+    { id:'h3',  tecnico:'Richard Caetano dos Santos',           nicho:'backend',  data:'2026-05-01T16:00:00Z',
+      scores:{t_qualidade:5,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4},
+      notaTecnica:4.75, notaComportamental:4.62, notaFinal:4.70, classificacao:'Ótimo', classificacaoCls:'otimo',
+      recomendacao:'bonus', observacoes:'Segundo ciclo no Ótimo. Documentação Swagger completa sem revisão.' },
+    { id:'h4',  tecnico:'Pedro Teodoro Varolo',                 nicho:'backend',  data:'2026-05-04T11:00:00Z',
+      scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4},
+      notaTecnica:4.42, notaComportamental:4.38, notaFinal:4.41, classificacao:'Ótimo', classificacaoCls:'otimo',
+      recomendacao:'promocao', observacoes:'Promoção para sênior aprovada. Passa a mentorear o time de back-end junior.' },
+    { id:'h5',  tecnico:'Mário Luiz Marchetti Alves',           nicho:'outros',   data:'2026-05-04T14:30:00Z',
+      scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:4},
+      notaTecnica:4.25, notaComportamental:4.23, notaFinal:4.24, classificacao:'Ótimo', classificacaoCls:'otimo',
+      recomendacao:'bonus', observacoes:'Terceiro ciclo consecutivo no Ótimo. Reeleito colaborador do mês.' },
+    { id:'h6',  tecnico:'Vanilson Lima',                        nicho:'dev',       data:'2026-05-02T15:30:00Z',
+      scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4},
+      notaTecnica:4.00, notaComportamental:4.00, notaFinal:4.00, classificacao:'Bom', classificacaoCls:'bom',
+      recomendacao:'bonus', observacoes:'Quarto ciclo em BOM. Confiabilidade reconhecida pelo gestor.' },
+    { id:'h7',  tecnico:'Jéssica Laine Conde',                  nicho:'outros',   data:'2026-05-05T14:00:00Z',
+      scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4},
+      notaTecnica:4.00, notaComportamental:4.00, notaFinal:4.00, classificacao:'Bom', classificacaoCls:'bom',
+      recomendacao:null, observacoes:'Terceiro ciclo em BOM. Referência em trabalho em equipe.' },
+    { id:'h8',  tecnico:'Kauan Carvalho dos Santos',            nicho:'design',   data:'2026-05-03T13:00:00Z',
+      scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4},
+      notaTecnica:4.00, notaComportamental:4.00, notaFinal:4.00, classificacao:'Bom', classificacaoCls:'bom',
+      recomendacao:'bonus', observacoes:'Passou a auxiliar reviews de componentes dos juniores. BOM consolidado.' },
+    { id:'h9',  tecnico:'Wander Gabriel de Souza Lima',         nicho:'backend',  data:'2026-05-02T11:00:00Z',
+      scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4},
+      notaTecnica:4.00, notaComportamental:4.00, notaFinal:4.00, classificacao:'Bom', classificacaoCls:'bom',
+      recomendacao:'bonus', observacoes:'Spike de microserviços aprovado, projeto seguirá no Q3.' },
+    { id:'h10', tecnico:'Caio Henrique Queiroz dos Santos',     nicho:'dev',       data:'2026-05-01T14:00:00Z',
+      scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3},
+      notaTecnica:3.00, notaComportamental:3.00, notaFinal:3.00, classificacao:'Regular', classificacaoCls:'regular',
+      recomendacao:'pdp', observacoes:'PDI em andamento. Leve melhora em comprometimento. Checkpoint ao fim do mês.' },
+    { id:'h11', tecnico:'Luis Otávio Borba',                    nicho:'frontend', data:'2026-05-03T15:00:00Z',
+      scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3},
+      notaTecnica:3.00, notaComportamental:3.00, notaFinal:3.00, classificacao:'Regular', classificacaoCls:'regular',
+      recomendacao:'pdp', observacoes:'Estabilizou em Regular sem recuar. PDI prorrogado 60 dias com nova mentoria.' },
+    { id:'h12', tecnico:'Luiz Gustavo Roberto Romanini',        nicho:'frontend', data:'2026-05-02T16:30:00Z',
+      scores:{t_qualidade:2,t_resolucao:3,t_produtividade:2,t_dominio:3,t_documentacao:2,c_colaboracao:2,c_cultura:3,c_dedicacao:2,c_postura:2,c_iniciativa:3},
+      notaTecnica:2.42, notaComportamental:2.38, notaFinal:2.40, classificacao:'Regular', classificacaoCls:'regular',
+      recomendacao:'pdp', observacoes:'Primeira reunião de PDI realizada. Carga reduzida temporariamente.' },
+    { id:'h13', tecnico:'Giovanni Rosa Marcomini',              nicho:'backend',  data:'2026-05-01T17:00:00Z',
+      scores:{t_qualidade:2,t_resolucao:2,t_produtividade:1,t_dominio:2,t_documentacao:2,c_colaboracao:2,c_cultura:1,c_dedicacao:2,c_postura:2,c_iniciativa:1},
+      notaTecnica:1.75, notaComportamental:1.62, notaFinal:1.70, classificacao:'Crítico', classificacaoCls:'critico',
+      recomendacao:'urgente', observacoes:'Regrediu após melhora pontual. Reunião com RH agendada. Decisão sobre continuidade até fim do Q2.' },
+    { id:'h14', tecnico:'Gabriel Marques Gallo',                nicho:'frontend', data:'2026-04-22T09:00:00Z',
+      scores:{t_qualidade:4,t_resolucao:3,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:3,c_iniciativa:4},
+      notaTecnica:3.50, notaComportamental:3.85, notaFinal:3.64, classificacao:'Bom', classificacaoCls:'bom',
+      recomendacao:'bonus', observacoes:'Primeiro ciclo em BOM. Jornada de melhoria reconhecida formalmente.' },
+    { id:'h15', tecnico:'Matheus de Lima Benini',               nicho:'outros',   data:'2026-04-04T11:30:00Z',
+      scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3},
+      notaTecnica:3.00, notaComportamental:3.00, notaFinal:3.00, classificacao:'Regular', classificacaoCls:'regular',
+      recomendacao:'pdp', observacoes:'PDI próximo da conclusão formal. Trajetória de melhora mantida.' },
+  ];
+  localStorage.setItem('sietch_history', JSON.stringify(entries));
+  // Demo já tem avaliações — libera "Minhas perguntas" assim que critérios forem salvos
+  localStorage.setItem('sietch_eval_done', '1');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   loadTheme();
+  seedDemoHistory();
   // Score panels só são renderizados quando o usuário chega no Step 3
   // (precisamos saber qual conjunto de critérios usar antes).
   updateSummary();
   updateHistoryBadge();
-  showView('meu-time');
+  showView('evaluation');
   wizardGoTo(1);
   await initAuth();
 });
@@ -5589,6 +5806,7 @@ function saveEvaluation() {
   const history = getHistory();
   history.unshift(evaluation);
   localStorage.setItem('sietch_history', JSON.stringify(history));
+  localStorage.setItem('sietch_eval_done', '1');
 
   updateHistoryBadge();
   showResults(evaluation);
@@ -5911,10 +6129,14 @@ function viewDetail(id) {
   const date = new Date(ev.data).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
   const badgeCls = ev.classificacaoCls ? `badge-${ev.classificacaoCls}` : 'badge-default';
 
-  const renderDetailBlock = (block, title) => `
+  const renderDetailBlock = (block, title) => {
+    // History entries are always stored with template CRITERIA keys (t_qualidade, c_colaboracao, etc.)
+    // Do not use getCurrentCriteria here — it may return DB custom criteria keys after wizard Step 2 loads
+    const critList = CRITERIA[block] || [];
+    return `
     <div style="margin-bottom:var(--spacing-6);">
       <div class="detail-section-title">${title}</div>
-      ${getCurrentCriteria(block).map(c => {
+      ${critList.map(c => {
         const s = ev.scores[c.id];
         const pct = s ? (s/5)*100 : 0;
         return `
@@ -5927,6 +6149,7 @@ function viewDetail(id) {
         </div>`;
       }).join('')}
     </div>`;
+  };
 
   currentExportText = buildExportText(ev);
 
@@ -6731,28 +6954,48 @@ function avatarColor(name) {
   return AVATAR_COLORS[(name.charCodeAt(0) + name.charCodeAt(name.length - 1)) % AVATAR_COLORS.length];
 }
 
-/* ── Mock data — April 2026, 20 technicians ── */
+/* ── Mock data — April 2026, 35 technicians (7 por área) ── */
 const MOCK_EVALUATIONS = [
-  { id:'m1',  nome:'Ana Rodrigues',   nicho:'frontend', data:'2026-04-02T10:00:00Z', createdAt:'2026-04-02T10:00:00Z', notaFinal:4.52, finalScore:4.52, tecnico:4.60, comportamental:4.40, technician:{name:'Ana Rodrigues',team:'frontend'},   scores:{t_qualidade:5,t_resolucao:4,t_produtividade:5,t_dominio:4,t_documentacao:5,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4}, recomendacao:'promocao', observacoes:'Excelente trabalho no projeto de redesign do app mobile. Referência técnica para o time.' },
-  { id:'m2',  nome:'Bruno Oliveira',  nicho:'backend',  data:'2026-04-03T14:00:00Z', createdAt:'2026-04-03T14:00:00Z', notaFinal:3.84, finalScore:3.84, tecnico:4.00, comportamental:3.60, technician:{name:'Bruno Oliveira',team:'backend'},   scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:3,c_dedicacao:4,c_postura:3,c_iniciativa:4}, recomendacao:'bonus' },
-  { id:'m3',  nome:'Carol Santos',    nicho:'design',   data:'2026-04-05T09:00:00Z', createdAt:'2026-04-05T09:00:00Z', notaFinal:4.78, finalScore:4.78, tecnico:4.80, comportamental:4.75, technician:{name:'Carol Santos',team:'design'},       scores:{t_qualidade:5,t_resolucao:5,t_produtividade:5,t_dominio:4,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:5,c_postura:4,c_iniciativa:5}, recomendacao:'promocao', observacoes:'Melhor entregas de design do trimestre. Liderou a revisão do DS com maestria.' },
-  { id:'m4',  nome:'Diego Costa',     nicho:'dev',      data:'2026-04-07T11:00:00Z', createdAt:'2026-04-07T11:00:00Z', notaFinal:3.20, finalScore:3.20, tecnico:3.20, comportamental:3.25, technician:{name:'Diego Costa',team:'dev'},           scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:4,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
-  { id:'m5',  nome:'Elena Ferreira',  nicho:'frontend', data:'2026-04-08T16:00:00Z', createdAt:'2026-04-08T16:00:00Z', notaFinal:4.30, finalScore:4.30, tecnico:4.40, comportamental:4.15, technician:{name:'Elena Ferreira',team:'frontend'},   scores:{t_qualidade:4,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:5}, recomendacao:'bonus' },
-  { id:'m6',  nome:'Felipe Alves',    nicho:'backend',  data:'2026-04-09T10:00:00Z', createdAt:'2026-04-09T10:00:00Z', notaFinal:2.64, finalScore:2.64, tecnico:2.60, comportamental:2.70, technician:{name:'Felipe Alves',team:'backend'},     scores:{t_qualidade:2,t_resolucao:3,t_produtividade:2,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:2,c_dedicacao:3,c_postura:3,c_iniciativa:2}, recomendacao:'pdp', observacoes:'Necessita de suporte mais próximo. Dificuldades com prazos e qualidade de entrega.' },
-  { id:'m7',  nome:'Gabriela Lima',   nicho:'design',   data:'2026-04-10T09:30:00Z', createdAt:'2026-04-10T09:30:00Z', notaFinal:4.62, finalScore:4.62, tecnico:4.60, comportamental:4.65, technician:{name:'Gabriela Lima',team:'design'},     scores:{t_qualidade:5,t_resolucao:4,t_produtividade:5,t_dominio:5,t_documentacao:4,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4}, recomendacao:'promocao' },
-  { id:'m8',  nome:'Henrique Melo',   nicho:'dev',      data:'2026-04-11T14:00:00Z', createdAt:'2026-04-11T14:00:00Z', notaFinal:3.56, finalScore:3.56, tecnico:3.60, comportamental:3.50, technician:{name:'Henrique Melo',team:'dev'},         scores:{t_qualidade:3,t_resolucao:4,t_produtividade:4,t_dominio:3,t_documentacao:4,c_colaboracao:4,c_cultura:3,c_dedicacao:4,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
-  { id:'m9',  nome:'Isabela Torres',  nicho:'frontend', data:'2026-04-14T10:00:00Z', createdAt:'2026-04-14T10:00:00Z', notaFinal:4.96, finalScore:4.96, tecnico:5.00, comportamental:4.90, technician:{name:'Isabela Torres',team:'frontend'},   scores:{t_qualidade:5,t_resolucao:5,t_produtividade:5,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:5,c_postura:5,c_iniciativa:4}, recomendacao:'promocao', observacoes:'Performance excepcional. Candidata natural para senior. Referência no time.' },
-  { id:'m10', nome:'João Paulo',      nicho:'backend',  data:'2026-04-15T11:00:00Z', createdAt:'2026-04-15T11:00:00Z', notaFinal:3.72, finalScore:3.72, tecnico:3.80, comportamental:3.60, technician:{name:'João Paulo',team:'backend'},       scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:4,c_colaboracao:3,c_cultura:4,c_dedicacao:4,c_postura:3,c_iniciativa:4}, recomendacao:'pdp' },
-  { id:'m11', nome:'Karina Neves',    nicho:'design',   data:'2026-04-16T09:00:00Z', createdAt:'2026-04-16T09:00:00Z', notaFinal:4.14, finalScore:4.14, tecnico:4.20, comportamental:4.05, technician:{name:'Karina Neves',team:'design'},       scores:{t_qualidade:4,t_resolucao:4,t_produtividade:5,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
-  { id:'m12', nome:'Lucas Martins',   nicho:'dev',      data:'2026-04-17T14:00:00Z', createdAt:'2026-04-17T14:00:00Z', notaFinal:1.96, finalScore:1.96, tecnico:1.80, comportamental:2.20, technician:{name:'Lucas Martins',team:'dev'},         scores:{t_qualidade:1,t_resolucao:2,t_produtividade:2,t_dominio:2,t_documentacao:2,c_colaboracao:2,c_cultura:2,c_dedicacao:3,c_postura:2,c_iniciativa:2}, recomendacao:'urgente', observacoes:'Atenção urgente requerida. Problemas de comunicação e frequência de entrega.' },
-  { id:'m13', nome:'Marina Souza',    nicho:'outros',   data:'2026-04-18T10:00:00Z', createdAt:'2026-04-18T10:00:00Z', notaFinal:3.88, finalScore:3.88, tecnico:3.80, comportamental:4.00, technician:{name:'Marina Souza',team:'outros'},       scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'pdp' },
-  { id:'m14', nome:'Nicolas Pereira', nicho:'backend',  data:'2026-04-21T09:00:00Z', createdAt:'2026-04-21T09:00:00Z', notaFinal:4.44, finalScore:4.44, tecnico:4.40, comportamental:4.50, technician:{name:'Nicolas Pereira',team:'backend'},   scores:{t_qualidade:4,t_resolucao:5,t_produtividade:4,t_dominio:4,t_documentacao:5,c_colaboracao:5,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
-  { id:'m15', nome:'Olivia Castro',   nicho:'frontend', data:'2026-04-22T14:00:00Z', createdAt:'2026-04-22T14:00:00Z', notaFinal:3.48, finalScore:3.48, tecnico:3.40, comportamental:3.60, technician:{name:'Olivia Castro',team:'frontend'},    scores:{t_qualidade:3,t_resolucao:3,t_produtividade:4,t_dominio:3,t_documentacao:4,c_colaboracao:4,c_cultura:3,c_dedicacao:4,c_postura:3,c_iniciativa:4}, recomendacao:'pdp' },
-  { id:'m16', nome:'Pedro Henrique',  nicho:'dev',      data:'2026-04-23T10:00:00Z', createdAt:'2026-04-23T10:00:00Z', notaFinal:4.80, finalScore:4.80, tecnico:4.80, comportamental:4.80, technician:{name:'Pedro Henrique',team:'dev'},        scores:{t_qualidade:5,t_resolucao:5,t_produtividade:5,t_dominio:4,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:5,c_postura:4,c_iniciativa:5}, recomendacao:'promocao', observacoes:'Destaque absoluto do time. Entregou o módulo de autenticação com semanas de antecedência.' },
-  { id:'m17', nome:'Renata Gomes',    nicho:'design',   data:'2026-04-24T09:00:00Z', createdAt:'2026-04-24T09:00:00Z', notaFinal:4.26, finalScore:4.26, tecnico:4.20, comportamental:4.35, technician:{name:'Renata Gomes',team:'design'},      scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
-  { id:'m18', nome:'Samuel Ribeiro',  nicho:'outros',   data:'2026-04-25T14:00:00Z', createdAt:'2026-04-25T14:00:00Z', notaFinal:3.10, finalScore:3.10, tecnico:3.00, comportamental:3.25, technician:{name:'Samuel Ribeiro',team:'outros'},     scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:4,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
-  { id:'m19', nome:'Thamires Leal',   nicho:'frontend', data:'2026-04-28T09:00:00Z', createdAt:'2026-04-28T09:00:00Z', notaFinal:4.08, finalScore:4.08, tecnico:4.00, comportamental:4.20, technician:{name:'Thamires Leal',team:'frontend'},    scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
-  { id:'m20', nome:'Victor Hugo',     nicho:'backend',  data:'2026-04-29T11:00:00Z', createdAt:'2026-04-29T11:00:00Z', notaFinal:4.56, finalScore:4.56, tecnico:4.60, comportamental:4.50, technician:{name:'Victor Hugo',team:'backend'},      scores:{t_qualidade:5,t_resolucao:4,t_produtividade:5,t_dominio:5,t_documentacao:4,c_colaboracao:5,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:5}, recomendacao:'bonus' },
+  // ── Dev (7) ───────────────────────────────────────────────────────────────
+  { id:'m1',  nome:'Eperson Cardoso Mayrink Xavier Filho', nicho:'dev',      data:'2026-05-01T10:00:00Z', createdAt:'2026-05-01T10:00:00Z', notaFinal:4.73, finalScore:4.73, tecnico:4.73, comportamental:4.73, technician:{name:'Eperson Cardoso Mayrink Xavier Filho',team:'dev'},      scores:{t_qualidade:5,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4}, recomendacao:'promocao', observacoes:'Referência técnica do squad. Liderou entrega crítica do trimestre com excelência.' },
+  { id:'m2',  nome:'Vanilson Lima',                        nicho:'dev',      data:'2026-05-02T09:00:00Z', createdAt:'2026-05-02T09:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Vanilson Lima',team:'dev'},                        scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m3',  nome:'Leandro Lamanna Zanardi',              nicho:'dev',      data:'2026-05-02T11:00:00Z', createdAt:'2026-05-02T11:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Leandro Lamanna Zanardi',team:'dev'},              scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3} },
+  { id:'m4',  nome:'João Victor Batista',                  nicho:'dev',      data:'2026-05-03T14:00:00Z', createdAt:'2026-05-03T14:00:00Z', notaFinal:3.38, finalScore:3.38, tecnico:3.45, comportamental:3.27, technician:{name:'João Victor Batista',team:'dev'},                  scores:{t_qualidade:3,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:3,c_cultura:4,c_dedicacao:3,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
+  { id:'m5',  nome:'Alexandre Takeshi',                    nicho:'dev',      data:'2026-05-03T10:00:00Z', createdAt:'2026-05-03T10:00:00Z', notaFinal:4.27, finalScore:4.27, tecnico:4.40, comportamental:4.09, technician:{name:'Alexandre Takeshi',team:'dev'},                    scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m6',  nome:'Ana Paula Gonçalves Floriano',         nicho:'dev',      data:'2026-05-04T09:00:00Z', createdAt:'2026-05-04T09:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Ana Paula Gonçalves Floriano',team:'dev'},         scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3}, recomendacao:'bonus' },
+  { id:'m7',  nome:'Caio Henrique Queiroz dos Santos',     nicho:'dev',      data:'2026-05-01T14:00:00Z', createdAt:'2026-05-01T14:00:00Z', notaFinal:2.67, finalScore:2.67, tecnico:2.73, comportamental:2.55, technician:{name:'Caio Henrique Queiroz dos Santos',team:'dev'},     scores:{t_qualidade:3,t_resolucao:3,t_produtividade:2,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:2,c_dedicacao:3,c_postura:2,c_iniciativa:3}, recomendacao:'pdp', observacoes:'Em acompanhamento — PDI com foco em qualidade de entrega e proatividade.' },
+  // ── Design (7) ────────────────────────────────────────────────────────────
+  { id:'m8',  nome:'Carlos Eduardo Schio Campos da Silva', nicho:'design',   data:'2026-05-02T10:00:00Z', createdAt:'2026-05-02T10:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Carlos Eduardo Schio Campos da Silva',team:'design'},   scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m9',  nome:'Gustavo de Jesus Carneiro',            nicho:'design',   data:'2026-05-02T14:00:00Z', createdAt:'2026-05-02T14:00:00Z', notaFinal:5.00, finalScore:5.00, tecnico:5.00, comportamental:5.00, technician:{name:'Gustavo de Jesus Carneiro',team:'design'},            scores:{t_qualidade:5,t_resolucao:5,t_produtividade:5,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:5,c_postura:5,c_iniciativa:5}, recomendacao:'promocao', observacoes:'Nota máxima em todos os critérios. Destaque absoluto do trimestre no Design.' },
+  { id:'m10', nome:'Denis Aparecido Rodrigues de Oliveira',nicho:'design',   data:'2026-05-03T11:00:00Z', createdAt:'2026-05-03T11:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Denis Aparecido Rodrigues de Oliveira',team:'design'},scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3} },
+  { id:'m11', nome:'Kauan Carvalho dos Santos',            nicho:'design',   data:'2026-05-03T13:00:00Z', createdAt:'2026-05-03T13:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Kauan Carvalho dos Santos',team:'design'},            scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m12', nome:'Rodolfo Pereira de Borba',             nicho:'design',   data:'2026-05-04T09:00:00Z', createdAt:'2026-05-04T09:00:00Z', notaFinal:3.38, finalScore:3.38, tecnico:3.45, comportamental:3.27, technician:{name:'Rodolfo Pereira de Borba',team:'design'},             scores:{t_qualidade:3,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:3,c_cultura:4,c_dedicacao:3,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
+  { id:'m13', nome:'Lucas Bueno e Silva Vigatto',          nicho:'design',   data:'2026-05-01T11:30:00Z', createdAt:'2026-05-01T11:30:00Z', notaFinal:4.27, finalScore:4.27, tecnico:4.40, comportamental:4.09, technician:{name:'Lucas Bueno e Silva Vigatto',team:'design'},          scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m14', nome:'Henrique Turazzi Casas Freile',        nicho:'design',   data:'2026-05-04T14:00:00Z', createdAt:'2026-05-04T14:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Henrique Turazzi Casas Freile',team:'design'},        scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3} },
+  // ── Front-end (7) ─────────────────────────────────────────────────────────
+  { id:'m15', nome:'Gustavo Rafael de Oliveira Iotti',     nicho:'frontend', data:'2026-05-03T09:15:00Z', createdAt:'2026-05-03T09:15:00Z', notaFinal:4.73, finalScore:4.73, tecnico:4.73, comportamental:4.73, technician:{name:'Gustavo Rafael de Oliveira Iotti',team:'frontend'},     scores:{t_qualidade:5,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4}, recomendacao:'promocao', observacoes:'Excelente trimestre. Liderou migração técnica com zero regressões.' },
+  { id:'m16', nome:'Gabriel Marques Gallo',                nicho:'frontend', data:'2026-05-04T09:00:00Z', createdAt:'2026-05-04T09:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Gabriel Marques Gallo',team:'frontend'},                scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m17', nome:'Erica Rocha Amaral',                   nicho:'frontend', data:'2026-05-05T09:00:00Z', createdAt:'2026-05-05T09:00:00Z', notaFinal:4.24, finalScore:4.24, tecnico:4.36, comportamental:4.09, technician:{name:'Erica Rocha Amaral',team:'frontend'},                   scores:{t_qualidade:4,t_resolucao:5,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m18', nome:'Luis Otávio Borba',                    nicho:'frontend', data:'2026-05-03T15:00:00Z', createdAt:'2026-05-03T15:00:00Z', notaFinal:3.00, finalScore:3.00, tecnico:3.00, comportamental:3.00, technician:{name:'Luis Otávio Borba',team:'frontend'},                    scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
+  { id:'m19', nome:'Vinicius Ribeiro Macedo Deotti',       nicho:'frontend', data:'2026-05-05T10:00:00Z', createdAt:'2026-05-05T10:00:00Z', notaFinal:4.27, finalScore:4.27, tecnico:4.40, comportamental:4.09, technician:{name:'Vinicius Ribeiro Macedo Deotti',team:'frontend'},       scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m20', nome:'Joabe Granvile Soares',                nicho:'frontend', data:'2026-05-02T09:00:00Z', createdAt:'2026-05-02T09:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Joabe Granvile Soares',team:'frontend'},                scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3} },
+  { id:'m21', nome:'Luiz Gustavo Roberto Romanini',        nicho:'frontend', data:'2026-05-02T16:30:00Z', createdAt:'2026-05-02T16:30:00Z', notaFinal:2.36, finalScore:2.36, tecnico:2.45, comportamental:2.27, technician:{name:'Luiz Gustavo Roberto Romanini',team:'frontend'},        scores:{t_qualidade:2,t_resolucao:3,t_produtividade:2,t_dominio:3,t_documentacao:2,c_colaboracao:2,c_cultura:3,c_dedicacao:2,c_postura:2,c_iniciativa:3}, recomendacao:'pdp', observacoes:'Dificuldades persistentes. PDI em andamento com foco em boas práticas.' },
+  // ── Back-end (7) ──────────────────────────────────────────────────────────
+  { id:'m22', nome:'Richard Caetano dos Santos',           nicho:'backend',  data:'2026-05-01T16:00:00Z', createdAt:'2026-05-01T16:00:00Z', notaFinal:4.73, finalScore:4.73, tecnico:4.73, comportamental:4.73, technician:{name:'Richard Caetano dos Santos',team:'backend'},           scores:{t_qualidade:5,t_resolucao:5,t_produtividade:4,t_dominio:5,t_documentacao:5,c_colaboracao:5,c_cultura:5,c_dedicacao:4,c_postura:5,c_iniciativa:4}, recomendacao:'bonus', observacoes:'Excelente desempenho técnico e comportamental. Alta consistência nas entregas.' },
+  { id:'m23', nome:'Wendell Harley de Souza Júnior',       nicho:'backend',  data:'2026-05-04T16:00:00Z', createdAt:'2026-05-04T16:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Wendell Harley de Souza Júnior',team:'backend'},       scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3}, recomendacao:'bonus' },
+  { id:'m24', nome:'Wander Gabriel de Souza Lima',         nicho:'backend',  data:'2026-05-02T11:00:00Z', createdAt:'2026-05-02T11:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Wander Gabriel de Souza Lima',team:'backend'},         scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m25', nome:'Marcos Roberto Morato',                nicho:'backend',  data:'2026-05-03T16:00:00Z', createdAt:'2026-05-03T16:00:00Z', notaFinal:3.00, finalScore:3.00, tecnico:3.00, comportamental:3.00, technician:{name:'Marcos Roberto Morato',team:'backend'},                scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
+  { id:'m26', nome:'Pedro Teodoro Varolo',                 nicho:'backend',  data:'2026-05-04T11:00:00Z', createdAt:'2026-05-04T11:00:00Z', notaFinal:4.27, finalScore:4.27, tecnico:4.40, comportamental:4.09, technician:{name:'Pedro Teodoro Varolo',team:'backend'},                 scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'promocao' },
+  { id:'m27', nome:'Daniela Inforzato Butolo',             nicho:'backend',  data:'2026-05-05T14:00:00Z', createdAt:'2026-05-05T14:00:00Z', notaFinal:3.38, finalScore:3.38, tecnico:3.45, comportamental:3.27, technician:{name:'Daniela Inforzato Butolo',team:'backend'},             scores:{t_qualidade:3,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:3,c_cultura:4,c_dedicacao:3,c_postura:3,c_iniciativa:3} },
+  { id:'m28', nome:'Giovanni Rosa Marcomini',              nicho:'backend',  data:'2026-05-01T17:00:00Z', createdAt:'2026-05-01T17:00:00Z', notaFinal:1.75, finalScore:1.75, tecnico:1.82, comportamental:1.64, technician:{name:'Giovanni Rosa Marcomini',team:'backend'},              scores:{t_qualidade:2,t_resolucao:2,t_produtividade:1,t_dominio:2,t_documentacao:2,c_colaboracao:2,c_cultura:1,c_dedicacao:2,c_postura:2,c_iniciativa:1}, recomendacao:'urgente', observacoes:'Situação crítica. Intervenção imediata necessária. Reunião com RH agendada.' },
+  // ── Outros (7) ────────────────────────────────────────────────────────────
+  { id:'m29', nome:'Rafael Mendes Maciel',                 nicho:'outros',   data:'2026-05-05T10:00:00Z', createdAt:'2026-05-05T10:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Rafael Mendes Maciel',team:'outros'},                 scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m30', nome:'Mário Luiz Marchetti Alves',           nicho:'outros',   data:'2026-05-04T14:30:00Z', createdAt:'2026-05-04T14:30:00Z', notaFinal:4.24, finalScore:4.24, tecnico:4.36, comportamental:4.09, technician:{name:'Mário Luiz Marchetti Alves',team:'outros'},           scores:{t_qualidade:4,t_resolucao:5,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:5,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m31', nome:'Jéssica Laine Conde',                  nicho:'outros',   data:'2026-05-05T14:00:00Z', createdAt:'2026-05-05T14:00:00Z', notaFinal:4.00, finalScore:4.00, tecnico:4.00, comportamental:4.00, technician:{name:'Jéssica Laine Conde',team:'outros'},                  scores:{t_qualidade:4,t_resolucao:4,t_produtividade:4,t_dominio:4,t_documentacao:4,c_colaboracao:4,c_cultura:4,c_dedicacao:4,c_postura:4,c_iniciativa:4} },
+  { id:'m32', nome:'Matheus de Lima Benini',               nicho:'outros',   data:'2026-05-04T11:30:00Z', createdAt:'2026-05-04T11:30:00Z', notaFinal:3.00, finalScore:3.00, tecnico:3.00, comportamental:3.00, technician:{name:'Matheus de Lima Benini',team:'outros'},               scores:{t_qualidade:3,t_resolucao:3,t_produtividade:3,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:3,c_dedicacao:3,c_postura:3,c_iniciativa:3}, recomendacao:'pdp' },
+  { id:'m33', nome:'Pedro Araujo Oliveira Brasil',         nicho:'outros',   data:'2026-05-03T10:00:00Z', createdAt:'2026-05-03T10:00:00Z', notaFinal:3.73, finalScore:3.73, tecnico:3.73, comportamental:3.73, technician:{name:'Pedro Araujo Oliveira Brasil',team:'outros'},         scores:{t_qualidade:4,t_resolucao:4,t_produtividade:3,t_dominio:4,t_documentacao:3,c_colaboracao:4,c_cultura:4,c_dedicacao:3,c_postura:4,c_iniciativa:3} },
+  { id:'m34', nome:'Patrick Alves Faciroli',               nicho:'outros',   data:'2026-05-02T10:00:00Z', createdAt:'2026-05-02T10:00:00Z', notaFinal:4.27, finalScore:4.27, tecnico:4.40, comportamental:4.09, technician:{name:'Patrick Alves Faciroli',team:'outros'},               scores:{t_qualidade:5,t_resolucao:4,t_produtividade:4,t_dominio:5,t_documentacao:4,c_colaboracao:4,c_cultura:5,c_dedicacao:4,c_postura:4,c_iniciativa:4}, recomendacao:'bonus' },
+  { id:'m35', nome:'Victor Zanfelice',                     nicho:'outros',   data:'2026-05-05T09:00:00Z', createdAt:'2026-05-05T09:00:00Z', notaFinal:2.67, finalScore:2.67, tecnico:2.73, comportamental:2.55, technician:{name:'Victor Zanfelice',team:'outros'},                     scores:{t_qualidade:3,t_resolucao:3,t_produtividade:2,t_dominio:3,t_documentacao:3,c_colaboracao:3,c_cultura:2,c_dedicacao:3,c_postura:2,c_iniciativa:3}, recomendacao:'pdp' },
 ];
 
 /* ── Eval detail registry — shared across all views ── */
@@ -6795,9 +7038,9 @@ function hideCalTip() {
 
 /* ── Mock team metadata (birthdays, etc.) ── */
 const MOCK_TEAM_META = {
-  'Ana Rodrigues':  { bMonth: 3 },
-  'Carol Santos':   { bMonth: 3 },
-  'Pedro Henrique': { bMonth: 3 },
+  'Gustavo de Jesus Carneiro':            { bMonth: 4 },
+  'Eperson Cardoso Mayrink Xavier Filho': { bMonth: 4 },
+  'Richard Caetano dos Santos':           { bMonth: 4 },
 };
 
 /* ── Sticker drag ── */
@@ -6925,8 +7168,18 @@ function openDetailModal(ev) {
   const dateStr = dateRaw
     ? new Date(dateRaw).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})
     : '';
-  const allScores = ev.scores || {};
-  const hasCrit   = Object.keys(allScores).length >= 5;
+  // Normalize scores: API returns array [{criterionKey, score}], mock data is flat object
+  const DB_KEY_MAP = {
+    qualidade_tecnica: 't_qualidade', resolucao_problemas: 't_resolucao',
+    conhecimento_ferramentas: 't_dominio', documentacao: 't_documentacao', boas_praticas: 't_produtividade',
+    comunicacao: 'c_postura', trabalho_equipe: 'c_colaboracao',
+    proatividade: 'c_iniciativa', comprometimento: 'c_dedicacao', adaptabilidade: 'c_cultura',
+  };
+  let allScores = ev.scores || {};
+  if (Array.isArray(allScores)) {
+    allScores = Object.fromEntries(allScores.map(s => [DB_KEY_MAP[s.criterionKey] || s.criterionKey, s.score]));
+  }
+  const hasCrit = Object.keys(allScores).length >= 5;
 
   const buildCritRows = (list) => list.map(c => {
     const s     = allScores[c.id];
@@ -7060,12 +7313,12 @@ async function renderMeuTime() {
 
   statsRow.innerHTML = `
     <div class="team-stat-card team-stat-card--indigo bf bf-1">
-      <div class="team-stat-card__icon" style="background:var(--indigo-4);">
+      <div class="team-stat-card__icon">
         <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-          <circle cx="7" cy="6" r="2.8" stroke="#9eb1ff" stroke-width="1.7"/>
-          <path d="M1.5 17c0-3.1 2.5-5.5 5.5-5.5s5.5 2.4 5.5 5.5" stroke="#9eb1ff" stroke-width="1.7" stroke-linecap="round"/>
-          <circle cx="13.5" cy="6" r="2.2" stroke="#9eb1ff" stroke-width="1.5"/>
-          <path d="M16.5 17c0-1.6-1.3-3-3-3" stroke="#9eb1ff" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="7" cy="6" r="2.8" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M1.5 17c0-3.1 2.5-5.5 5.5-5.5s5.5 2.4 5.5 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <circle cx="13.5" cy="6" r="2.2" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16.5 17c0-1.6-1.3-3-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
       <div>
@@ -7074,9 +7327,9 @@ async function renderMeuTime() {
       </div>
     </div>
     <div class="team-stat-card team-stat-card--green bf bf-2">
-      <div class="team-stat-card__icon" style="background:var(--green-4);">
+      <div class="team-stat-card__icon">
         <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-          <path d="M17 5L8 15.5 3 10" stroke="#4cc38a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 5L8 15.5 3 10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div>
@@ -7085,10 +7338,10 @@ async function renderMeuTime() {
       </div>
     </div>
     <div class="team-stat-card team-stat-card--amber bf bf-3">
-      <div class="team-stat-card__icon" style="background:var(--amber-4);">
+      <div class="team-stat-card__icon">
         <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
           <polygon points="10,2 12.4,7.6 18.5,8.2 14,12.5 15.4,18.5 10,15.4 4.6,18.5 6,12.5 1.5,8.2 7.6,7.6"
-            stroke="#ffcb47" stroke-width="1.7" stroke-linejoin="round"/>
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
         </svg>
       </div>
       <div>
@@ -7097,11 +7350,11 @@ async function renderMeuTime() {
       </div>
     </div>
     <div class="team-stat-card team-stat-card--rose bf bf-4">
-      <div class="team-stat-card__icon" style="background:var(--red-4);">
+      <div class="team-stat-card__icon">
         <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-          <rect x="2" y="3" width="16" height="14" rx="2.5" stroke="#ff6369" stroke-width="1.7"/>
-          <path d="M2 8h16" stroke="#ff6369" stroke-width="1.5"/>
-          <path d="M6 1v4M14 1v4" stroke="#ff6369" stroke-width="1.5" stroke-linecap="round"/>
+          <rect x="2" y="3" width="16" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M2 8h16" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M6 1v4M14 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
       <div>

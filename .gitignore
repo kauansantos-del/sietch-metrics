@@ -11,3 +11,5 @@ backend/.env.local
 backend/.env.*.local
 backend/.vercel/
 backend/coverage/
+
+.vercel

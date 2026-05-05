@@ -75,6 +75,7 @@ export async function listEvaluations(
       include: {
         technician: { select: { id: true, name: true, team: true } },
         evaluator: { select: { id: true, name: true } },
+        scores: { orderBy: [{ block: 'asc' as const }, { criterionKey: 'asc' as const }] },
       },
       orderBy: { createdAt: 'desc' },
       skip: (query.page - 1) * query.limit,
