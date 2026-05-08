@@ -7,7 +7,7 @@
 
 ## 1. Visão Geral
 
-A **PACT** é uma metodologia estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
+A **Metrics** é uma metodologia estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
 
 ### Origem
 
@@ -25,7 +25,7 @@ A metodologia nasceu de uma conversa entre **Luis Borba**, **Leandro Lamanna Zan
 
 ---
 
-## 2. Estrutura da Metodologia (PACT)
+## 2. Estrutura da Metodologia (Metrics)
 
 A avaliação é dividida em **dois blocos principais**, com pesos distintos na composição da nota final.
 
@@ -289,7 +289,7 @@ Download para o usuário
 
 | Termo | Definição |
 |---|---|
-| **PACT** | Performance, Atitude, Cultura e Técnica — nome da metodologia |
+| **Metrics** | Performance, Atitude, Cultura e Técnica — nome da metodologia |
 | **Bloco técnico** | Conjunto de critérios que avaliam a entrega e competência técnica |
 | **Bloco comportamental** | Conjunto de critérios que avaliam cultura, postura e colaboração |
 | **Nota ponderada** | Média calculada com pesos diferentes por prioridade do critério |
@@ -299,4 +299,4 @@ Download para o usuário
 
 ---
 
-*Documentação gerada em 22/04/2026 — PACT v1.0 — Uso interno RH*
+*Documentação gerada em 22/04/2026 — Metrics v1.0 — Uso interno RH*

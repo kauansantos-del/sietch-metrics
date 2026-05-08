@@ -23,7 +23,7 @@
 
 ## 1. O que é o Sietch Metrics
 
-A metodologia **PACT** (Performance, Atitude, Cultura e Técnica) é uma abordagem estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos de TI, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
+A metodologia **Metrics** (Performance, Atitude, Cultura e Técnica) é uma abordagem estruturada de avaliação de performance criada para mensurar de forma justa e holística o trabalho dos técnicos de TI, indo além da entrega técnica e capturando dimensões comportamentais que impactam diretamente a cultura e a dinâmica de equipe.
 
 A metodologia nasceu de uma conversa entre **Luis Borba**, **Leandro Lamanna Zanardi**, **Patrick Faciroli** e **Rodolfo**, com a premissa de:
 
@@ -413,4 +413,4 @@ vercel --prod --scope kauansantos-dels-projects
 
 ---
 
-*Sietch Metrics v1.0 (metodologia PACT) — Ciclo Abril 2026 — Uso interno RH*
+*Sietch Metrics v1.0 (metodologia Metrics) — Ciclo Abril 2026 — Uso interno RH*

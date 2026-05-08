@@ -1,6 +1,6 @@
 # Sietch Metrics — Backend Blueprint
 
-> Documento técnico completo para implementação do backend da plataforma PACT, com autenticação Google restrita por domínio corporativo, banco Postgres e API REST consumida pelo frontend já existente.
+> Documento técnico completo para implementação do backend da plataforma Metrics, com autenticação Google restrita por domínio corporativo, banco Postgres e API REST consumida pelo frontend já existente.
 
 **Stack escolhida:**
 - **Runtime:** Node.js 20 LTS + TypeScript
@@ -337,10 +337,10 @@ Usamos o **Authorization Code Flow** (não o Implicit Flow, que é deprecated). 
 Passo a passo no console da Google:
 
 1. Acesse [console.cloud.google.com](https://console.cloud.google.com)
-2. Crie um novo projeto (ex: `pact-internal-auth`)
+2. Crie um novo projeto (ex: `metrics-internal-auth`)
 3. Vá em **APIs & Services → OAuth consent screen**
    - Tipo: **Internal** (só funciona para Google Workspace; se sua empresa não tiver Workspace, use **External**)
-   - Nome do app: `PACT`
+   - Nome do app: `Metrics`
    - Email de suporte: seu email corporativo
    - Logo (opcional): use o `logo-dark.svg` convertido para PNG
    - Domínios autorizados: `vercel.app` (ou seu domínio customizado)
@@ -503,7 +503,7 @@ Arquivo `.env.example` (commitar) — **nunca commitar `.env`**:
 
 ```bash
 # ─── Banco de dados (Neon) ──────────────────────────────────────
-DATABASE_URL="postgresql://user:pass@ep-xxx.neon.tech/pact?sslmode=require"
+DATABASE_URL="postgresql://user:pass@ep-xxx.neon.tech/metrics?sslmode=require"
 
 # ─── Google OAuth ───────────────────────────────────────────────
 GOOGLE_CLIENT_ID="xxxxxxxxxx.apps.googleusercontent.com"
@@ -1302,8 +1302,8 @@ async function bootstrap() {
 function showLoginScreen() {
   document.body.innerHTML = `
     <div class="login-screen">
-      <img src="logo-dark.svg" class="login-logo" alt="PACT" />
-      <h1>PACT</h1>
+      <img src="logo-dark.svg" class="login-logo" alt="Metrics" />
+      <h1>Metrics</h1>
       <p>Plataforma interna de avaliação de performance</p>
       <a href="${API_BASE}/auth/google" class="btn-google">
         <svg><!-- ícone Google --></svg>
@@ -1485,7 +1485,7 @@ jobs:
 ### 9.5 Setup do Neon
 
 1. Criar conta em [neon.tech](https://neon.tech)
-2. Criar projeto `pact-prod`
+2. Criar projeto `metrics-prod`
 3. Copiar a connection string (formato `postgresql://user:pass@host/db?sslmode=require`)
 4. Criar branch `dev` no Neon para desenvolvimento (free tier permite até 10 branches)
 5. Importante: usar a **pooled connection** (`...-pooler.neon.tech`) para Vercel — evita esgotamento de conexões em alta concorrência
@@ -1493,8 +1493,8 @@ jobs:
 ### 9.6 Domínio customizado (opcional)
 
 Se a empresa tiver domínio próprio:
-- Frontend: `pact.suaempresa.com`
-- Backend: `api.pact.suaempresa.com`
+- Frontend: `metrics.suaempresa.com`
+- Backend: `api.metrics.suaempresa.com`
 
 Cookie de sessão funciona melhor com domínios irmãos. Adicionar `SameSite=lax` (já configurado) é suficiente nesse caso.
 
@@ -1654,4 +1654,4 @@ describe('Auth', () => {
 
 ---
 
-*Documento técnico — Sietch Metrics Backend — gerado para o projeto Sietch PACT.*
+*Documento técnico — Sietch Metrics Backend — gerado para o projeto Sietch Metrics.*

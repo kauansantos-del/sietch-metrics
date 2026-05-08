@@ -1,6 +1,6 @@
 # Sietch Metrics — Backend
 
-API REST para a plataforma Sietch Metrics — metodologia PACT (Performance, Atitude, Cultura e Técnica).
+API REST para a plataforma Sietch Metrics — metodologia Metrics (Performance, Atitude, Cultura e Técnica).
 Implementação do [SIETCH_METRICS_BACKEND_BLUEPRINT.md](../SIETCH_METRICS_BACKEND_BLUEPRINT.md).
 
 ## Stack
@@ -86,7 +86,7 @@ Abre Prisma Studio em `http://localhost:5555`.
 
 ## Configurar Google OAuth
 
-1. [console.cloud.google.com](https://console.cloud.google.com) → criar projeto `pact-internal-auth`
+1. [console.cloud.google.com](https://console.cloud.google.com) → criar projeto `metrics-internal-auth`
 2. **APIs & Services → OAuth consent screen**
    - Tipo: **Internal** (se sua empresa usa Google Workspace) ou **External**
    - Scopes: `openid`, `email`, `profile`
