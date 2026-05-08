@@ -2,8 +2,32 @@
 
 > Plataforma interna de avaliação de performance para técnicos de TI.
 
-**Produção:** [sietch-metrics.vercel.app](https://sietch-metrics.vercel.app)
-**Repositório:** [github.com/kauansantos-del/sietch-metrics](https://github.com/kauansantos-del/sietch-metrics)
+**Produção:** [sietch-metrics.vercel.app](https://sietch-metrics.vercel.app)  
+**Repositório:** [github.com/kauansantos-del/sietch-metrics](https://github.com/kauansantos-del/sietch-metrics)  
+**Contato:** kauancarvalhomk@gmail.com
+
+---
+
+## Quick Start — novo dev
+
+```bash
+# 1. Clonar
+git clone https://github.com/kauansantos-del/sietch-metrics.git
+cd sietch-metrics
+
+# 2. Frontend — abrir index.html no navegador (não precisa de build)
+#    Recomendado: usar Live Server (VS Code) ou http-server na porta 5500
+
+# 3. Backend
+cd backend
+npm install
+cp .env.example .env        # Preencher DATABASE_URL, DIRECT_URL e JWT_SECRET
+npx prisma db push          # Sincroniza schema com o banco
+npm run db:seed             # Popula dados iniciais (só banco vazio)
+npm run dev                 # API sobe em http://localhost:3000
+```
+
+> Detalhes completos do backend em [backend/README.md](backend/README.md)
 
 ---
 
