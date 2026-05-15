@@ -16,6 +16,8 @@ import technicianRoutes from './routes/technicians.routes';
 import userRoutes from './routes/users.routes';
 import trainingRoutes from './routes/trainings.routes';
 import assignmentRoutes from './routes/assignments.routes';
+import playerRoutes from './routes/player.routes';
+import colaboradorRoutes from './routes/colaborador.routes';
 
 const app = express();
 
@@ -85,6 +87,8 @@ app.use('/api/technicians', technicianRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/trainings', trainingRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/player', playerRoutes);
+app.use('/api/colaborador', colaboradorRoutes);
 
 // 404 + error handler — sempre por último
 app.use('/api', notFoundHandler);
