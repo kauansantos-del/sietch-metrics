@@ -18,6 +18,7 @@ import trainingRoutes from './routes/trainings.routes';
 import assignmentRoutes from './routes/assignments.routes';
 import playerRoutes from './routes/player.routes';
 import colaboradorRoutes from './routes/colaborador.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app = express();
 
@@ -89,6 +90,7 @@ app.use('/api/trainings', trainingRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/player', playerRoutes);
 app.use('/api/colaborador', colaboradorRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 + error handler — sempre por último
 app.use('/api', notFoundHandler);

@@ -14,7 +14,17 @@ interface JwtPayload {
 }
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
-  const token = req.cookies[env.SESSION_COOKIE_NAME];
+  // Aceita cookie OU header Authorization: Bearer <token>
+  // (Bearer é usado quando frontend e backend estão em origens diferentes — dev cross-port)
+  let token: string | undefined = req.cookies[env.SESSION_COOKIE_NAME];
+
+  if (!token) {
+    const auth = req.headers.authorization;
+    if (auth && auth.startsWith('Bearer ')) {
+      token = auth.slice(7).trim();
+    }
+  }
+
   if (!token || typeof token !== 'string') {
     return next(new UnauthenticatedError());
   }

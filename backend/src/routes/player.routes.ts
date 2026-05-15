@@ -355,7 +355,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = resolveVideoSchema.parse(req.body);
-      const result = resolveVideoInput(data.provider, data.input);
+      const result = await resolveVideoInput(data.provider, data.input);
       const status = result.valid ? 200 : 422;
       res.status(status).json(result);
     } catch (err) {

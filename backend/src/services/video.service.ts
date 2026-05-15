@@ -174,38 +174,117 @@ const VIMEO_REGEXES = [
   /player\.vimeo\.com\/video\/(\d+)/,
 ];
 
-export function resolveVideoInput(provider: 'youtube' | 'vimeo', input: string) {
+interface ResolvedVideo {
+  valid: boolean;
+  code?: string;
+  video_id?: string;
+  unlisted_hash?: string | null;
+  title?: string;
+  duration_sec?: number | null;
+  thumbnail_url?: string | null;
+  embed_url?: string;
+}
+
+/**
+ * Resolve via regex (rápido) + valida via oEmbed (real).
+ * oEmbed do YouTube/Vimeo NÃO requer auth.
+ */
+export async function resolveVideoInput(
+  provider: 'youtube' | 'vimeo',
+  input: string,
+): Promise<ResolvedVideo> {
   if (provider === 'youtube') {
-    // ID puro (11 chars)
+    let videoId: string | undefined;
+
     if (/^[\w-]{11}$/.test(input)) {
-      return { valid: true, video_id: input, embed_url: `https://www.youtube-nocookie.com/embed/${input}` };
-    }
-    for (const re of YT_REGEXES) {
-      const m = input.match(re);
-      if (m?.[1]) {
-        return {
-          valid: true,
-          video_id: m[1],
-          embed_url: `https://www.youtube-nocookie.com/embed/${m[1]}`,
-        };
+      videoId = input;
+    } else {
+      for (const re of YT_REGEXES) {
+        const m = input.match(re);
+        if (m?.[1]) { videoId = m[1]; break; }
       }
     }
-    return { valid: false, code: 'INVALID_URL' };
+
+    if (!videoId) return { valid: false, code: 'INVALID_URL' };
+
+    // Valida via oEmbed
+    try {
+      const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) {
+        return res.status === 401 || res.status === 403 || res.status === 404
+          ? { valid: false, code: 'PRIVATE_OR_REMOVED' }
+          : { valid: false, code: 'OEMBED_ERROR' };
+      }
+      const data = (await res.json()) as {
+        title?: string;
+        thumbnail_url?: string;
+      };
+      return {
+        valid: true,
+        video_id: videoId,
+        title: data.title,
+        thumbnail_url: data.thumbnail_url ?? null,
+        duration_sec: null, // YouTube oEmbed não retorna duração
+        embed_url: `https://www.youtube-nocookie.com/embed/${videoId}`,
+      };
+    } catch {
+      // Falha de rede — devolve o que sabemos do regex
+      return {
+        valid: true,
+        video_id: videoId,
+        embed_url: `https://www.youtube-nocookie.com/embed/${videoId}`,
+      };
+    }
   }
 
   if (provider === 'vimeo') {
+    let videoId: string | undefined;
+    let unlistedHash: string | null = null;
+
     for (const re of VIMEO_REGEXES) {
       const m = input.match(re);
       if (m?.[1]) {
-        return {
-          valid: true,
-          video_id: m[1],
-          unlisted_hash: m[2] ?? null,
-          embed_url: `https://player.vimeo.com/video/${m[1]}${m[2] ? `?h=${m[2]}` : ''}`,
-        };
+        videoId = m[1];
+        unlistedHash = m[2] ?? null;
+        break;
       }
     }
-    return { valid: false, code: 'INVALID_URL' };
+
+    if (!videoId) return { valid: false, code: 'INVALID_URL' };
+
+    try {
+      const url = `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}${
+        unlistedHash ? `/${unlistedHash}` : ''
+      }`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) {
+        return res.status === 403 || res.status === 404
+          ? { valid: false, code: 'PRIVATE_OR_REMOVED' }
+          : { valid: false, code: 'OEMBED_ERROR' };
+      }
+      const data = (await res.json()) as {
+        title?: string;
+        thumbnail_url?: string;
+        duration?: number;
+      };
+      return {
+        valid: true,
+        video_id: videoId,
+        unlisted_hash: unlistedHash,
+        title: data.title,
+        thumbnail_url: data.thumbnail_url ?? null,
+        duration_sec: data.duration ?? null,
+        embed_url: `https://player.vimeo.com/video/${videoId}${unlistedHash ? `?h=${unlistedHash}` : ''}`,
+      };
+    } catch {
+      return {
+        valid: true,
+        video_id: videoId,
+        unlisted_hash: unlistedHash,
+        embed_url: `https://player.vimeo.com/video/${videoId}${unlistedHash ? `?h=${unlistedHash}` : ''}`,
+      };
+    }
   }
 
   return { valid: false, code: 'INVALID_PROVIDER' };

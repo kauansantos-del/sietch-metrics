@@ -6724,7 +6724,7 @@ const TRAINING_TRACKS = [
   { id: 'ux',         label: 'UX/Design',       color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
 ];
 
-const TRAINING_CATALOG = [
+let TRAINING_CATALOG = [
   { id: 'tc1', title: 'PLD/FT — Prevenção à Lavagem de Dinheiro', track: 'compliance', duration: 120, mandatory: true,  desc: 'Treinamento obrigatório sobre prevenção à lavagem de dinheiro e financiamento ao terrorismo. Essencial para conformidade regulatória Stark/Banco Central.', modules: 4, done: 312, rating: 4.7, status: 'ativo', policy: 'DOC-005' },
   { id: 'tc2', title: 'LGPD — Lei Geral de Proteção de Dados',     track: 'compliance', duration: 90,  mandatory: true,  desc: 'Fundamentos da LGPD, direitos dos titulares, bases legais e responsabilidades do colaborador no tratamento de dados pessoais.', modules: 3, done: 287, rating: 4.5, status: 'ativo', policy: 'DOC-002' },
   { id: 'tc3', title: 'Código de Ética e Conduta',                  track: 'compliance', duration: 60,  mandatory: true,  desc: 'Valores, princípios e condutas esperadas de todos os colaboradores. Inclui aceite digital com timestamp auditável.', modules: 2, done: 341, rating: 4.8, status: 'ativo', policy: 'DOC-001' },
@@ -6735,7 +6735,7 @@ const TRAINING_CATALOG = [
   { id: 'tc8', title: 'Antifraude em Fintechs',                     track: 'antifraude', duration: 90,  mandatory: true,  desc: 'Padrões de fraude em pagamentos, chargeback, KYC, biometria e motores de regras.', modules: 3, done: 156, rating: 4.5, status: 'ativo', policy: 'B-10' },
 ];
 
-const MY_ASSIGNMENTS = [
+let MY_ASSIGNMENTS = [
   { id: 'a1', trainingId: 'tc4', title: 'Fundamentos de Cyber Security',              track: 'cyber',      status: 'andamento', progress: 60,  assignedBy: 'Rafael Andrade', deadline: '2026-05-20', duration: 180, remaining: 72 },
   { id: 'a2', trainingId: 'tc1', title: 'PLD/FT — Prevenção à Lavagem de Dinheiro',   track: 'compliance', status: 'pendente',  progress: 0,   assignedBy: 'Camila Rocha',   deadline: '2026-05-30', duration: 120, remaining: 120 },
   { id: 'a3', trainingId: 'tc3', title: 'Código de Ética e Conduta',                  track: 'compliance', status: 'concluido', progress: 100, assignedBy: 'Rafael Andrade', deadline: '2026-04-01', duration: 60,  remaining: 0 },
@@ -6743,7 +6743,7 @@ const MY_ASSIGNMENTS = [
   { id: 'a5', trainingId: 'tc7', title: 'Design System e UX Research',                track: 'ux',         status: 'aguardando',progress: 100, assignedBy: 'Fernanda Lima',  deadline: '2026-05-10', duration: 150, remaining: 0 },
 ];
 
-const TEAM_MEMBERS_TREIN = [
+let TEAM_MEMBERS_TREIN = [
   { id: 'tm1', name: 'Ana Paula Ferreira', role: 'Dev Backend',       avatar: 'AP', andamento: 2, atrasados: 0, concluidos: 5, proximoPrazo: '2026-05-15', ultimaConclusao: '2026-04-22' },
   { id: 'tm2', name: 'Bruno Costa',        role: 'DevOps Engineer',   avatar: 'BC', andamento: 1, atrasados: 1, concluidos: 3, proximoPrazo: '2026-05-08', ultimaConclusao: '2026-04-10' },
   { id: 'tm3', name: 'Carla Santos',       role: 'QA Engineer',       avatar: 'CS', andamento: 3, atrasados: 0, concluidos: 7, proximoPrazo: '2026-05-20', ultimaConclusao: '2026-05-02' },
@@ -6752,7 +6752,7 @@ const TEAM_MEMBERS_TREIN = [
   { id: 'tm6', name: 'Felipe Torres',      role: 'Product Manager',   avatar: 'FT', andamento: 2, atrasados: 0, concluidos: 6, proximoPrazo: '2026-05-25', ultimaConclusao: '2026-05-01' },
 ];
 
-const VALIDATION_QUEUE = [
+let VALIDATION_QUEUE = [
   { id: 'vq1', collaborator: 'Ana Paula Ferreira', training: 'Fundamentos de Cyber Security', completedAt: '2026-05-03', evidence: true },
   { id: 'vq2', collaborator: 'Felipe Torres',       training: 'Design System e UX Research',  completedAt: '2026-05-01', evidence: false },
 ];
@@ -9957,7 +9957,15 @@ function openLeaderModal(lId) {
   document.getElementById('modal-footer').innerHTML = `<button class="btn btn-text btn-md" onclick="closeModal()">Fechar</button>`;
   openModal();
 }
+
+// Expõe arrays e funções pro app-bridge.js sobrescrever
+window.TRAINING_CATALOG = TRAINING_CATALOG;
+window.MY_ASSIGNMENTS   = MY_ASSIGNMENTS;
+window.TEAM_MEMBERS_TREIN = TEAM_MEMBERS_TREIN;
+window.VALIDATION_QUEUE = VALIDATION_QUEUE;
+window.renderTreinamentos = typeof renderTreinamentos === 'function' ? renderTreinamentos : null;
 </script>
+<script src="app-bridge.js"></script>
 </body>
 </html>
 

@@ -1,9 +1,15 @@
+// Auth — login por email (sem Google OAuth)
+//
+// Para tools internos. Em produção, considere adicionar password ou magic link.
+// Esta versão considera login válido se o email existir no banco e o user estiver ativo.
+
 import { Router, type Request, type Response, type NextFunction } from 'express';
+import { z } from 'zod';
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
 import { logAudit } from '../middleware/audit';
 import { requireAuth } from '../middleware/auth';
-import { NotFoundError } from '../utils/errors';
+import { NotFoundError, UnauthenticatedError } from '../utils/errors';
 import { sessionCookieOptions, signSessionToken } from '../services/auth.service';
 
 const router = Router();
@@ -17,7 +23,6 @@ async function ensureDefaultUser() {
   if (!user) {
     user = await prisma.user.create({
       data: {
-        googleId: `local_${Date.now()}`,
         email: DEFAULT_USER_EMAIL,
         name: DEFAULT_USER_NAME,
         role: 'SUPER_ADMIN',
@@ -32,22 +37,33 @@ async function ensureDefaultUser() {
   return user;
 }
 
-// ─── 1. Sessão automática ────────────────────────────────────
-// Cria/recupera o usuário padrão e devolve cookie de sessão.
-router.post('/session', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const user = await ensureDefaultUser();
+function issueSession(res: Response, user: { id: string; email: string; name: string; picture: string | null; role: 'SUPER_ADMIN' | 'ADMIN' }) {
+  const token = signSessionToken({ ...user });
+  res.cookie(env.SESSION_COOKIE_NAME, token, sessionCookieOptions());
+  return user;
+}
 
-    const authUser = {
+// ─── Login por email ─────────────────────────────────────────
+
+const loginSchema = z.object({ email: z.string().email().toLowerCase() });
+
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = loginSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new UnauthenticatedError('Email não encontrado');
+    if (!user.active) throw new UnauthenticatedError('Usuário inativo');
+
+    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+
+    issueSession(res, {
       id: user.id,
       email: user.email,
       name: user.name,
       picture: user.picture,
       role: user.role,
-    };
-
-    const token = signSessionToken(authUser);
-    res.cookie(env.SESSION_COOKIE_NAME, token, sessionCookieOptions());
+    });
 
     await logAudit({
       userId: user.id,
@@ -56,13 +72,77 @@ router.post('/session', async (req: Request, res: Response, next: NextFunction) 
       userAgent: req.get('user-agent') ?? null,
     });
 
-    return res.json({ ok: true, user: authUser });
+    res.json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        role: user.role,
+      },
+    });
   } catch (err) {
-    return next(err);
+    next(err);
   }
 });
 
-// ─── 2. Usuário atual ────────────────────────────────────────
+// ─── Sessão automática (admin padrão) ────────────────────────
+// Mantido para fluxos de bootstrap. Não-protegido.
+
+router.post('/session', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await ensureDefaultUser();
+
+    issueSession(res, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      picture: user.picture,
+      role: user.role,
+    });
+
+    await logAudit({
+      userId: user.id,
+      action: 'user.login',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? null,
+    });
+
+    res.json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Logout ──────────────────────────────────────────────────
+
+router.post('/logout', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.clearCookie(env.SESSION_COOKIE_NAME, sessionCookieOptions());
+    await logAudit({
+      userId: req.user!.userId,
+      action: 'user.logout',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? null,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Usuário atual ───────────────────────────────────────────
+
 router.get('/me', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await prisma.user.findUnique({
@@ -78,6 +158,26 @@ router.get('/me', requireAuth, async (req: Request, res: Response, next: NextFun
     });
     if (!user) throw new NotFoundError('Usuário não encontrado');
     res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Lista de usuários disponíveis para login (modo dev) ─────
+// Apenas em desenvolvimento. Útil para a tela de login mostrar dropdown.
+
+router.get('/users-for-login', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      res.json({ users: [] });
+      return;
+    }
+    const users = await prisma.user.findMany({
+      where: { active: true },
+      orderBy: [{ role: 'asc' }, { name: 'asc' }],
+      select: { email: true, name: true, role: true },
+    });
+    res.json({ users });
   } catch (err) {
     next(err);
   }
