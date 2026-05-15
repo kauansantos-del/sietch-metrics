@@ -14,6 +14,7 @@ import {
   getTimeline,
   getTrainingSummary,
 } from '../services/colaborador.service';
+import { canViewUser, listVisibleUsers } from '../services/hierarchy.service';
 
 const router = Router();
 
@@ -25,15 +26,27 @@ function resolveTargetUserId(req: Request, paramName = 'userId'): string {
   return raw!;
 }
 
-function assertCanView(req: Request, targetUserId: string) {
+async function assertCanView(req: Request, targetUserId: string) {
   const { role, userId } = req.user!;
-  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return;
-  if (userId === targetUserId) return;
-  throw new ForbiddenError(
-    'FORBIDDEN_ROLE',
-    'Sem permissão para ver dados de outro colaborador',
-  );
+  const ok = await canViewUser(userId, role, targetUserId);
+  if (!ok) {
+    throw new ForbiddenError(
+      'FORBIDDEN_ROLE',
+      'Sem permissão para ver dados deste colaborador',
+    );
+  }
 }
+
+// ─── Lista usuários visíveis (admin vê todos, gestor vê time) ────────
+
+router.get('/users', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await listVisibleUsers(req.user!.userId, req.user!.role);
+    res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Summary (header + KPIs + alertas) ───────────────────────
 
@@ -42,7 +55,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const targetUserId = resolveTargetUserId(req);
-      assertCanView(req, targetUserId);
+      await assertCanView(req, targetUserId);
       const summary = await getTrainingSummary(targetUserId);
       res.json(summary);
     } catch (err) {
@@ -58,7 +71,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const targetUserId = resolveTargetUserId(req);
-      assertCanView(req, targetUserId);
+      await assertCanView(req, targetUserId);
       const detail = await getAssignmentDrilldown(targetUserId, req.params.assignmentId);
       res.json(detail);
     } catch (err) {
@@ -86,7 +99,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const targetUserId = resolveTargetUserId(req);
-      assertCanView(req, targetUserId);
+      await assertCanView(req, targetUserId);
       const query = timelineQuerySchema.parse(req.query);
       const result = await getTimeline(targetUserId, {
         from: query.from ? new Date(query.from) : undefined,

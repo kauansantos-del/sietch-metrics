@@ -33,6 +33,11 @@ const envSchema = z.object({
 
   // Bootstrap
   INITIAL_ADMIN_EMAIL: z.string().email().optional(),
+
+  // Supabase Storage (opcional — uploads de capa e vídeo)
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().default('sietch-uploads'),
 });
 
 export type Env = z.infer<typeof envSchema>;

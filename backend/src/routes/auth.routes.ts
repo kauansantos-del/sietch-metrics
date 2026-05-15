@@ -40,7 +40,7 @@ async function ensureDefaultUser() {
 function issueSession(res: Response, user: { id: string; email: string; name: string; picture: string | null; role: 'SUPER_ADMIN' | 'ADMIN' }) {
   const token = signSessionToken({ ...user });
   res.cookie(env.SESSION_COOKIE_NAME, token, sessionCookieOptions());
-  return user;
+  return { user, token };
 }
 
 // ─── Login por email ─────────────────────────────────────────
@@ -57,7 +57,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
 
-    issueSession(res, {
+    const { token } = issueSession(res, {
       id: user.id,
       email: user.email,
       name: user.name,
@@ -74,6 +74,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
 
     res.json({
       ok: true,
+      token, // pra clients cross-origin que não conseguem usar cookie
       user: {
         id: user.id,
         email: user.email,
@@ -94,7 +95,7 @@ router.post('/session', async (req: Request, res: Response, next: NextFunction) 
   try {
     const user = await ensureDefaultUser();
 
-    issueSession(res, {
+    const { token } = issueSession(res, {
       id: user.id,
       email: user.email,
       name: user.name,
@@ -111,6 +112,7 @@ router.post('/session', async (req: Request, res: Response, next: NextFunction) 
 
     res.json({
       ok: true,
+      token,
       user: {
         id: user.id,
         email: user.email,

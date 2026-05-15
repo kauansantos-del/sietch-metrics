@@ -1,8 +1,11 @@
 // =====================================================================
-//  app-bridge.js — Conecta o frontend (mockado) ao backend real.
+//  app-bridge.js — Conecta o frontend ao backend real.
 //
-//  Estratégia: não reescrevemos o HTML. Substituímos os arrays mock e
-//  funções de save por chamadas API. O resto do render permanece igual.
+//  Estratégia:
+//  1) Auth via Bearer token (cross-origin-friendly em dev 5500↔4000)
+//  2) Hijack dos arrays mock (TRAINING_CATALOG, MY_ASSIGNMENTS, etc)
+//  3) Override de funções de salvamento (criar, completar, submeter)
+//  4) Re-render automático após cada operação
 // =====================================================================
 
 (function () {
@@ -10,24 +13,36 @@
 
   const API_BASE = (() => {
     const host = window.location.hostname;
-    // Em dev local, o backend está em :4000. Em produção, no mesmo domínio.
     if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4000/api';
     return '/api';
   })();
 
+  const TOKEN_KEY = 'sietch_metrics_token';
+
+  function getToken()  { return localStorage.getItem(TOKEN_KEY); }
+  function setToken(t) { if (t) localStorage.setItem(TOKEN_KEY, t); }
+  function clearToken(){ localStorage.removeItem(TOKEN_KEY); }
+
   // ─── API client ──────────────────────────────────────────────────────
 
   async function api(path, options = {}) {
+    const token = getToken();
+    const headers = {
+      ...(options.headers || {}),
+    };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch(API_BASE + path, {
       ...options,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      },
-      body: options.body && typeof options.body !== 'string'
-        ? JSON.stringify(options.body)
-        : options.body,
+      headers,
+      body:
+        options.body && typeof options.body !== 'string' && !(options.body instanceof FormData)
+          ? JSON.stringify(options.body)
+          : options.body,
     });
 
     if (!res.ok) {
@@ -37,17 +52,29 @@
       e.code = err.error?.code;
       e.status = res.status;
       e.details = err.error?.details;
+
+      if (res.status === 401) clearToken();
       throw e;
     }
     if (res.status === 204) return null;
-    return res.json();
+
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return res.json();
+    if (ct.includes('text/csv') || ct.includes('text/html')) return res.text();
+    return res.blob();
   }
 
   window.SietchAPI = {
     // Auth
     me:                () => api('/auth/me'),
-    login:             (email) => api('/auth/login', { method: 'POST', body: { email } }),
-    logout:            () => api('/auth/logout', { method: 'POST' }),
+    login:             async (email) => {
+      const r = await api('/auth/login', { method: 'POST', body: { email } });
+      if (r.token) setToken(r.token);
+      return r;
+    },
+    logout:            async () => {
+      try { await api('/auth/logout', { method: 'POST' }); } finally { clearToken(); }
+    },
     usersForLogin:     () => api('/auth/users-for-login'),
 
     // Trainings (admin)
@@ -100,13 +127,33 @@
     videoProgressPost: (mid, body) => api(`/player/video/${mid}/progress`, { method: 'POST', body }),
     videoResolve:      (provider, input) => api('/player/video/resolve', { method: 'POST', body: { provider, input } }),
 
-    // Drill-down (admin/RH)
+    // Drill-down (admin/gestor)
     colabSummary:      (userId = 'me') => api(`/colaborador/users/${userId}/training-summary`),
     colabAssignment:   (userId, aid) => api(`/colaborador/users/${userId}/assignments/${aid}`),
     colabTimeline:     (userId, q = '') => api(`/colaborador/users/${userId}/activity` + (q ? `?${q}` : '')),
+    colabUsers:        () => api('/colaborador/users'),
 
-    // Listas de apoio
-    listUsers:         () => api('/users'),
+    // Admin actions
+    adminResetAttempts:(body) => api('/admin/quiz/reset-attempts', { method: 'POST', body }),
+    adminVoidQuestion: (body) => api('/admin/quiz/void-question', { method: 'POST', body }),
+    adminReassign:     (body) => api('/admin/assignments/reassign', { method: 'POST', body }),
+    adminCertificate:  (aid) => api(`/admin/certificate/${aid}`),
+
+    // Exports — devolve URL (link de download) ou blob
+    exportTrainingsCsv:(userId = 'me') => `${API_BASE}/admin/exports/users/${userId}/trainings.csv`,
+    exportAcceptancesCsv: (userId = 'me') => `${API_BASE}/admin/exports/users/${userId}/acceptances.csv`,
+    exportProgressCsv: (trainingId) => `${API_BASE}/admin/exports/trainings/${trainingId}/progress.csv`,
+
+    // Uploads
+    uploadCover:       (file) => {
+      const fd = new FormData(); fd.append('file', file);
+      return api('/uploads/cover', { method: 'POST', body: fd });
+    },
+    uploadVideo:       (file) => {
+      const fd = new FormData(); fd.append('file', file);
+      return api('/uploads/video', { method: 'POST', body: fd });
+    },
+    getVideoAsset:     (id) => api(`/uploads/video/${id}`),
   };
 
   // ─── Mapeamento de enums ─────────────────────────────────────────────
@@ -176,12 +223,12 @@
       rating: 4.5,
       status: t.status === 'PUBLISHED' ? 'ativo' : (t.status === 'DRAFT' ? 'rascunho' : 'arquivado'),
       policy: t.policyRef || null,
-      _raw: t, // mantém original
+      cover: t.coverUrl || null,
+      _raw: t,
     };
   }
 
   function assignmentToFront(a) {
-    const completed = (a.modulesProgress || []).filter(p => p.status === 'COMPLETED').length;
     return {
       id: a.id,
       trainingId: a.trainingId,
@@ -194,7 +241,6 @@
       deadline: a.dueAt ? String(a.dueAt).slice(0, 10) : null,
       duration: formatDuration(a.training?.modules),
       remaining: diffDays(a.dueAt) ?? 0,
-      _completed: completed,
       _raw: a,
     };
   }
@@ -202,7 +248,9 @@
   // ─── Login overlay ───────────────────────────────────────────────────
 
   function buildLoginOverlay(users) {
-    const opts = users.map(u => `<option value="${u.email}">${u.name} — ${u.email} (${u.role})</option>`).join('');
+    const opts = users.map(u =>
+      `<option value="${u.email}">${u.name} — ${u.email} (${u.role})</option>`,
+    ).join('');
     return `
       <div id="sietch-login-overlay" style="
         position:fixed;inset:0;z-index:99999;
@@ -235,13 +283,12 @@
             margin-top:18px;width:100%;padding:12px 16px;
             background:linear-gradient(135deg,#6366f1,#8b5cf6);
             color:white;border:none;border-radius:8px;
-            font-size:14px;font-weight:600;cursor:pointer;
-            transition:opacity .2s;">
+            font-size:14px;font-weight:600;cursor:pointer;">
             Entrar
           </button>
           <div id="sietch-login-err" style="margin-top:12px;font-size:12px;color:#ff5e7d;min-height:16px;"></div>
           <div style="margin-top:24px;padding-top:18px;border-top:1px solid #22243380;font-size:11px;color:#666;text-align:center;">
-            Login simplificado por email — para uso interno.
+            Login simplificado por email — uso interno.
           </div>
         </div>
       </div>
@@ -278,13 +325,12 @@
     });
   }
 
-  // ─── Loader de dados → preenche os arrays mock ───────────────────────
+  // ─── Loader de dados ─────────────────────────────────────────────────
 
   async function loadCatalogIntoMock() {
     try {
       const r = await window.SietchAPI.listTrainings('limit=100');
       const items = (r.items || []).map(trainingToCatalog);
-
       if (window.TRAINING_CATALOG) {
         window.TRAINING_CATALOG.length = 0;
         items.forEach(i => window.TRAINING_CATALOG.push(i));
@@ -300,7 +346,6 @@
     try {
       const r = await window.SietchAPI.myAssignments('limit=100');
       const items = (r.items || []).map(assignmentToFront);
-
       if (window.MY_ASSIGNMENTS) {
         window.MY_ASSIGNMENTS.length = 0;
         items.forEach(i => window.MY_ASSIGNMENTS.push(i));
@@ -312,101 +357,138 @@
     }
   }
 
-  async function loadAllTrainingData() {
-    await Promise.all([loadCatalogIntoMock(), loadAssignmentsIntoMock()]);
+  async function loadTeamIntoMock() {
+    try {
+      const r = await window.SietchAPI.colabUsers();
+      const items = (r.users || []).map((u) => ({
+        id: u.id,
+        name: u.name,
+        role: u.role,
+        team: u.team,
+        avatar: (u.name || '?').split(' ').map(s => s[0]).slice(0, 2).join(''),
+        andamento: 0,
+        atrasados: 0,
+        concluidos: 0,
+        proximoPrazo: null,
+        ultimaConclusao: null,
+      }));
+      if (window.TEAM_MEMBERS_TREIN) {
+        window.TEAM_MEMBERS_TREIN.length = 0;
+        items.forEach(i => window.TEAM_MEMBERS_TREIN.push(i));
+      } else {
+        window.TEAM_MEMBERS_TREIN = items;
+      }
+    } catch (e) {
+      console.error('[bridge] colabUsers failed', e);
+    }
   }
 
-  // ─── Bootstrap ───────────────────────────────────────────────────────
-
-  async function bootstrap() {
-    let user = null;
-
+  async function loadPendingReviewsIntoMock() {
     try {
-      const r = await window.SietchAPI.me();
-      user = r.user;
-    } catch {
-      user = await showLoginScreen();
+      const r = await window.SietchAPI.taskPendingReviews();
+      const items = (r.submissions || []).map((s) => ({
+        id: s.id,
+        collaborator: s.moduleProgress?.assignment?.user?.name || '?',
+        training: s.moduleProgress?.assignment?.training?.title || '?',
+        completedAt: s.submittedAt ? String(s.submittedAt).slice(0, 10) : '',
+        evidence: true,
+      }));
+      if (window.VALIDATION_QUEUE) {
+        window.VALIDATION_QUEUE.length = 0;
+        items.forEach(i => window.VALIDATION_QUEUE.push(i));
+      } else {
+        window.VALIDATION_QUEUE = items;
+      }
+    } catch (e) {
+      console.error('[bridge] pendingReviews failed', e);
     }
+  }
 
-    if (!user) return;
+  async function loadAllTrainingData() {
+    await Promise.all([
+      loadCatalogIntoMock(),
+      loadAssignmentsIntoMock(),
+      loadTeamIntoMock(),
+      loadPendingReviewsIntoMock(),
+    ]);
+  }
 
-    // Popula currentUser global
-    window.currentUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      picture: user.picture,
-      // Compatibilidade com a estrutura mockada
-      avatar: (user.name || '?').split(' ').map(s => s[0]).slice(0, 2).join(''),
-    };
-
-    // Mostra o app
-    document.body.style.visibility = 'visible';
-
-    // Carrega dados reais por trás dos arrays mock
-    await loadAllTrainingData();
-
-    // Re-renderiza a tela de treinamentos se já estiver montada
+  function reRender() {
     if (typeof window.renderTreinamentos === 'function') {
       try { window.renderTreinamentos(); } catch (e) { console.warn(e); }
     }
-    if (typeof window.renderHeader === 'function') {
-      try { window.renderHeader(); } catch (e) { /* opcional */ }
-    }
   }
 
-  // ─── Helpers expostos pro código original ────────────────────────────
-
-  window.SietchBridge = {
-    reloadCatalog: loadCatalogIntoMock,
-    reloadAssignments: loadAssignmentsIntoMock,
-    reloadAll: loadAllTrainingData,
-    logout: async () => {
-      try { await window.SietchAPI.logout(); } finally { window.location.reload(); }
-    },
-    TRACK_TO_CATEGORY,
-    CATEGORY_TO_TRACK,
-    MODULE_TYPE_TO_FRONT,
-  };
-
-  // ─── Override de funções de save (criar, completar etc) ──────────────
+  // ─── Overrides de ações ──────────────────────────────────────────────
 
   function installOverrides() {
-    // Conclusão de módulo no player → POST /assignments/me/:aid/modules/:mid/complete
+    // ── Conclusão de módulo (player) ──────────────────────────────────
     window.completeModuleViaAPI = async function (assignmentId, moduleId) {
       try {
         await window.SietchAPI.completeModule(assignmentId, moduleId);
         await loadAssignmentsIntoMock();
-        if (typeof window.renderTreinamentos === 'function') window.renderTreinamentos();
+        reRender();
       } catch (e) {
         alert('Erro ao concluir módulo: ' + e.message);
       }
     };
 
-    // Quiz: iniciar + submeter via API
+    // ── Quiz ──────────────────────────────────────────────────────────
     window.quizStartViaAPI  = (aid, mid) => window.SietchAPI.quizStart(aid, mid);
-    window.quizSubmitViaAPI = (aid, mid, attemptId, answers) =>
-      window.SietchAPI.quizSubmit(aid, mid, { attempt_id: attemptId, answers });
+    window.quizSubmitViaAPI = async (aid, mid, attemptId, answers) => {
+      const r = await window.SietchAPI.quizSubmit(aid, mid, {
+        attempt_id: attemptId, answers,
+      });
+      await loadAssignmentsIntoMock();
+      reRender();
+      return r;
+    };
+    window.quizAttemptsViaAPI = (aid, mid) => window.SietchAPI.quizAttempts(aid, mid);
+    window.quizAttemptDetailViaAPI = (attemptId) => window.SietchAPI.quizAttempt(attemptId);
 
-    // Task: submeter via API
-    window.taskSubmitViaAPI = (aid, mid, kind, content) =>
-      window.SietchAPI.taskSubmit(aid, mid, { kind, content });
+    // ── Task ──────────────────────────────────────────────────────────
+    window.taskSubmitViaAPI = async (aid, mid, kind, content) => {
+      const r = await window.SietchAPI.taskSubmit(aid, mid, { kind, content });
+      await loadAssignmentsIntoMock();
+      reRender();
+      return r;
+    };
+    window.taskSubmissionsViaAPI = (aid, mid) => window.SietchAPI.taskSubmissions(aid, mid);
+    window.taskReviewViaAPI = async (sid, decision, feedback, criteriaChecks) => {
+      const r = await window.SietchAPI.taskReview(sid, { decision, feedback, criteriaChecks });
+      await loadPendingReviewsIntoMock();
+      reRender();
+      return r;
+    };
 
-    // Policy: aceitar via API
-    window.policyAcceptViaAPI = (aid, mid, readingTimeSec) =>
-      window.SietchAPI.policyAccept(aid, mid, { reading_time_sec: readingTimeSec });
+    // ── Policy ────────────────────────────────────────────────────────
+    window.policyAcceptViaAPI = async (aid, mid, readingTimeSec) => {
+      const r = await window.SietchAPI.policyAccept(aid, mid, {
+        reading_time_sec: readingTimeSec,
+      });
+      await loadAssignmentsIntoMock();
+      reRender();
+      return r;
+    };
+    window.policyAcceptancesViaAPI = () => window.SietchAPI.policyAcceptances();
 
-    // Video: reportar progresso
-    window.videoTickViaAPI = (mid, currentTimeSec, durationSec, intervalCovered) =>
-      window.SietchAPI.videoProgressPost(mid, {
+    // ── Video ─────────────────────────────────────────────────────────
+    let lastVideoTick = 0;
+    window.videoTickViaAPI = (mid, currentTimeSec, durationSec, intervalCovered) => {
+      const now = Date.now();
+      if (now - lastVideoTick < 4000) return Promise.resolve(null); // throttle 4s
+      lastVideoTick = now;
+      return window.SietchAPI.videoProgressPost(mid, {
         event: 'tick',
         current_time_sec: currentTimeSec,
         duration_sec: durationSec,
         interval_covered: intervalCovered,
       });
+    };
+    window.videoProgressGetViaAPI = (mid) => window.SietchAPI.videoProgressGet(mid);
+    window.videoResolveViaAPI = (provider, input) => window.SietchAPI.videoResolve(provider, input);
 
-    // Criar treinamento via API
+    // ── Criar treinamento (admin) ─────────────────────────────────────
     window.createTrainingViaAPI = async function (data) {
       const trackToCat = TRACK_TO_CATEGORY[data.track] || 'OUTROS';
       const payload = {
@@ -415,12 +497,154 @@
         category: trackToCat,
         tags: data.tags || [],
         policyRef: data.policy || null,
+        coverUrl: data.cover || data.coverUrl || null,
       };
       const r = await window.SietchAPI.createTraining(payload);
       await loadCatalogIntoMock();
+      reRender();
       return r.training;
     };
+
+    window.publishTrainingViaAPI = async (id, bump) => {
+      const r = await window.SietchAPI.publishTraining(id, bump || 'minor');
+      await loadCatalogIntoMock();
+      reRender();
+      return r.training;
+    };
+
+    window.archiveTrainingViaAPI = async (id) => {
+      const r = await window.SietchAPI.archiveTraining(id);
+      await loadCatalogIntoMock();
+      reRender();
+      return r.training;
+    };
+
+    window.addModuleViaAPI = async (trainingId, moduleData) => {
+      const r = await window.SietchAPI.createModule(trainingId, moduleData);
+      await loadCatalogIntoMock();
+      return r.module;
+    };
+
+    window.uploadCoverViaAPI = (file) => window.SietchAPI.uploadCover(file);
+    window.uploadVideoViaAPI = (file) => window.SietchAPI.uploadVideo(file);
+
+    // ── Atribuir treinamento (admin) ──────────────────────────────────
+    window.assignTrainingViaAPI = async (trainingId, userIds, dueAt) => {
+      const r = await window.SietchAPI.bulkAssign({
+        userIds, trainingId, dueAt,
+      });
+      await loadAssignmentsIntoMock();
+      reRender();
+      return r;
+    };
+
+    // ── Drill-down do colaborador (admin) ─────────────────────────────
+    window.colabSummaryViaAPI    = (userId) => window.SietchAPI.colabSummary(userId);
+    window.colabAssignmentViaAPI = (userId, aid) => window.SietchAPI.colabAssignment(userId, aid);
+    window.colabTimelineViaAPI   = (userId, q) => window.SietchAPI.colabTimeline(userId, q);
+
+    // ── Admin actions ─────────────────────────────────────────────────
+    window.adminResetAttemptsViaAPI = async (assignmentId, moduleId) => {
+      const r = await window.SietchAPI.adminResetAttempts({
+        assignment_id: assignmentId, module_id: moduleId,
+      });
+      reRender();
+      return r;
+    };
+    window.adminVoidQuestionViaAPI = (moduleId, questionId) =>
+      window.SietchAPI.adminVoidQuestion({ module_id: moduleId, question_id: questionId });
+    window.adminReassignViaAPI = async (userId, trainingId) => {
+      const r = await window.SietchAPI.adminReassign({
+        user_id: userId, training_id: trainingId,
+      });
+      await loadAssignmentsIntoMock();
+      reRender();
+      return r;
+    };
+
+    // ── Certificado ───────────────────────────────────────────────────
+    window.openCertificateViaAPI = (assignmentId) => {
+      const token = getToken();
+      // Abre numa nova aba com Bearer via fetch + blob
+      window.SietchAPI.adminCertificate(assignmentId)
+        .then((html) => {
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        })
+        .catch((e) => alert('Erro ao gerar certificado: ' + e.message));
+    };
+
+    // ── Exports CSV ───────────────────────────────────────────────────
+    window.downloadExportViaAPI = async (kind, userIdOrTrainingId) => {
+      const url =
+        kind === 'trainings'
+          ? window.SietchAPI.exportTrainingsCsv(userIdOrTrainingId)
+          : kind === 'acceptances'
+          ? window.SietchAPI.exportAcceptancesCsv(userIdOrTrainingId)
+          : window.SietchAPI.exportProgressCsv(userIdOrTrainingId);
+
+      const token = getToken();
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) { alert('Falha ao exportar'); return; }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${kind}-${userIdOrTrainingId}.csv`;
+      a.click();
+    };
   }
+
+  // ─── Bootstrap ───────────────────────────────────────────────────────
+
+  async function bootstrap() {
+    let user = null;
+
+    if (getToken()) {
+      try { const r = await window.SietchAPI.me(); user = r.user; }
+      catch { clearToken(); }
+    }
+
+    if (!user) {
+      user = await showLoginScreen();
+    }
+
+    if (!user) return;
+
+    window.currentUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      picture: user.picture,
+      avatar: (user.name || '?').split(' ').map(s => s[0]).slice(0, 2).join(''),
+    };
+
+    document.body.style.visibility = 'visible';
+
+    await loadAllTrainingData();
+    reRender();
+
+    if (typeof window.renderHeader === 'function') {
+      try { window.renderHeader(); } catch {}
+    }
+  }
+
+  // Helpers expostos pro código original
+  window.SietchBridge = {
+    reloadCatalog: loadCatalogIntoMock,
+    reloadAssignments: loadAssignmentsIntoMock,
+    reloadAll: loadAllTrainingData,
+    logout: async () => {
+      await window.SietchAPI.logout();
+      window.location.reload();
+    },
+    TRACK_TO_CATEGORY,
+    CATEGORY_TO_TRACK,
+    MODULE_TYPE_TO_FRONT,
+  };
 
   // ─── Start ───────────────────────────────────────────────────────────
 

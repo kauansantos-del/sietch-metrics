@@ -30,9 +30,14 @@ model User {
   picture     String?
   role        UserRole  @default(ADMIN)
   active      Boolean   @default(true)
+  managerId   String?   @map("manager_id") @db.Uuid
+  team        String?   @db.VarChar(80)
   lastLoginAt DateTime? @map("last_login_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  manager     User?    @relation("ManagerReports", fields: [managerId], references: [id], onDelete: SetNull)
+  reports     User[]   @relation("ManagerReports")
 
   evaluations    Evaluation[]      @relation("EvaluatorEvaluations")
   customCriteria CustomCriterion[] @relation("OwnedCriteria")
@@ -49,6 +54,8 @@ model User {
   activityEvents       ActivityEvent[]
 
   @@index([email])
+  @@index([managerId])
+  @@index([team])
   @@map("users")
 }
 
