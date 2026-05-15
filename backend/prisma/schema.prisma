@@ -38,6 +38,16 @@ model User {
   customCriteria CustomCriterion[] @relation("OwnedCriteria")
   auditLogs      AuditLog[]
 
+  authoredTrainings    Training[]         @relation("AuthoredTrainings")
+  publishedVersions    TrainingVersion[]  @relation("PublishedBy")
+  assignmentsReceived  Assignment[]       @relation("AssignmentUser")
+  assignmentsCreated   Assignment[]       @relation("AssignmentAssignedBy")
+  taskReviews          TaskSubmission[]   @relation("TaskReviewer")
+  policyAcceptances    PolicyAcceptance[]
+  videoProgresses      VideoProgress[]
+  videoAssets          VideoAsset[]
+  activityEvents       ActivityEvent[]
+
   @@index([email])
   @@map("users")
 }
@@ -174,4 +184,373 @@ model AuditLog {
   @@index([createdAt])
   @@index([entityType, entityId])
   @@map("audit_log")
+}
+
+// ─────────────────────────────────────────────────────────────
+// TRAININGS — catálogo de treinamentos
+// Spec: task-criacao-treinamento.md
+// ─────────────────────────────────────────────────────────────
+
+enum TrainingCategory {
+  COMPLIANCE
+  CYBER_SECURITY
+  PENTEST
+  DEV_FRONTEND
+  DEV_BACKEND
+  LIDERANCA
+  SOFT_SKILLS
+  OUTROS
+}
+
+enum TrainingStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TrainingVisibility {
+  ALL
+  BY_ROLE
+  BY_TEAM
+  MANUAL
+}
+
+model Training {
+  id              String             @id @default(uuid()) @db.Uuid
+  title           String             @db.VarChar(80)
+  description     String             @db.Text
+  category        TrainingCategory
+  tags            String[]           @default([])
+  coverUrl        String?            @map("cover_url") @db.Text
+  policyRef       String?            @map("policy_ref") @db.VarChar(20)
+  language        String             @default("pt-BR") @db.VarChar(8)
+  authorId        String             @map("author_id") @db.Uuid
+  status          TrainingStatus     @default(DRAFT)
+  currentVersion  String             @default("1.0") @map("current_version") @db.VarChar(10)
+  isMandatory     Boolean            @default(false) @map("is_mandatory")
+  deadlineDays    Int?               @map("deadline_days")
+  passingScore    Int                @default(70) @map("passing_score")
+  maxAttempts     Int                @default(0) @map("max_attempts")
+  visibility      TrainingVisibility @default(ALL)
+  hasCertificate  Boolean            @default(false) @map("has_certificate")
+  recurrence      Json?              // { kind: 'never' | 'annual' | 'every_n_months', interval_months?: int }
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  publishedAt     DateTime?          @map("published_at")
+
+  author        User               @relation("AuthoredTrainings", fields: [authorId], references: [id], onDelete: Restrict)
+  modules       Module[]
+  versions      TrainingVersion[]
+  assignments   Assignment[]
+  prerequisites Prerequisite[]     @relation("PrerequisiteOf")
+  requiredBy    Prerequisite[]     @relation("RequiredBy")
+  activityEvents ActivityEvent[]
+
+  @@index([status, category])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("trainings")
+}
+
+model TrainingVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  trainingId  String   @map("training_id") @db.Uuid
+  version     String   @db.VarChar(10)
+  snapshot    Json     // snapshot completo (training + módulos) imutável
+  publishedAt DateTime @default(now()) @map("published_at")
+  publishedBy String   @map("published_by") @db.Uuid
+
+  training    Training     @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  publisher   User         @relation("PublishedBy", fields: [publishedBy], references: [id], onDelete: Restrict)
+  assignments Assignment[]
+
+  @@unique([trainingId, version])
+  @@index([trainingId])
+  @@map("training_versions")
+}
+
+enum ModuleType {
+  VIDEO
+  ARTICLE
+  QUIZ
+  TASK
+  POLICY
+  LIVE
+}
+
+model Module {
+  id            String     @id @default(uuid()) @db.Uuid
+  trainingId    String     @map("training_id") @db.Uuid
+  orderIndex    Int        @map("order_index")
+  type          ModuleType
+  title         String     @db.VarChar(120)
+  description   String?    @db.Text
+  durationMin   Int        @map("duration_min")
+  isRequired    Boolean    @default(true) @map("is_required")
+  payload       Json       // payload específico por tipo (ver §4.4 da spec)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  training       Training           @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  progresses     ModuleProgress[]
+  policyAccepts  PolicyAcceptance[]
+  videoProgresses VideoProgress[]
+  activityEvents ActivityEvent[]
+
+  @@unique([trainingId, orderIndex])
+  @@index([trainingId, orderIndex])
+  @@map("modules")
+}
+
+model Prerequisite {
+  trainingId         String @map("training_id") @db.Uuid
+  requiredTrainingId String @map("required_training_id") @db.Uuid
+
+  training         Training @relation("PrerequisiteOf", fields: [trainingId], references: [id], onDelete: Cascade)
+  requiredTraining Training @relation("RequiredBy", fields: [requiredTrainingId], references: [id], onDelete: Cascade)
+
+  @@id([trainingId, requiredTrainingId])
+  @@index([requiredTrainingId])
+  @@map("prerequisites")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ASSIGNMENTS — atribuição de treinamento a colaborador
+// Spec: task-progressao-colaborador.md §8.1
+// ─────────────────────────────────────────────────────────────
+
+enum AssignmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  WAITING
+}
+
+model Assignment {
+  id                 String           @id @default(uuid()) @db.Uuid
+  userId             String           @map("user_id") @db.Uuid
+  trainingId         String           @map("training_id") @db.Uuid
+  trainingVersionId  String           @map("training_version_id") @db.Uuid
+  assignedBy         String           @map("assigned_by") @db.Uuid
+  assignedAt         DateTime         @default(now()) @map("assigned_at")
+  dueAt              DateTime?        @map("due_at")
+  startedAt          DateTime?        @map("started_at")
+  completedAt        DateTime?        @map("completed_at")
+  status             AssignmentStatus @default(NOT_STARTED)
+  progressPct        Decimal          @default(0) @map("progress_pct") @db.Decimal(5, 2)
+  finalScore         Decimal?         @map("final_score") @db.Decimal(5, 2)
+
+  user            User             @relation("AssignmentUser", fields: [userId], references: [id], onDelete: Cascade)
+  trainingVersion TrainingVersion  @relation(fields: [trainingVersionId], references: [id], onDelete: Restrict)
+  training        Training         @relation(fields: [trainingId], references: [id], onDelete: Restrict)
+  assignedByUser  User             @relation("AssignmentAssignedBy", fields: [assignedBy], references: [id], onDelete: Restrict)
+  modulesProgress ModuleProgress[]
+
+  @@unique([userId, trainingId, trainingVersionId])
+  @@index([userId, status])
+  @@index([trainingId])
+  @@index([dueAt])
+  @@map("assignments")
+}
+
+enum ModuleProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model ModuleProgress {
+  id           String               @id @default(uuid()) @db.Uuid
+  assignmentId String               @map("assignment_id") @db.Uuid
+  moduleId     String               @map("module_id") @db.Uuid
+  status       ModuleProgressStatus @default(NOT_STARTED)
+  startedAt    DateTime?            @map("started_at")
+  completedAt  DateTime?            @map("completed_at")
+  timeSpentSec Int                  @default(0) @map("time_spent_sec")
+  payload      Json?                // payload específico (scroll_pct, etc)
+
+  assignment      Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  module          Module           @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  quizAttempts    QuizAttempt[]
+  taskSubmissions TaskSubmission[]
+
+  @@unique([assignmentId, moduleId])
+  @@index([assignmentId])
+  @@map("module_progress")
+}
+
+// ─────────────────────────────────────────────────────────────
+// QUIZ — tentativas e respostas
+// ─────────────────────────────────────────────────────────────
+
+model QuizAttempt {
+  id               String    @id @default(uuid()) @db.Uuid
+  moduleProgressId String    @map("module_progress_id") @db.Uuid
+  attemptNumber    Int       @map("attempt_number")
+  startedAt        DateTime  @default(now()) @map("started_at")
+  submittedAt      DateTime? @map("submitted_at")
+  durationSec      Int?      @map("duration_sec")
+  scorePct         Decimal?  @map("score_pct") @db.Decimal(5, 2)
+  passed           Boolean?
+  payload          Json      // snapshot das questões na versão usada
+
+  moduleProgress ModuleProgress @relation(fields: [moduleProgressId], references: [id], onDelete: Cascade)
+  answers        QuizAnswer[]
+
+  @@unique([moduleProgressId, attemptNumber])
+  @@index([moduleProgressId, attemptNumber])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id              String   @id @default(uuid()) @db.Uuid
+  attemptId       String   @map("attempt_id") @db.Uuid
+  questionId      String   @map("question_id") @db.VarChar(40)
+  selectedOptions String[] @map("selected_options")
+  correct         Boolean
+  partialCredit   Decimal? @map("partial_credit") @db.Decimal(5, 2)
+  timeSpentSec    Int?     @map("time_spent_sec")
+
+  attempt QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+  @@map("quiz_answers")
+}
+
+// ─────────────────────────────────────────────────────────────
+// TASK SUBMISSIONS — submissões de tarefa prática
+// ─────────────────────────────────────────────────────────────
+
+enum TaskSubmissionKind {
+  TEXT
+  FILE
+  LINK
+  NONE
+}
+
+enum TaskSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  APPROVED_WITH_NOTES
+}
+
+model TaskSubmission {
+  id               String                @id @default(uuid()) @db.Uuid
+  moduleProgressId String                @map("module_progress_id") @db.Uuid
+  submissionNumber Int                   @map("submission_number")
+  submittedAt      DateTime              @default(now()) @map("submitted_at")
+  submissionKind   TaskSubmissionKind    @map("submission_kind")
+  content          Json                  // { text } | { file_url, filename } | { url }
+  status           TaskSubmissionStatus  @default(PENDING)
+  reviewerId       String?               @map("reviewer_id") @db.Uuid
+  reviewedAt       DateTime?             @map("reviewed_at")
+  feedback         String?               @db.Text
+  criteriaChecks   Json?                 @map("criteria_checks") // [{ id, text, checked }]
+
+  moduleProgress ModuleProgress @relation(fields: [moduleProgressId], references: [id], onDelete: Cascade)
+  reviewer       User?          @relation("TaskReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([moduleProgressId, submissionNumber])
+  @@index([moduleProgressId])
+  @@index([status, reviewerId])
+  @@map("task_submissions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// POLICY ACCEPTANCES — auditoria de aceites de política
+// Imutável. Nunca deletar.
+// ─────────────────────────────────────────────────────────────
+
+model PolicyAcceptance {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  policyRef      String   @map("policy_ref") @db.VarChar(20)
+  policyVersion  String   @map("policy_version") @db.VarChar(10)
+  moduleId       String?  @map("module_id") @db.Uuid
+  contentSnapshot String? @map("content_snapshot") @db.Text
+  acceptedAt     DateTime @default(now()) @map("accepted_at")
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  readingTimeSec Int?     @map("reading_time_sec")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([userId, policyRef])
+  @@index([userId, acceptedAt])
+  @@map("policy_acceptances")
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIDEO — assets e progresso de visualização
+// Spec: task-embed-video.md §6.2
+// ─────────────────────────────────────────────────────────────
+
+enum VideoAssetStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  ERROR
+}
+
+model VideoAsset {
+  id           String           @id @default(uuid()) @db.Uuid
+  uploadedBy   String           @map("uploaded_by") @db.Uuid
+  filename     String           @db.Text
+  sizeBytes    BigInt           @map("size_bytes")
+  durationSec  Int?             @map("duration_sec")
+  status       VideoAssetStatus @default(UPLOADING)
+  storageKey   String?          @map("storage_key") @db.Text
+  playbackId   String?          @map("playback_id") @db.Text
+  errorMessage String?          @map("error_message") @db.Text
+  createdAt    DateTime         @default(now()) @map("created_at")
+  readyAt      DateTime?        @map("ready_at")
+
+  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@index([uploadedBy])
+  @@index([status])
+  @@map("video_assets")
+}
+
+model VideoProgress {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  moduleId         String    @map("module_id") @db.Uuid
+  watchedIntervals Json      @default("[]") @map("watched_intervals") // [[start, end], ...]
+  watchedPct       Decimal   @default(0) @map("watched_pct") @db.Decimal(5, 2)
+  lastPosition     Int       @default(0) @map("last_position")
+  completedAt      DateTime? @map("completed_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@map("video_progress")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ACTIVITY EVENTS — timeline de eventos do colaborador
+// ─────────────────────────────────────────────────────────────
+
+model ActivityEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  type       String   @db.VarChar(40) // ex: 'module.completed', 'quiz.attempt.submitted'
+  trainingId String?  @map("training_id") @db.Uuid
+  moduleId   String?  @map("module_id") @db.Uuid
+  payload    Json?
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  training Training? @relation(fields: [trainingId], references: [id], onDelete: SetNull)
+  module   Module?   @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([userId, occurredAt(sort: Desc)])
+  @@index([userId, type, occurredAt(sort: Desc)])
+  @@map("activity_events")
 }

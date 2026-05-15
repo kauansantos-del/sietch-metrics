@@ -14,6 +14,8 @@ import criteriaRoutes from './routes/criteria.routes';
 import evaluationRoutes from './routes/evaluations.routes';
 import technicianRoutes from './routes/technicians.routes';
 import userRoutes from './routes/users.routes';
+import trainingRoutes from './routes/trainings.routes';
+import assignmentRoutes from './routes/assignments.routes';
 
 const app = express();
 
@@ -81,6 +83,8 @@ app.use('/api/criteria', criteriaRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/technicians', technicianRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/trainings', trainingRoutes);
+app.use('/api/assignments', assignmentRoutes);
 
 // 404 + error handler — sempre por último
 app.use('/api', notFoundHandler);
