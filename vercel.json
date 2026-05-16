@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://sietch-metrics-api.vercel.app/api/:path*" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
