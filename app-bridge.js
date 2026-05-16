@@ -575,6 +575,133 @@
         .catch((e) => alert('Erro ao gerar certificado: ' + e.message));
     };
 
+    // ── Override de openCreateTraining (modal de criação) ─────────────
+    // A função original só mostrava toast. Aqui de verdade salva no banco.
+    window.openCreateTraining = function () {
+      const tracks = window.TRAINING_TRACKS || [];
+      const trackOptions = tracks.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
+
+      window.treinOpenModal({
+        title: 'Criar treinamento',
+        body: `
+          <div style="display:flex;flex-direction:column;gap:var(--spacing-4);">
+            <div>
+              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Título *</label>
+              <input id="sb-train-title" type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);" placeholder="Ex: Fundamentos de Cyber Security">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Trilha *</label>
+                <select id="sb-train-track" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);">
+                  <option value="">Selecionar…</option>
+                  ${trackOptions}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Prazo (dias)</label>
+                <input id="sb-train-deadline" type="number" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="30" value="30">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Descrição *</label>
+              <textarea id="sb-train-desc" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:80px;resize:vertical;font-family:var(--font-family);" placeholder="Mínimo 20 caracteres — aparece nos cards"></textarea>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" id="sb-train-mandatory" style="width:16px;height:16px;accent-color:var(--blue-9);">
+              <label for="sb-train-mandatory" style="font-size:14px;color:var(--text-default);cursor:pointer;">Treinamento obrigatório</label>
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Política vinculada (opcional)</label>
+              <input id="sb-train-policy" type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="Ex: DOC-005">
+            </div>
+            <div id="sb-train-err" style="color:#ff5e7d;font-size:13px;min-height:18px;"></div>
+          </div>
+        `,
+        footer: `
+          <button id="sb-train-save-btn" class="btn btn-primary btn-md" onclick="window.__sietchSaveTraining()">Criar treinamento</button>
+          <button class="btn btn-text btn-md" onclick="closeModal()">Cancelar</button>
+        `,
+        wide: true,
+      });
+    };
+
+    window.__sietchSaveTraining = async function () {
+      const err = document.getElementById('sb-train-err');
+      const btn = document.getElementById('sb-train-save-btn');
+      const title = document.getElementById('sb-train-title').value.trim();
+      const track = document.getElementById('sb-train-track').value;
+      const desc  = document.getElementById('sb-train-desc').value.trim();
+      const deadline = parseInt(document.getElementById('sb-train-deadline').value, 10);
+      const mandatory = document.getElementById('sb-train-mandatory').checked;
+      const policy = document.getElementById('sb-train-policy').value.trim();
+
+      err.textContent = '';
+      if (!title || title.length < 3) { err.textContent = 'Título obrigatório (3-80 chars)'; return; }
+      if (!track) { err.textContent = 'Selecione uma trilha'; return; }
+      if (!desc || desc.length < 20) { err.textContent = 'Descrição precisa ter no mínimo 20 caracteres'; return; }
+
+      btn.disabled = true; btn.textContent = 'Salvando…';
+      try {
+        const training = await window.createTrainingViaAPI({
+          title, desc, track, policy: policy || null,
+        });
+        // Aplica deadline + mandatory via PATCH
+        if (training?.id && (deadline || mandatory)) {
+          await window.SietchAPI.updateTraining(training.id, {
+            isMandatory: mandatory,
+            deadlineDays: deadline || 30,
+          });
+        }
+        await loadCatalogIntoMock();
+        reRender();
+        window.closeModal();
+        if (window.showToast) window.showToast('Treinamento criado!', 'success');
+      } catch (e) {
+        err.textContent = e.message || 'Erro ao criar';
+        btn.disabled = false; btn.textContent = 'Criar treinamento';
+      }
+    };
+
+    // ── Override de confirmAssign ─────────────────────────────────────
+    // Era mock — agora chama a API de bulk assign de verdade.
+    window.confirmAssign = async function () {
+      const trainingMockId = window.assignSelectedTraining;
+      const training = (window.TRAINING_CATALOG || []).find((t) => t.id === trainingMockId);
+      if (!training) { alert('Selecione um treinamento'); return; }
+
+      const selectedMockIds = window.assignSelectedCollabs || [];
+      const userIds = selectedMockIds
+        .map((mockId) => {
+          const m = (window.TEAM_MEMBERS_TREIN || []).find((x) => x.id === mockId);
+          return m?.id; // já é o uuid real (vem do colabUsers)
+        })
+        .filter(Boolean);
+
+      if (userIds.length === 0) { alert('Selecione pelo menos 1 colaborador'); return; }
+
+      try {
+        const dueAt = window.assignDeadline
+          ? new Date(window.assignDeadline).toISOString()
+          : null;
+        const r = await window.SietchAPI.bulkAssign({
+          userIds,
+          trainingId: training.id,
+          dueAt,
+        });
+        await loadAssignmentsIntoMock();
+        if (window.renderLiderView) window.renderLiderView();
+        reRender();
+        window.closeModal();
+        if (window.showToast)
+          window.showToast(
+            `${training.title} atribuído a ${r.succeeded} colaborador(es).`,
+            'success',
+          );
+      } catch (e) {
+        alert('Erro ao atribuir: ' + e.message);
+      }
+    };
+
     // ── Exports CSV ───────────────────────────────────────────────────
     window.downloadExportViaAPI = async (kind, userIdOrTrainingId) => {
       const url =
@@ -599,6 +726,19 @@
 
   // ─── Bootstrap ───────────────────────────────────────────────────────
 
+  async function autoSession() {
+    // Cria/recupera o admin padrão e devolve token+user. Sem tela de login.
+    const res = await fetch(API_BASE + '/auth/session', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('auto-session failed');
+    const data = await res.json();
+    if (data.token) setToken(data.token);
+    return data.user;
+  }
+
   async function bootstrap() {
     let user = null;
 
@@ -608,10 +748,16 @@
     }
 
     if (!user) {
-      user = await showLoginScreen();
+      try { user = await autoSession(); }
+      catch (e) { console.error('[bridge] autoSession failed', e); }
     }
 
-    if (!user) return;
+    if (!user) {
+      // Fallback final: mostra a UI mesmo sem auth (modo offline/leitura)
+      if (typeof window.__sietchShowApp === 'function') window.__sietchShowApp();
+      document.body.style.visibility = 'visible';
+      return;
+    }
 
     window.currentUser = {
       id: user.id,
@@ -622,6 +768,7 @@
       avatar: (user.name || '?').split(' ').map(s => s[0]).slice(0, 2).join(''),
     };
 
+    if (typeof window.__sietchShowApp === 'function') window.__sietchShowApp();
     document.body.style.visibility = 'visible';
 
     await loadAllTrainingData();
@@ -648,14 +795,39 @@
 
   // ─── Start ───────────────────────────────────────────────────────────
 
-  document.body.style.visibility = 'hidden';
+  function hideAppContent() {
+    // Esconde só o conteúdo da app, não o body inteiro (senão o overlay
+    // herda visibility: hidden e não aparece).
+    let style = document.getElementById('sietch-bridge-hide-css');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'sietch-bridge-hide-css';
+      style.textContent = `
+        body > *:not(#sietch-login-overlay):not(script):not(style) {
+          visibility: hidden !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  function showAppContent() {
+    const s = document.getElementById('sietch-bridge-hide-css');
+    if (s) s.remove();
+  }
+
+  // Expõe pro bootstrap
+  window.__sietchHideApp = hideAppContent;
+  window.__sietchShowApp = showAppContent;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+      hideAppContent();
       installOverrides();
       bootstrap();
     });
   } else {
+    hideAppContent();
     installOverrides();
     bootstrap();
   }
