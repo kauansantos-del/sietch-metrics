@@ -575,8 +575,9 @@
         .catch((e) => alert('Erro ao gerar certificado: ' + e.message));
     };
 
-    // ── Override de openCreateTraining (modal de criação) ─────────────
-    // A função original só mostrava toast. Aqui de verdade salva no banco.
+    // ── Override de openCreateTraining (modal simples — fallback) ─────
+    // O wizard completo está em training-builder.js (que sobrescreve isso
+    // depois). Esse modal aqui só existe se o builder não carregar.
     window.openCreateTraining = function () {
       const tracks = window.TRAINING_TRACKS || [];
       const trackOptions = tracks.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
