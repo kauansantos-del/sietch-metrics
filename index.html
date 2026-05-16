@@ -3719,9 +3719,8 @@
     .trein-search input:focus { border-color: var(--border-default); }
     .trein-search__icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
     .trein-filter-select {
-      padding: 9px 12px; background: var(--surface-card); border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md); font-size: 14px; color: var(--text-default);
-      cursor: pointer; outline: none; font-family: var(--font-family);
+      /* Visual herdado da §30 (Form Controls Refined). Aqui só dimensão. */
+      min-width: 160px;
     }
     .trein-list { display: flex; flex-direction: column; gap: var(--spacing-3); }
     .trein-card {
@@ -7361,7 +7360,7 @@ function openCreateTraining() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div>
             <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Trilha *</label>
-            <select style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);">
+            <select style="width:100%;">
               <option value="">Selecionar…</option>
               ${TRAINING_TRACKS.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}
             </select>
