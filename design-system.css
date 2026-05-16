@@ -1604,3 +1604,469 @@ ul, ol {
     width: 100%;
   }
 }
+
+
+/* ============================================================
+   30. Form Controls — Refined (light + dark)
+   ============================================================
+   Substitui os controles nativos por versões consistentes com a
+   linguagem visual do produto. Funciona com light/dark automaticamente
+   via os tokens --surface-*, --border-*, --text-* e --indigo-*.
+
+   Aplicado de forma agressiva via seletores nos elementos nativos,
+   sem precisar trocar markup. Selects ganham chevron próprio.
+   Checkbox e radio são reconstruídos via appearance:none.
+   ============================================================ */
+
+:root {
+  --field-bg:           var(--surface-card);
+  --field-bg-hover:     color-mix(in srgb, var(--surface-card) 70%, var(--surface-subtle));
+  --field-border:       var(--border-subtle);
+  --field-border-hover: var(--border-default);
+  --field-text:         var(--text-default);
+  --field-placeholder:  var(--text-placeholder);
+  --field-radius:       10px;
+  --field-height:       40px;
+  --field-padding-x:    14px;
+  --accent:             var(--indigo-9);
+  --accent-hover:       var(--indigo-10);
+  --accent-soft:        color-mix(in srgb, var(--indigo-9) 18%, transparent);
+  --ring-color:         color-mix(in srgb, var(--indigo-9) 35%, transparent);
+}
+
+[data-theme="dark"] {
+  --field-bg:           color-mix(in srgb, var(--gray-1) 60%, var(--gray-2));
+  --field-bg-hover:     color-mix(in srgb, var(--gray-1) 30%, var(--gray-3));
+  --field-border:       var(--gray-5);
+  --field-border-hover: var(--gray-7);
+  --field-placeholder:  var(--gray-9);
+  --accent:             var(--indigo-9);
+  --accent-hover:       var(--indigo-10);
+  --accent-soft:        color-mix(in srgb, var(--indigo-9) 28%, transparent);
+  --ring-color:         color-mix(in srgb, var(--indigo-9) 45%, transparent);
+}
+
+/* ─── Reset base de inputs ──────────────────────────────────── */
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+textarea,
+select {
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--field-text);
+  background-color: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
+  padding: 0 var(--field-padding-x);
+  outline: none;
+  transition:
+    background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color    160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow      160ms cubic-bezier(0.16, 1, 0.3, 1),
+    color           160ms cubic-bezier(0.16, 1, 0.3, 1);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+select {
+  height: var(--field-height);
+}
+
+textarea {
+  padding: 12px var(--field-padding-x);
+  resize: vertical;
+  min-height: 92px;
+  line-height: 1.55;
+}
+
+/* Hover suave — sutil, sem chamar atenção */
+input[type="text"]:hover:not(:disabled),
+input[type="email"]:hover:not(:disabled),
+input[type="number"]:hover:not(:disabled),
+input[type="tel"]:hover:not(:disabled),
+input[type="password"]:hover:not(:disabled),
+input[type="search"]:hover:not(:disabled),
+input[type="url"]:hover:not(:disabled),
+input[type="date"]:hover:not(:disabled),
+input[type="datetime-local"]:hover:not(:disabled),
+input[type="time"]:hover:not(:disabled),
+textarea:hover:not(:disabled),
+select:hover:not(:disabled) {
+  background-color: var(--field-bg-hover);
+  border-color: var(--field-border-hover);
+}
+
+/* Focus — anel suave indigo, não a borda preta agressiva */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="url"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="time"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--surface-subtle);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--field-placeholder);
+}
+
+/* Number sem spinner */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Search com clear button discreto */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  background-image: linear-gradient(45deg, transparent 45%, var(--text-low) 45% 55%, transparent 55%),
+                    linear-gradient(-45deg, transparent 45%, var(--text-low) 45% 55%, transparent 55%);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 120ms;
+}
+input[type="search"]::-webkit-search-cancel-button:hover { opacity: 1; }
+
+/* ─── Select — chevron próprio inline SVG ───────────────────── */
+
+select {
+  padding-right: 38px;
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d8d8d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+select:hover:not(:disabled) {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23646464' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+select:focus {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233e63dd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23646464' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+[data-theme="dark"] select:hover:not(:disabled) {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bbbbbb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Estiliza as <option> visíveis no dropdown nativo
+   (limites variam por navegador, mas Chromium/Firefox respeitam) */
+select option {
+  background-color: var(--field-bg);
+  color: var(--field-text);
+  padding: 8px 12px;
+}
+select option:checked,
+select option:hover {
+  background-color: var(--accent-soft);
+  color: var(--field-text);
+}
+
+/* IE/multi-line selects */
+select[multiple],
+select[size] {
+  height: auto;
+  padding: 6px 0;
+}
+select[multiple] option,
+select[size] option {
+  padding: 8px 14px;
+}
+
+/* ─── Checkbox custom — appearance: none + check SVG ────────── */
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--field-border);
+  border-radius: 5px;
+  background-color: var(--field-bg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  vertical-align: middle;
+  transition:
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color    140ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow      140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform        80ms cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--accent);
+  background-color: var(--field-bg-hover);
+}
+
+input[type="checkbox"]:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 8 7 12 13 4'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 13px 13px;
+  animation: sietchCheckPop 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="checkbox"]:checked:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+input[type="checkbox"]:indeterminate {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='3' y1='8' x2='13' y2='8'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 13px 13px;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@keyframes sietchCheckPop {
+  0%   { transform: scale(0.6); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Radio custom ──────────────────────────────────────────── */
+
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--field-border);
+  border-radius: 50%;
+  background-color: var(--field-bg);
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  transition:
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color    140ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow      140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform        80ms cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--accent);
+  background-color: var(--field-bg-hover);
+}
+
+input[type="radio"]:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+input[type="radio"]:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+input[type="radio"]:checked {
+  border-color: var(--accent);
+  background-color: var(--field-bg);
+}
+
+input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: sietchCheckPop 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="radio"]:checked:hover:not(:disabled)::after {
+  background-color: var(--accent-hover);
+}
+
+input[type="radio"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Range slider polish ───────────────────────────────────── */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--field-border);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 3px solid var(--surface-card);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: transform 120ms;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.05); }
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 3px solid var(--surface-card);
+  cursor: grab;
+}
+
+/* ─── Custom toggle (switch) — opt-in via classe ────────────── */
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.switch__control {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--field-border);
+  border-radius: 999px;
+  transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.switch__control::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--surface-card);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch input[type="checkbox"]:checked + .switch__control {
+  background: var(--accent);
+}
+.switch input[type="checkbox"]:checked + .switch__control::after {
+  transform: translateX(18px);
+}
+.switch input[type="checkbox"]:focus-visible + .switch__control {
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+/* ─── Scrollbar refinada (dark-friendly) ────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-6) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--gray-6);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-8);
+  background-clip: padding-box;
+}
+
+/* ─── File input (button look) ──────────────────────────────── */
+
+input[type="file"] {
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--field-text);
+}
+input[type="file"]::file-selector-button {
+  appearance: none;
+  font: inherit;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--field-text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background 140ms;
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--field-bg-hover);
+  border-color: var(--accent);
+}
+
