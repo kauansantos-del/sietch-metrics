@@ -117,7 +117,6 @@
   function renderStep1() {
     const m = state.meta;
     return `
-      ${renderStepper()}
       <div class="sb-form">
         <div class="sb-field">
           <label class="sb-label">Título <span class="sb-req">*</span></label>
@@ -226,26 +225,11 @@
 
   function renderStep2() {
     return `
-      ${renderStepper()}
       <div class="sb-form">
         <div class="sb-section-head">
           <div>
             <div class="sb-section-title">Módulos do treinamento</div>
             <div class="sb-help">Adicione na ordem em que aparecerão pro colaborador. Reordenar com ↑/↓.</div>
-          </div>
-          <div class="sb-add-menu">
-            <button type="button" class="sb-btn sb-btn--primary" onclick="SietchBuilder.toggleAddMenu()">+ Adicionar módulo</button>
-            <div id="sb-add-menu" class="sb-add-menu__list" hidden>
-              ${MODULE_TYPES.map(t => `
-                <button type="button" class="sb-add-menu__item" onclick="SietchBuilder.addModule('${t.value}')">
-                  <span class="sb-add-menu__icon">${t.icon}</span>
-                  <span>
-                    <span class="sb-add-menu__label">${t.label}</span>
-                    <span class="sb-add-menu__desc">${t.desc}</span>
-                  </span>
-                </button>
-              `).join('')}
-            </div>
           </div>
         </div>
 
@@ -253,12 +237,41 @@
           <div class="sb-empty">
             <div class="sb-empty__title">Nenhum módulo ainda</div>
             <div class="sb-empty__desc">Comece adicionando vídeo, artigo, quiz, tarefa ou política.</div>
+            <div class="sb-empty__actions" style="position:relative;">
+              ${renderAddMenuButton(true)}
+            </div>
           </div>
         ` : `
           <div class="sb-modules">
-            ${state.modules.map((mod, i) => renderModuleCard(mod, i)).join('')}
+            ${state.modules.map((mod, i) => `
+              ${renderModuleCard(mod, i)}
+              <div class="sb-add-between">${renderAddMenuButton(false, i + 1)}</div>
+            `).join('')}
           </div>
         `}
+      </div>
+    `;
+  }
+
+  function renderAddMenuButton(big, position) {
+    const btnClass = big ? 'sb-btn sb-btn--primary' : 'sb-add-between__btn';
+    const label = big ? '+ Adicionar módulo' : '+ adicionar módulo aqui';
+    const pos = position == null ? -1 : position;
+    return `
+      <div class="sb-add-menu">
+        <button type="button" class="${btnClass}" data-sb-add-toggle="${pos}"
+          onclick="SietchBuilder.toggleAddMenu(this, ${pos})">${label}</button>
+        <div class="sb-add-menu__list" hidden>
+          ${MODULE_TYPES.map(t => `
+            <button type="button" class="sb-add-menu__item" onclick="SietchBuilder.addModule('${t.value}')">
+              <span class="sb-add-menu__icon">${t.icon}</span>
+              <span>
+                <span class="sb-add-menu__label">${t.label}</span>
+                <span class="sb-add-menu__desc">${t.desc}</span>
+              </span>
+            </button>
+          `).join('')}
+        </div>
       </div>
     `;
   }
@@ -876,9 +889,17 @@
 
   // ─── Módulos: helpers ────────────────────────────────────────────────
 
-  window.SietchBuilder.toggleAddMenu = function () {
-    const el = $('#sb-add-menu');
-    if (el) el.hidden = !el.hidden;
+  let _pendingInsertAt = -1; // -1 = no fim
+
+  window.SietchBuilder.toggleAddMenu = function (btn, pos) {
+    // Fecha todos os outros menus abertos
+    document.querySelectorAll('.sb-add-menu__list').forEach((el) => {
+      if (el !== btn.nextElementSibling) el.hidden = true;
+    });
+    const list = btn.nextElementSibling;
+    if (!list) return;
+    list.hidden = !list.hidden;
+    _pendingInsertAt = (pos == null || pos === -1) ? -1 : pos;
   };
 
   window.SietchBuilder.addModule = function (type) {
@@ -890,7 +911,7 @@
       TASK:    { statement_md: '', submission_kind: 'text', acceptance_criteria: [], auto_complete: false, reviewer_role: 'admin' },
       POLICY:  { policy_ref: '', policy_version: '', effective_date: '', content_md: '', require_full_scroll: true, accept_label: '' },
     };
-    state.modules.push({
+    const item = {
       tempId: uid(),
       type,
       title: '',
@@ -899,8 +920,15 @@
       isRequired: true,
       payload: defaultPayloads[type] || {},
       expanded: true,
-    });
-    $('#sb-add-menu').hidden = true;
+    };
+    if (_pendingInsertAt < 0 || _pendingInsertAt >= state.modules.length) {
+      state.modules.push(item);
+    } else {
+      state.modules.splice(_pendingInsertAt, 0, item);
+    }
+    _pendingInsertAt = -1;
+    // Fecha todos menus
+    document.querySelectorAll('.sb-add-menu__list').forEach(el => { el.hidden = true; });
     render();
   };
 
@@ -931,7 +959,6 @@
   function renderStep3() {
     const s = state.settings;
     return `
-      ${renderStepper()}
       <div class="sb-form">
         <div class="sb-grid-2">
           <label class="sb-checkbox-line sb-checkbox-line--card">
@@ -1009,12 +1036,7 @@
     const v = state.validation;
     const m = state.meta;
     const totalMin = state.modules.reduce((s, x) => s + (x.durationMin || 0), 0);
-    const typeCounts = state.modules.reduce((acc, x) => {
-      acc[x.type] = (acc[x.type] || 0) + 1;
-      return acc;
-    }, {});
     return `
-      ${renderStepper()}
       <div class="sb-form">
         <div class="sb-card">
           <div class="sb-card__title">${esc(m.title || '—')}</div>
@@ -1097,13 +1119,74 @@
     if (state.step === 3) body = renderStep3();
     if (state.step === 4) body = renderStep4();
 
-    window.treinOpenModal({
-      title: state.mode === 'edit' ? 'Editar treinamento' : 'Criar treinamento',
-      body,
-      footer: renderFooter(),
-      wide: true,
+    let host = document.getElementById('sb-page-root');
+    const isNew = !host;
+    if (isNew) {
+      host = document.createElement('div');
+      host.id = 'sb-page-root';
+      document.body.appendChild(host);
+    }
+
+    const subtitle = state.mode === 'edit' ? 'Editando' : 'Novo curso';
+    const title    = state.mode === 'edit' ? (state.meta.title || 'Sem título') : 'Criar treinamento';
+
+    host.innerHTML = `
+      <div class="sb-page" data-step="${state.step}">
+        <header class="sb-page__head">
+          <div class="sb-page__head-inner">
+            <div class="sb-page__brand">
+              <button type="button" class="sb-page__close" title="Fechar"
+                onclick="SietchBuilder.close()" aria-label="Fechar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              </button>
+              <div>
+                <div class="sb-page__crumb">Sietch › Treinamentos › ${esc(subtitle)}</div>
+                <h1 class="sb-page__title">${esc(title)}</h1>
+              </div>
+            </div>
+            <div class="sb-page__stepper-wrap">${renderStepper()}</div>
+          </div>
+        </header>
+
+        <main class="sb-page__main">
+          <div class="sb-page__col">
+            ${body}
+          </div>
+        </main>
+
+        <footer class="sb-page__foot">
+          <div class="sb-page__foot-inner">${renderFooter()}</div>
+        </footer>
+      </div>
+    `;
+
+    if (isNew) {
+      requestAnimationFrame(() => host.querySelector('.sb-page').classList.add('sb-page--in'));
+      attachOutsideClickClose();
+      document.body.classList.add('sb-page-open');
+    }
+  }
+
+  function attachOutsideClickClose() {
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('sb-add-menu');
+      if (!menu || menu.hidden) return;
+      const btn = e.target.closest('[data-sb-add-toggle]');
+      if (btn) return;
+      if (!menu.contains(e.target)) menu.hidden = true;
     });
   }
+
+  window.SietchBuilder.close = function () {
+    const host = document.getElementById('sb-page-root');
+    if (!host) return;
+    const page = host.querySelector('.sb-page');
+    if (page) page.classList.remove('sb-page--in');
+    setTimeout(() => {
+      host.remove();
+      document.body.classList.remove('sb-page-open');
+    }, 220);
+  };
 
   // ─── Salvar / publicar ───────────────────────────────────────────────
 
@@ -1244,7 +1327,7 @@
     if (!state.trainingId) { alert('Salve primeiro'); return; }
     try {
       await window.SietchAPI.publishTraining(state.trainingId, 'minor');
-      if (window.closeModal) window.closeModal();
+      window.SietchBuilder.close();
       if (window.SietchBridge?.reloadCatalog) await window.SietchBridge.reloadCatalog();
       if (window.renderTreinamentos) window.renderTreinamentos();
       if (window.showToast) window.showToast('Treinamento publicado!', 'success');
