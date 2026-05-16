@@ -4840,7 +4840,7 @@ const RECOMENDACAO_LABELS = {
 // API / AUTH CONFIG
 // ══════════════════════════════════════════════
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3000/api'
+  ? 'http://localhost:4000/api'
   : 'https://sietch-metrics-api.vercel.app/api';
 
 // ══════════════════════════════════════════════
@@ -5672,7 +5672,7 @@ async function importSietchTemplate() {
   }
 }
 
-let currentUser = null;
+var currentUser = null; // var para que window.currentUser funcione (bridge)
 
 // ══════════════════════════════════════════════
 // INIT
