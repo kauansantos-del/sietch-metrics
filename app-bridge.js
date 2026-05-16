@@ -780,6 +780,232 @@
     if (typeof window.renderHeader === 'function') {
       try { window.renderHeader(); } catch {}
     }
+
+    // Hidratação do player só funciona depois que o openTrainingPlayer foi definido
+    // pelo código inline do index.html. Aqui já passou pelo DOMContentLoaded.
+    installPlayerHydration();
+
+    // Persistência de navegação: salva tab atual e restaura ao recarregar
+    installNavPersistence();
+  }
+
+  // ─── Persistência de navegação ───────────────────────────────────────
+
+  const NAV_KEY = 'sietch_nav_state_v1';
+
+  function saveNavState(partial) {
+    try {
+      const prev = JSON.parse(localStorage.getItem(NAV_KEY) || '{}');
+      localStorage.setItem(NAV_KEY, JSON.stringify({ ...prev, ...partial, _ts: Date.now() }));
+    } catch {}
+  }
+  function loadNavState() {
+    try { return JSON.parse(localStorage.getItem(NAV_KEY) || '{}'); }
+    catch { return {}; }
+  }
+
+  function installNavPersistence() {
+    // Envolve showView (top-level sidebar)
+    if (typeof window.showView === 'function' && !window.showView._sietchWrapped) {
+      const orig = window.showView;
+      window.showView = function (view) {
+        saveNavState({ view });
+        return orig.apply(this, arguments);
+      };
+      window.showView._sietchWrapped = true;
+    }
+    // Envolve switchTreinRole (Meus/Equipe/Admin)
+    if (typeof window.switchTreinRole === 'function' && !window.switchTreinRole._sietchWrapped) {
+      const orig = window.switchTreinRole;
+      window.switchTreinRole = function (role) {
+        saveNavState({ treinRole: role });
+        return orig.apply(this, arguments);
+      };
+      window.switchTreinRole._sietchWrapped = true;
+    }
+    // Envolve switchRHTab (Catálogo/Atribuições/Relatórios)
+    if (typeof window.switchRHTab === 'function' && !window.switchRHTab._sietchWrapped) {
+      const orig = window.switchRHTab;
+      window.switchRHTab = function (tab) {
+        saveNavState({ rhTab: tab });
+        return orig.apply(this, arguments);
+      };
+      window.switchRHTab._sietchWrapped = true;
+    }
+
+    // Restaura navegação após boot
+    const s = loadNavState();
+    if (s && s.view) {
+      try { window.showView(s.view); } catch {}
+    }
+    if (s && s.treinRole && typeof window.switchTreinRole === 'function') {
+      try { window.switchTreinRole(s.treinRole); } catch {}
+    }
+    if (s && s.rhTab && typeof window.switchRHTab === 'function') {
+      // Garante que a view rh está visível primeiro
+      setTimeout(() => { try { window.switchRHTab(s.rhTab); } catch {} }, 80);
+    }
+  }
+
+  // ─── Adapter backend → player ────────────────────────────────────────
+
+  // Mini markdown → HTML (cabeçalhos, listas, negrito, parágrafos)
+  function mdToHtml(md) {
+    if (!md) return '';
+    const escapeHtml = (s) => String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const lines = String(md).split(/\r?\n/);
+    const out = [];
+    let inList = false;
+    const flushList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+    for (let raw of lines) {
+      const line = raw.trim();
+      if (!line) { flushList(); continue; }
+      let m;
+      if ((m = line.match(/^######\s+(.*)/))) { flushList(); out.push(`<h6>${escapeHtml(m[1])}</h6>`); continue; }
+      if ((m = line.match(/^#####\s+(.*)/)))  { flushList(); out.push(`<h5>${escapeHtml(m[1])}</h5>`); continue; }
+      if ((m = line.match(/^####\s+(.*)/)))   { flushList(); out.push(`<h4>${escapeHtml(m[1])}</h4>`); continue; }
+      if ((m = line.match(/^###\s+(.*)/)))    { flushList(); out.push(`<h3>${escapeHtml(m[1])}</h3>`); continue; }
+      if ((m = line.match(/^##\s+(.*)/)))     { flushList(); out.push(`<h3>${escapeHtml(m[1])}</h3>`); continue; }
+      if ((m = line.match(/^#\s+(.*)/)))      { flushList(); out.push(`<h3>${escapeHtml(m[1])}</h3>`); continue; }
+      if ((m = line.match(/^[-*]\s+(.*)/))) {
+        if (!inList) { out.push('<ul>'); inList = true; }
+        out.push(`<li>${inlineMd(escapeHtml(m[1]))}</li>`);
+        continue;
+      }
+      flushList();
+      out.push(`<p>${inlineMd(escapeHtml(line))}</p>`);
+    }
+    flushList();
+    return out.join('\n');
+  }
+  function inlineMd(s) {
+    return String(s)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  }
+
+  function backendModuleToPlayer(m) {
+    const base = {
+      id: m.id,
+      name: m.title || '(sem título)',
+      dur: m.durationMin || 0,
+      desc: m.description || null,
+    };
+    const p = m.payload || {};
+    if (m.type === 'VIDEO') {
+      return {
+        ...base,
+        type: 'video',
+        provider: p.provider || 'youtube',
+        videoId:  p.source?.video_id || null,
+        videoUrl: p.source?.url || null,
+        minWatchPct: p.min_watch_pct || 90,
+      };
+    }
+    if (m.type === 'ARTICLE') {
+      return {
+        ...base,
+        type: 'article',
+        readingTime: m.durationMin || 5,
+        content: mdToHtml(p.content_md || ''),
+      };
+    }
+    if (m.type === 'QUIZ') {
+      const qs = (p.questions || []).map(q => {
+        const opts = q.options || [];
+        // Player espera correct como ÍNDICE da opção correta (single-choice).
+        // Para multiple: pega o primeiro correct (aproximação).
+        const correctIdx = Math.max(0, opts.findIndex(o => o.correct));
+        return {
+          q: q.statement || '',
+          opts: opts.map(o => o.text || ''),
+          correct: correctIdx,
+          feedback: q.explanation || '',
+        };
+      });
+      return {
+        ...base,
+        type: 'quiz',
+        minScore:    p.passing_score || 70,
+        maxAttempts: p.max_attempts ?? 3,
+        questions: qs,
+      };
+    }
+    if (m.type === 'TASK') {
+      return {
+        ...base,
+        type: 'task',
+        desc:     p.statement_md || m.description || '',
+        snippets: [],
+        criteria: (p.acceptance_criteria || []).map(c => c.text || ''),
+        delivery: p.submission_kind || 'text',
+        validatedBy: '—',
+        daysReview: 3,
+      };
+    }
+    if (m.type === 'POLICY') {
+      return {
+        ...base,
+        type: 'policy',
+        version: p.policy_version || '1.0',
+        docRef:  p.policy_ref || '',
+        effectiveDate: p.effective_date || '',
+        content: mdToHtml(p.content_md || ''),
+        acceptLabel: p.accept_label || '',
+      };
+    }
+    return { ...base, type: 'article', content: '<p>Tipo não suportado.</p>' };
+  }
+
+  // Hidrata o cache MODULES_BY_TRAINING com módulos REAIS do backend
+  const _hydratingTrainings = new Map(); // trainingId → Promise
+  async function hydrateModulesForTraining(trainingId) {
+    if (!trainingId) return [];
+    window.MODULES_BY_TRAINING = window.MODULES_BY_TRAINING || {};
+    // Se já tem em cache e não está vazio, devolve
+    if (Array.isArray(window.MODULES_BY_TRAINING[trainingId]) && window.MODULES_BY_TRAINING[trainingId].length > 0) {
+      return window.MODULES_BY_TRAINING[trainingId];
+    }
+    // Deduplica chamadas simultâneas
+    if (_hydratingTrainings.has(trainingId)) return _hydratingTrainings.get(trainingId);
+    const p = (async () => {
+      try {
+        const r = await window.SietchAPI.listModules(trainingId);
+        const mods = (r.modules || []).map(backendModuleToPlayer);
+        window.MODULES_BY_TRAINING[trainingId] = mods;
+        return mods;
+      } catch (e) {
+        console.error('[bridge] hydrateModulesForTraining failed', e);
+        window.MODULES_BY_TRAINING[trainingId] = [];
+        return [];
+      } finally {
+        _hydratingTrainings.delete(trainingId);
+      }
+    })();
+    _hydratingTrainings.set(trainingId, p);
+    return p;
+  }
+
+  // Override de openTrainingPlayer: hidrata módulos antes de abrir
+  function installPlayerHydration() {
+    if (typeof window.openTrainingPlayer !== 'function') return;
+    if (window.openTrainingPlayer._sietchWrapped) return;
+    const orig = window.openTrainingPlayer;
+    window.openTrainingPlayer = async function (assignmentId) {
+      const a = (window.MY_ASSIGNMENTS || []).find(x => x.id === assignmentId);
+      if (a && a.trainingId) {
+        const cached = (window.MODULES_BY_TRAINING || {})[a.trainingId];
+        if (!Array.isArray(cached) || cached.length === 0) {
+          // Mostra um loader visual rápido (opcional)
+          try { await hydrateModulesForTraining(a.trainingId); } catch {}
+        }
+      }
+      return orig.call(this, assignmentId);
+    };
+    window.openTrainingPlayer._sietchWrapped = true;
   }
 
   // Helpers expostos pro código original
@@ -787,6 +1013,7 @@
     reloadCatalog: loadCatalogIntoMock,
     reloadAssignments: loadAssignmentsIntoMock,
     reloadAll: loadAllTrainingData,
+    hydrateModules: hydrateModulesForTraining,
     logout: async () => {
       await window.SietchAPI.logout();
       window.location.reload();

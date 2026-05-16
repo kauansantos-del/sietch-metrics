@@ -3815,10 +3815,29 @@
       background: var(--surface-card); border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md); padding: 20px; cursor: pointer;
       transition: all 180ms ease; display: flex; flex-direction: column; gap: 10px;
+      min-width: 0; /* permite shrink dentro do grid */
+      overflow: hidden;
     }
     .trein-catalog-card:hover { border-color: var(--border-default); box-shadow: var(--elevation-2); transform: translateY(-2px); }
-    .trein-catalog-card__title { font-size: 14px; font-weight: 600; color: var(--text-high); line-height: 1.35; }
-    .trein-catalog-card__desc  { font-size: 13px; color: var(--text-muted); line-height: 1.5; flex: 1; }
+    .trein-catalog-card__title {
+      font-size: 14px; font-weight: 600; color: var(--text-high); line-height: 1.35;
+      /* Trunca em 2 linhas com ellipsis, quebra palavras gigantes (URLs etc) */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .trein-catalog-card__desc  {
+      font-size: 13px; color: var(--text-muted); line-height: 1.5; flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     .trein-catalog-card__foot  { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .trein-catalog-card__stats { display: flex; gap: 12px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
     .trein-catalog-mandatory { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--red-11); background: var(--red-3); border: 1px solid var(--red-6); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
@@ -6816,6 +6835,9 @@ function renderTreinSubView() {
   document.getElementById('trein-view-meus').style.display  = treinCurrentRole === 'meus'  ? '' : 'none';
   document.getElementById('trein-view-lider').style.display = treinCurrentRole === 'lider' ? '' : 'none';
   document.getElementById('trein-view-rh').style.display    = treinCurrentRole === 'rh'    ? '' : 'none';
+  // Limpa o header-action ao sair da admin
+  const headerAction = document.getElementById('trein-header-action');
+  if (headerAction && treinCurrentRole !== 'rh') headerAction.innerHTML = '';
   if (treinCurrentRole === 'meus')  renderMeusView();
   if (treinCurrentRole === 'lider') renderLiderView();
   if (treinCurrentRole === 'rh')    renderRHView();
@@ -7226,25 +7248,34 @@ function renderRHContent() {
   const el = document.getElementById('trein-rh-content');
   if (!el) return;
 
-  if (rhCurrentSubTab === 'catalogo') {
-    el.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-4);">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:var(--text-high);">Catálogo de treinamentos</div>
-          <div style="font-size:13px;color:var(--text-muted);">${TRAINING_CATALOG.length} treinamentos ativos</div>
-        </div>
-        <button class="btn btn-primary btn-md" onclick="openCreateTraining()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  // Botão "Criar treinamento" no header da página (só quando está em Catálogo)
+  const headerAction = document.getElementById('trein-header-action');
+  if (headerAction) {
+    if (rhCurrentSubTab === 'catalogo' && treinCurrentRole === 'rh') {
+      headerAction.innerHTML = `
+        <button class="btn btn-primary btn-md trein-create-btn" onclick="openCreateTraining()">
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Criar treinamento
         </button>
+      `;
+    } else {
+      headerAction.innerHTML = '';
+    }
+  }
+
+  if (rhCurrentSubTab === 'catalogo') {
+    el.innerHTML = `
+      <div style="margin-bottom:var(--spacing-4);">
+        <div style="font-size:15px;font-weight:700;color:var(--text-high);">Catálogo de treinamentos</div>
+        <div style="font-size:13px;color:var(--text-muted);">${TRAINING_CATALOG.length} treinamentos ativos · clique em um card pra ver como o aluno vê</div>
       </div>
       <div class="trein-catalog-grid">
         ${TRAINING_CATALOG.map(t => {
           const tr = getTrainTrack(t.track);
           return `
-            <div class="trein-catalog-card">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-                <span class="trein-badge" style="background:${tr.bg};color:${tr.color};">${tr.label}</span>
+            <div class="trein-catalog-card" onclick="openAdminTrainingView('${t.id}')" title="Ver treinamento">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;">
+                <span class="trein-badge" style="background:${tr.bg};color:${tr.color};white-space:nowrap;">${tr.label}</span>
                 ${t.mandatory ? `<span class="trein-catalog-mandatory">Obrigatório</span>` : ''}
               </div>
               <div class="trein-catalog-card__title">${t.title}</div>
@@ -7257,7 +7288,7 @@ function renderRHContent() {
                 </div>
                 <div style="font-size:12px;color:var(--amber-11);font-weight:600;">★ ${t.rating}</div>
               </div>
-              ${t.policy ? `<div style="font-size:11px;color:var(--text-muted);padding-top:8px;border-top:1px solid var(--border-subtle);">Política: ${t.policy}</div>` : ''}
+              ${t.policy ? `<div style="font-size:11px;color:var(--text-muted);padding-top:8px;border-top:1px solid var(--border-subtle);overflow-wrap:anywhere;">Política: ${t.policy}</div>` : ''}
             </div>
           `;
         }).join('')}

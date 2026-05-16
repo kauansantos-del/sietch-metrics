@@ -35,9 +35,55 @@
     { value: 'POLICY',  label: 'Política',             icon: '§', desc: 'Aceite formal auditável' },
   ];
 
-  // ─── Estado global do wizard ─────────────────────────────────────────
+  // ─── Estado global do wizard + persistência ──────────────────────────
 
   let state = null;
+  const STORAGE_KEY = 'sietch_builder_draft_v1';
+
+  function serializeState() {
+    if (!state) return null;
+    // Não serializa erros nem flags efêmeras
+    return JSON.stringify({
+      mode: state.mode,
+      trainingId: state.trainingId,
+      step: state.step,
+      meta: state.meta,
+      modules: state.modules,
+      settings: state.settings,
+      _toolbarOpen: state._toolbarOpen,
+      _savedAt: Date.now(),
+    });
+  }
+  function loadSavedState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      // Validade: 7 dias
+      if (parsed._savedAt && Date.now() - parsed._savedAt > 7 * 24 * 3600 * 1000) {
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      return parsed;
+    } catch { return null; }
+  }
+  function clearSavedState() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }
+  let _saveTimer = null;
+  function saveStateDebounced() {
+    if (!state) return;
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => {
+      try {
+        const s = serializeState();
+        if (s) localStorage.setItem(STORAGE_KEY, s);
+      } catch (e) {
+        // Quota cheia, etc — ignora silenciosamente
+      }
+    }, 400);
+  }
 
   function newDraftState() {
     return {
@@ -65,8 +111,68 @@
       },
       validation: null,       // resposta do POST /trainings/:id/validate
       saving: false,
-      error: null,
+      errors: {},             // { fieldKey: 'mensagem', _general: 'banner top' }
     };
+  }
+
+  // ─── Erros: helpers ──────────────────────────────────────────────────
+
+  function hasErr(key) { return !!state.errors?.[key]; }
+  function errMsg(key) { return state.errors?.[key] || ''; }
+  function fieldCls(key, opts) {
+    // Estado verde/vermelho/neutro por contador (min/max) ou erro do state
+    if (opts && opts.value != null && opts.min != null) {
+      const len = String(opts.value || '').length;
+      if (len > 0 && len >= opts.min && (opts.max == null || len <= opts.max)) {
+        return 'sb-field sb-field--valid';
+      }
+    }
+    return hasErr(key) ? 'sb-field sb-field--has-error' : 'sb-field';
+  }
+  function renderErr(key) {
+    // Mantido só pra campos sem contador (ex: select de categoria)
+    return hasErr(key) ? `<div class="sb-field__error">${esc(errMsg(key))}</div>` : '';
+  }
+  function counterState(len, min, max) {
+    if (max != null && len > max) return 'over';
+    if (len === 0) return 'empty';
+    if (len < min) return 'short';
+    return 'valid';
+  }
+  function renderCounter(value, min, max, errKey) {
+    const len = String(value || '').length;
+    const st = counterState(len, min, max);
+    const total = max != null ? `/${max}` : '';
+    const hint = min > 0 && len < min ? ` · mín ${min}` : '';
+    return `
+      <div class="sb-counter sb-counter--${st}"
+        data-counter-for="${errKey || ''}" data-min="${min}" data-max="${max != null ? max : ''}">
+        <span class="sb-counter__num">${len}${total}</span><span class="sb-counter__hint">${hint}</span>
+      </div>
+    `;
+  }
+  function renderBanner() {
+    if (!state.errors?._general) return '';
+    return `<div class="sb-banner-error">${esc(state.errors._general)}</div>`;
+  }
+  function clearErr(key) {
+    if (!state.errors) return;
+    if (state.errors[key]) { delete state.errors[key]; }
+  }
+  function clearAllErrs() { state.errors = {}; }
+  function setErrs(errs) { state.errors = errs || {}; }
+  function hasAnyErrs(errs) { return errs && Object.keys(errs).length > 0; }
+  function scrollFirstError() {
+    requestAnimationFrame(() => {
+      // Prioriza o primeiro campo com erro inline. Evita scrollar pro topo.
+      const el = document.querySelector('.sb-field--has-error');
+      if (el && el.scrollIntoView) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Tenta focar o input dentro
+        const input = el.querySelector('input, textarea, select');
+        if (input) try { input.focus({ preventScroll: true }); } catch {}
+      }
+    });
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────
@@ -118,35 +224,42 @@
     const m = state.meta;
     return `
       <div class="sb-form">
-        <div class="sb-field">
+        ${renderBanner()}
+
+        <div class="${fieldCls('title', { value: m.title, min: 3, max: 80 })}" data-field-key="title">
           <label class="sb-label">Título <span class="sb-req">*</span></label>
           <input id="sb-title" type="text" maxlength="80"
             value="${esc(m.title)}"
+            data-validate-min="3" data-validate-max="80"
+            oninput="SietchBuilder.bindMeta('title', this.value, this, 3, 80)"
             placeholder="Ex: Fundamentos de Cyber Security">
-          <div class="sb-help">3–80 caracteres</div>
+          ${renderCounter(m.title, 3, 80, 'title')}
         </div>
 
-        <div class="sb-field">
+        <div class="${fieldCls('description', { value: m.description, min: 20, max: 500 })}" data-field-key="description">
           <label class="sb-label">Descrição <span class="sb-req">*</span></label>
           <textarea id="sb-desc" maxlength="500"
+            data-validate-min="20" data-validate-max="500"
+            oninput="SietchBuilder.bindMeta('description', this.value, this, 20, 500)"
             placeholder="O que o colaborador vai aprender? Em quais situações vai aplicar?"
             style="min-height:100px;">${esc(m.description)}</textarea>
-          <div class="sb-help">20–500 caracteres</div>
+          ${renderCounter(m.description, 20, 500, 'description')}
         </div>
 
         <div class="sb-grid-2">
-          <div class="sb-field">
+          <div class="${fieldCls('category')}">
             <label class="sb-label">Categoria <span class="sb-req">*</span></label>
-            <select id="sb-category">
+            <select id="sb-category" onchange="SietchBuilder.bindMeta('category', this.value, this)">
               <option value="">Selecionar…</option>
               ${CATEGORIES.map(c => `
                 <option value="${c.value}" ${m.category === c.value ? 'selected' : ''}>${c.label}</option>
               `).join('')}
             </select>
+            ${renderErr('category')}
           </div>
           <div class="sb-field">
             <label class="sb-label">Idioma</label>
-            <select id="sb-language">
+            <select id="sb-language" onchange="SietchBuilder.bindMeta('language', this.value, this)">
               <option value="pt-BR" ${m.language === 'pt-BR' ? 'selected' : ''}>Português (BR)</option>
               <option value="en-US" ${m.language === 'en-US' ? 'selected' : ''}>English (US)</option>
               <option value="es-ES" ${m.language === 'es-ES' ? 'selected' : ''}>Español</option>
@@ -168,15 +281,18 @@
         </div>
 
         <div class="sb-grid-2">
-          <div class="sb-field">
+          <div class="${fieldCls('coverUrl')}">
             <label class="sb-label">Capa (URL)</label>
             <input id="sb-cover" type="url" value="${esc(m.coverUrl)}"
+              oninput="SietchBuilder.bindMeta('coverUrl', this.value, this)"
               placeholder="https://..." >
+            ${renderErr('coverUrl')}
             <div class="sb-help">Recomendado 1200×630, jpg/png/webp</div>
           </div>
           <div class="sb-field">
             <label class="sb-label">Política vinculada</label>
             <input id="sb-policy-ref" type="text" maxlength="20" value="${esc(m.policyRef)}"
+              oninput="SietchBuilder.bindMeta('policyRef', this.value, this)"
               placeholder="Ex: DOC-005">
             <div class="sb-help">Código da política (opcional)</div>
           </div>
@@ -185,23 +301,76 @@
     `;
   }
 
+  // bindMeta: atualiza state, contador e estado de validade ao vivo (sem re-render)
+  window.SietchBuilder = window.SietchBuilder || {};
+  window.SietchBuilder.bindMeta = function (key, value, evtTarget, min, max) {
+    state.meta[key] = value;
+    const el = evtTarget || (event && event.target);
+    const wrap = el && el.closest ? el.closest('.sb-field') : null;
+    if (!wrap) return;
+
+    // Atualiza estado visual do campo (border + contador)
+    updateFieldVisual(wrap, value, min, max);
+
+    // Limpa erro do state se existir (já que o usuário está corrigindo)
+    if (hasErr(key)) {
+      delete state.errors[key];
+      const errEl = wrap.querySelector('.sb-field__error');
+      if (errEl) errEl.remove();
+    }
+  };
+
+  function updateFieldVisual(wrap, value, min, max) {
+    const len = String(value || '').length;
+    wrap.classList.remove('sb-field--has-error', 'sb-field--valid');
+    if (min != null) {
+      const isValid = len >= min && (max == null || len <= max);
+      const isOver  = max != null && len > max;
+      if (isValid) wrap.classList.add('sb-field--valid');
+      else if (isOver) wrap.classList.add('sb-field--has-error');
+    }
+    const counter = wrap.querySelector('.sb-counter');
+    if (counter && min != null) {
+      const st = counterState(len, min, max);
+      counter.classList.remove('sb-counter--empty', 'sb-counter--short', 'sb-counter--valid', 'sb-counter--over');
+      counter.classList.add(`sb-counter--${st}`);
+      const num = counter.querySelector('.sb-counter__num');
+      if (num) num.textContent = `${len}${max != null ? '/' + max : ''}`;
+      const hint = counter.querySelector('.sb-counter__hint');
+      if (hint) hint.textContent = (min > 0 && len < min) ? ` · mín ${min}` : '';
+    }
+  }
+
   function readStep1() {
-    state.meta.title       = $('#sb-title').value.trim();
-    state.meta.description = $('#sb-desc').value.trim();
-    state.meta.category    = $('#sb-category').value;
-    state.meta.language    = $('#sb-language').value;
-    state.meta.coverUrl    = $('#sb-cover').value.trim();
-    state.meta.policyRef   = $('#sb-policy-ref').value.trim();
+    // Sincroniza o que ainda não foi capturado via bindMeta (fallback)
+    const t = $('#sb-title');     if (t) state.meta.title       = t.value.trim();
+    const d = $('#sb-desc');      if (d) state.meta.description = d.value.trim();
+    const c = $('#sb-category');  if (c) state.meta.category    = c.value;
+    const l = $('#sb-language');  if (l) state.meta.language    = l.value;
+    const cv = $('#sb-cover');    if (cv) state.meta.coverUrl    = cv.value.trim();
+    const p  = $('#sb-policy-ref'); if (p) state.meta.policyRef   = p.value.trim();
   }
 
   function validateStep1() {
     const m = state.meta;
-    if (!m.title || m.title.length < 3) return 'Título obrigatório (3–80 chars)';
-    if (m.title.length > 80) return 'Título muito longo (máx 80)';
-    if (!m.description || m.description.length < 20) return 'Descrição precisa ter no mínimo 20 caracteres';
-    if (m.description.length > 500) return 'Descrição muito longa (máx 500)';
-    if (!m.category) return 'Categoria obrigatória';
-    return null;
+    const errs = {};
+    const title = (m.title || '').trim();
+    const desc  = (m.description || '').trim();
+
+    if (!title)             errs.title = 'Título obrigatório';
+    else if (title.length < 3)  errs.title = 'Mínimo 3 caracteres';
+    else if (title.length > 80) errs.title = 'Máximo 80 caracteres';
+
+    if (!desc)              errs.description = 'Descrição obrigatória';
+    else if (desc.length < 20)  errs.description = 'Mínimo 20 caracteres';
+    else if (desc.length > 500) errs.description = 'Máximo 500 caracteres';
+
+    if (!m.category)        errs.category = 'Selecione uma categoria';
+
+    if (m.coverUrl && !/^https?:\/\/.+/i.test(m.coverUrl)) {
+      errs.coverUrl = 'URL inválida (use http(s)://...)';
+    }
+    return errs;
   }
 
   // ─── Tags helpers ────────────────────────────────────────────────────
@@ -226,6 +395,7 @@
   function renderStep2() {
     return `
       <div class="sb-form">
+        ${renderBanner()}
         <div class="sb-section-head">
           <div>
             <div class="sb-section-title">Módulos do treinamento</div>
@@ -233,56 +403,79 @@
           </div>
         </div>
 
+        ${renderModuleToolbar()}
+
         ${state.modules.length === 0 ? `
           <div class="sb-empty">
             <div class="sb-empty__title">Nenhum módulo ainda</div>
-            <div class="sb-empty__desc">Comece adicionando vídeo, artigo, quiz, tarefa ou política.</div>
-            <div class="sb-empty__actions" style="position:relative;">
-              ${renderAddMenuButton(true)}
-            </div>
+            <div class="sb-empty__desc">Use a barra acima pra adicionar vídeo, artigo, quiz, tarefa ou política.</div>
           </div>
         ` : `
           <div class="sb-modules">
-            ${state.modules.map((mod, i) => `
-              ${renderModuleCard(mod, i)}
-              <div class="sb-add-between">${renderAddMenuButton(false, i + 1)}</div>
-            `).join('')}
+            ${state.modules.map((mod, i) => renderModuleCard(mod, i)).join('')}
           </div>
         `}
       </div>
     `;
   }
 
-  function renderAddMenuButton(big, position) {
-    const btnClass = big ? 'sb-btn sb-btn--primary' : 'sb-add-between__btn';
-    const label = big ? '+ Adicionar módulo' : '+ adicionar módulo aqui';
-    const pos = position == null ? -1 : position;
+  function renderModuleToolbar() {
+    const open = state._toolbarOpen === true;
     return `
-      <div class="sb-add-menu">
-        <button type="button" class="${btnClass}" data-sb-add-toggle="${pos}"
-          onclick="SietchBuilder.toggleAddMenu(this, ${pos})">${label}</button>
-        <div class="sb-add-menu__list" hidden>
-          ${MODULE_TYPES.map(t => `
-            <button type="button" class="sb-add-menu__item" onclick="SietchBuilder.addModule('${t.value}')">
-              <span class="sb-add-menu__icon">${t.icon}</span>
-              <span>
-                <span class="sb-add-menu__label">${t.label}</span>
-                <span class="sb-add-menu__desc">${t.desc}</span>
-              </span>
-            </button>
-          `).join('')}
+      <div class="sb-mod-toolbar ${open ? 'is-open' : ''}" role="region" aria-label="Adicionar módulo">
+        <button type="button" class="sb-mod-toolbar__toggle"
+          aria-expanded="${open ? 'true' : 'false'}"
+          onclick="SietchBuilder.toggleToolbar()">
+          <span class="sb-mod-toolbar__toggle-icon">+</span>
+          <span class="sb-mod-toolbar__toggle-label">Adicionar módulo</span>
+          <span class="sb-mod-toolbar__toggle-chev" aria-hidden="true">▾</span>
+        </button>
+        <div class="sb-mod-toolbar__panel" ${open ? '' : 'hidden'}>
+          <div class="sb-mod-toolbar__hint">Escolha o tipo de módulo</div>
+          <div class="sb-mod-toolbar__btns">
+            ${MODULE_TYPES.map(t => `
+              <button type="button" class="sb-mod-toolbar__btn"
+                onclick="SietchBuilder.addModule('${t.value}')"
+                title="${esc(t.desc)}">
+                <span class="sb-mod-toolbar__icon">${t.icon}</span>
+                <span class="sb-mod-toolbar__name">${t.label}</span>
+                <span class="sb-mod-toolbar__desc">${esc(t.desc)}</span>
+              </button>
+            `).join('')}
+          </div>
         </div>
       </div>
     `;
   }
 
+  window.SietchBuilder.toggleToolbar = function () {
+    state._toolbarOpen = !state._toolbarOpen;
+    render();
+  };
+
+  function moduleHasErrors(tempId) {
+    if (!state.errors) return false;
+    const prefix = `mod-${tempId}-`;
+    return Object.keys(state.errors).some(k => k.startsWith(prefix));
+  }
+  function moduleErrorList(tempId) {
+    if (!state.errors) return [];
+    const prefix = `mod-${tempId}-`;
+    return Object.keys(state.errors)
+      .filter(k => k.startsWith(prefix))
+      .map(k => state.errors[k]);
+  }
+
+  // (removido: renderAddMenuButton — substituído por renderModuleToolbar sticky)
+
   function renderModuleCard(mod, idx) {
     const total = state.modules.length;
     const typeMeta = MODULE_TYPES.find(t => t.value === mod.type) || {};
     const isExpanded = mod.expanded;
+    const hasErrs = moduleHasErrors(mod.tempId);
 
     return `
-      <div class="sb-mod ${isExpanded ? 'is-open' : ''}" data-id="${mod.tempId}">
+      <div class="sb-mod ${isExpanded ? 'is-open' : ''} ${hasErrs ? 'has-errors' : ''}" data-id="${mod.tempId}">
         <div class="sb-mod__head" onclick="SietchBuilder.toggleModule('${mod.tempId}')">
           <div class="sb-mod__index">${idx + 1}</div>
           <div class="sb-mod__type">
@@ -290,6 +483,7 @@
             <span class="sb-mod__type-label">${typeMeta.label || mod.type}</span>
           </div>
           <div class="sb-mod__title">${esc(mod.title || `Novo ${typeMeta.label || ''}`)}</div>
+          ${hasErrs ? '<div class="sb-mod__err-chip" title="Tem erros">!</div>' : ''}
           <div class="sb-mod__meta">${mod.durationMin || 0} min</div>
           <div class="sb-mod__actions" onclick="event.stopPropagation()">
             <button type="button" class="sb-icon-btn" title="Subir"
@@ -309,23 +503,38 @@
   }
 
   function renderModuleEditor(mod) {
+    const id = mod.tempId;
+    const titleKey = `mod-${id}-title`;
+    const durKey   = `mod-${id}-durationMin`;
+    // Erros agora ficam INLINE em cada campo, sem banner no topo
+    const errBanner = '';
+
     const common = `
       <div class="sb-grid-2">
-        <div class="sb-field">
+        <div class="${fieldCls(titleKey, { value: mod.title, min: 3, max: 80 })}">
           <label class="sb-label">Título do módulo <span class="sb-req">*</span></label>
-          <input data-mod-field="title" type="text" value="${esc(mod.title)}" placeholder="Ex: OWASP Top 10">
+          <input data-mod-field="title" data-err-key="${titleKey}" type="text" maxlength="80"
+            value="${esc(mod.title)}" placeholder="Ex: OWASP Top 10"
+            oninput="SietchBuilder.bindModFieldCounted('${id}','title',this.value,'${titleKey}',this,3,80)">
+          ${renderCounter(mod.title, 3, 80, titleKey)}
         </div>
-        <div class="sb-field">
+        <div class="${fieldCls(durKey)}">
           <label class="sb-label">Duração estimada (min) <span class="sb-req">*</span></label>
-          <input data-mod-field="durationMin" type="number" min="0" max="600" value="${mod.durationMin || 0}">
+          <input data-mod-field="durationMin" data-err-key="${durKey}" type="number" min="0" max="600"
+            value="${mod.durationMin || 0}"
+            oninput="SietchBuilder.bindModField('${id}','durationMin',parseInt(this.value,10)||0,'${durKey}',this)">
+          ${renderErr(durKey)}
         </div>
       </div>
       <div class="sb-field">
         <label class="sb-label">Descrição curta</label>
-        <input data-mod-field="description" type="text" maxlength="200" value="${esc(mod.description || '')}" placeholder="Aparece abaixo do título">
+        <input data-mod-field="description" type="text" maxlength="200" value="${esc(mod.description || '')}"
+          oninput="SietchBuilder.bindModField('${id}','description',this.value)"
+          placeholder="Aparece abaixo do título">
       </div>
       <label class="sb-checkbox-line">
-        <input type="checkbox" data-mod-field="isRequired" ${mod.isRequired !== false ? 'checked' : ''}>
+        <input type="checkbox" data-mod-field="isRequired" ${mod.isRequired !== false ? 'checked' : ''}
+          onchange="SietchBuilder.bindModField('${id}','isRequired',this.checked)">
         <span>Obrigatório para concluir o treinamento</span>
       </label>
     `;
@@ -338,16 +547,55 @@
     if (mod.type === 'POLICY')  payloadEditor = renderPolicyEditor(mod);
 
     return `
-      <div class="sb-mod-editor" data-mod-id="${mod.tempId}">
+      <div class="sb-mod-editor" data-mod-id="${id}">
+        ${errBanner}
         ${common}
         <div class="sb-divider"></div>
         ${payloadEditor}
         <div class="sb-mod-editor__footer">
-          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.persistModule('${mod.tempId}')">Salvar módulo</button>
+          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.persistModule('${id}')">Salvar módulo</button>
         </div>
       </div>
     `;
   }
+
+  window.SietchBuilder.bindModFieldCounted = function (modId, key, value, errKey, evtTarget, min, max) {
+    const mod = state.modules.find(m => m.tempId === modId);
+    if (!mod) return;
+    mod[key] = value;
+    const el = evtTarget || (event && event.target);
+    const wrap = el && el.closest ? el.closest('.sb-field') : null;
+    if (wrap) updateFieldVisual(wrap, value, min, max);
+    if (errKey && hasErr(errKey)) {
+      delete state.errors[errKey];
+      if (wrap) {
+        const msg = wrap.querySelector('.sb-field__error');
+        if (msg) msg.remove();
+      }
+    }
+    // Atualiza o título visível no header do módulo se estiver fechado
+    const modCard = document.querySelector(`.sb-mod[data-id="${modId}"] .sb-mod__title`);
+    if (modCard && key === 'title') {
+      const tm = MODULE_TYPES.find(t => t.value === mod.type) || {};
+      modCard.textContent = value || `Novo ${tm.label || ''}`;
+    }
+  };
+
+  window.SietchBuilder.bindModField = function (modId, key, value, errKey, evtTarget) {
+    const mod = state.modules.find(m => m.tempId === modId);
+    if (!mod) return;
+    mod[key] = value;
+    if (errKey && hasErr(errKey)) {
+      delete state.errors[errKey];
+      const el = evtTarget || (event && event.target) || document.querySelector(`[data-err-key="${errKey}"]`);
+      const wrap = el && el.closest ? el.closest('.sb-field') : null;
+      if (wrap) {
+        wrap.classList.remove('sb-field--has-error');
+        const msg = wrap.querySelector('.sb-field__error');
+        if (msg) msg.remove();
+      }
+    }
+  };
 
   // ─── Editor: VIDEO ───────────────────────────────────────────────────
 
@@ -388,8 +636,8 @@
           ` : ''}
         </div>
       ` : `
-        <div class="sb-field">
-          <label class="sb-label">URL ou ID do vídeo</label>
+        <div class="${fieldCls(`mod-${mod.tempId}-video`)}">
+          <label class="sb-label">URL ou ID do vídeo <span class="sb-req">*</span></label>
           <div class="sb-row">
             <input id="sb-vid-input-${mod.tempId}" type="text"
               value="${esc(src.url || src.video_id || '')}"
@@ -407,6 +655,7 @@
               </div>
             ` : ''}
           </div>
+          ${renderErr(`mod-${mod.tempId}-video`)}
         </div>
       `}
 
@@ -517,13 +766,16 @@
 
   function renderArticleEditor(mod) {
     const p = mod.payload || {};
+    const contentKey = `mod-${mod.tempId}-content_md`;
     return `
-      <div class="sb-field">
+      <div class="${fieldCls(contentKey)}">
         <label class="sb-label">Conteúdo (Markdown) <span class="sb-req">*</span></label>
         <textarea style="min-height:240px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;"
-          onchange="SietchBuilder.updateArticlePayload('${mod.tempId}', 'content_md', this.value)"
+          data-err-key="${contentKey}"
+          oninput="SietchBuilder.updateArticlePayload('${mod.tempId}', 'content_md', this.value, this)"
           placeholder="# Título\n\nTexto do artigo em markdown…">${esc(p.content_md || '')}</textarea>
-        <div class="sb-help">Suporta cabeçalhos, listas, links, código, etc. Máx 200KB.</div>
+        ${renderErr(contentKey)}
+        <div class="sb-help">Suporta cabeçalhos, listas, links, código, etc. Mínimo 50 caracteres.</div>
       </div>
       <div class="sb-field">
         <label class="sb-label">Link externo (opcional)</label>
@@ -534,10 +786,15 @@
     `;
   }
 
-  window.SietchBuilder.updateArticlePayload = function (modId, key, value) {
+  window.SietchBuilder.updateArticlePayload = function (modId, key, value, evtTarget) {
     const mod = state.modules.find(m => m.tempId === modId);
     if (!mod) return;
     mod.payload = { ...(mod.payload || {}), [key]: value };
+    if (key === 'content_md') {
+      const errKey = `mod-${modId}-content_md`;
+      if (hasErr(errKey) && value && value.length >= 50) clearFieldError(errKey, evtTarget);
+    }
+    saveStateDebounced();
   };
 
   // ─── Editor: QUIZ ────────────────────────────────────────────────────
@@ -592,59 +849,120 @@
   }
 
   function renderQuestion(modId, q, idx) {
+    const isMulti = q.kind === 'multiple';
+    const isTF    = q.kind === 'true_false';
+    const correctCount = (q.options || []).filter(o => o.correct).length;
+    const kindLabel = isMulti ? 'Múltiplas corretas' : isTF ? 'V/F' : 'Única correta';
+    const stmtKey = `mod-${modId}-q-${q.id}-statement`;
+    const optsKey = `mod-${modId}-q-${q.id}-opts`;
+    const correctKey = `mod-${modId}-q-${q.id}-correct`;
+    const hasOptsErr = hasErr(optsKey) || hasErr(correctKey);
+
     return `
-      <div class="sb-question">
+      <div class="sb-question ${moduleHasErrors(modId) && (hasErr(stmtKey) || hasOptsErr) ? 'has-errors' : ''}" data-question-id="${q.id}">
         <div class="sb-question__head">
           <span class="sb-question__num">Q${idx + 1}</span>
-          <select onchange="SietchBuilder.updateQuestion('${modId}', '${q.id}', 'kind', this.value)">
-            <option value="single"     ${q.kind === 'single' ? 'selected' : ''}>Única correta</option>
-            <option value="multiple"   ${q.kind === 'multiple' ? 'selected' : ''}>Múltiplas corretas</option>
-            <option value="true_false" ${q.kind === 'true_false' ? 'selected' : ''}>Verdadeiro / Falso</option>
-          </select>
-          <input type="number" min="0" max="10" value="${q.weight ?? 1}" style="width:80px;"
-            title="Peso"
-            onchange="SietchBuilder.updateQuestion('${modId}', '${q.id}', 'weight', parseInt(this.value, 10) || 0)">
-          <button type="button" class="sb-icon-btn sb-icon-btn--danger" title="Remover"
-            onclick="SietchBuilder.removeQuestion('${modId}', '${q.id}')">×</button>
-        </div>
-        <div class="sb-field">
-          <textarea style="min-height:60px;"
-            onchange="SietchBuilder.updateQuestion('${modId}', '${q.id}', 'statement', this.value)"
-            placeholder="Enunciado da questão">${esc(q.statement || '')}</textarea>
-        </div>
-        <div class="sb-options">
-          ${(q.options || []).map((opt) => `
-            <label class="sb-option">
-              <input type="${q.kind === 'multiple' ? 'checkbox' : 'radio'}"
-                name="sb-opt-${q.id}"
-                ${opt.correct ? 'checked' : ''}
-                onchange="SietchBuilder.toggleOptionCorrect('${modId}', '${q.id}', '${opt.id}', this.checked)">
-              <input type="text" value="${esc(opt.text || '')}"
-                placeholder="Texto da opção"
-                onchange="SietchBuilder.updateOptionText('${modId}', '${q.id}', '${opt.id}', this.value)">
-              <button type="button" class="sb-icon-btn sb-icon-btn--danger"
-                onclick="SietchBuilder.removeOption('${modId}', '${q.id}', '${opt.id}')">×</button>
+          <span class="sb-question__kind-pill">${kindLabel}</span>
+          <div class="sb-question__head-controls">
+            <select class="sb-question__kind-select"
+              onchange="SietchBuilder.updateQuestion('${modId}', '${q.id}', 'kind', this.value)">
+              <option value="single"     ${q.kind === 'single' ? 'selected' : ''}>Única correta</option>
+              <option value="multiple"   ${isMulti ? 'selected' : ''}>Múltiplas corretas</option>
+              <option value="true_false" ${isTF ? 'selected' : ''}>Verdadeiro / Falso</option>
+            </select>
+            <label class="sb-question__weight" title="Peso da questão">
+              <span>Peso</span>
+              <input type="number" min="0" max="10" value="${q.weight ?? 1}"
+                oninput="SietchBuilder.updateQuestionLive('${modId}', '${q.id}', 'weight', parseInt(this.value, 10) || 0)">
             </label>
-          `).join('')}
+            <button type="button" class="sb-icon-btn sb-icon-btn--danger" title="Remover questão"
+              onclick="SietchBuilder.removeQuestion('${modId}', '${q.id}')">×</button>
+          </div>
         </div>
-        ${q.kind !== 'true_false' ? `
-          <button type="button" class="sb-btn sb-btn--ghost sb-btn--sm"
-            onclick="SietchBuilder.addOption('${modId}', '${q.id}')">+ adicionar opção</button>
-        ` : ''}
-        <div class="sb-field">
-          <label class="sb-label sb-label--sm">Explicação (opcional)</label>
-          <input type="text" value="${esc(q.explanation || '')}"
-            placeholder="Mostrada após responder"
-            onchange="SietchBuilder.updateQuestion('${modId}', '${q.id}', 'explanation', this.value || null)">
+
+        <div class="sb-question__body">
+          <div class="${fieldCls(stmtKey)}">
+            <label class="sb-label sb-label--sm">Enunciado <span class="sb-req">*</span></label>
+            <textarea class="sb-question__statement"
+              oninput="SietchBuilder.updateQuestionLive('${modId}', '${q.id}', 'statement', this.value, this)"
+              placeholder="Ex: Qual a primeira regra do OWASP Top 10 em 2021?">${esc(q.statement || '')}</textarea>
+            ${renderErr(stmtKey)}
+          </div>
+
+          <div class="sb-question__opts-head">
+            <span class="sb-label sb-label--sm">Opções ${isMulti ? `(múltiplas corretas — ${correctCount} marcadas)` : '(marque a correta)'}</span>
+            ${!isTF ? `<button type="button" class="sb-add-opt"
+              onclick="SietchBuilder.addOption('${modId}', '${q.id}')">+ opção</button>` : ''}
+          </div>
+
+          <div class="sb-options ${hasOptsErr ? 'sb-options--error' : ''}">
+            ${(q.options || []).map((opt) => {
+              const optKey = `mod-${modId}-q-${q.id}-opt-${opt.id}`;
+              return `
+              <div class="sb-option ${opt.correct ? 'is-correct' : ''} ${hasErr(optKey) ? 'has-error' : ''}">
+                <input type="${isMulti ? 'checkbox' : 'radio'}"
+                  class="sb-option__mark"
+                  name="sb-opt-${q.id}"
+                  ${opt.correct ? 'checked' : ''}
+                  ${isTF ? 'disabled' : ''}
+                  onchange="SietchBuilder.toggleOptionCorrect('${modId}', '${q.id}', '${opt.id}', this.checked, this)">
+                <input type="text" class="sb-option__text"
+                  value="${esc(opt.text || '')}"
+                  placeholder="Texto da opção"
+                  data-err-key="${optKey}"
+                  oninput="SietchBuilder.updateOptionText('${modId}', '${q.id}', '${opt.id}', this.value, this)">
+                ${!isTF ? `<button type="button" class="sb-icon-btn sb-icon-btn--danger" title="Remover opção"
+                  onclick="SietchBuilder.removeOption('${modId}', '${q.id}', '${opt.id}')">×</button>` : ''}
+              </div>
+              `;
+            }).join('')}
+          </div>
+          ${hasErr(optsKey) ? `<div class="sb-field__error">${esc(errMsg(optsKey))}</div>` : ''}
+          ${hasErr(correctKey) ? `<div class="sb-field__error">${esc(errMsg(correctKey))}</div>` : ''}
+
+          <div class="sb-field">
+            <label class="sb-label sb-label--sm">Explicação <span class="sb-help-inline">— mostrada após responder (opcional)</span></label>
+            <input type="text" value="${esc(q.explanation || '')}"
+              placeholder="Por que essa é a resposta correta?"
+              oninput="SietchBuilder.updateQuestionLive('${modId}', '${q.id}', 'explanation', this.value || null)">
+          </div>
         </div>
       </div>
     `;
+  }
+
+  // Versão sem re-render: usa pra campos que não mudam estrutura
+  window.SietchBuilder.updateQuestionLive = function (modId, qid, key, value, evtTarget) {
+    const mod = state.modules.find(m => m.tempId === modId);
+    if (!mod?.payload?.questions) return;
+    const q = mod.payload.questions.find(x => x.id === qid);
+    if (!q) return;
+    q[key] = value;
+    // Limpa erro inline da questão quando o usuário começa a corrigir
+    if (key === 'statement') {
+      const errKey = `mod-${modId}-q-${qid}-statement`;
+      if (hasErr(errKey)) clearFieldError(errKey, evtTarget);
+    }
+    saveStateDebounced();
+  };
+
+  function clearFieldError(errKey, evtTarget) {
+    if (!hasErr(errKey)) return;
+    delete state.errors[errKey];
+    const el = evtTarget || (event && event.target);
+    const wrap = el && el.closest ? el.closest('.sb-field') : null;
+    if (wrap) {
+      wrap.classList.remove('sb-field--has-error');
+      const msg = wrap.querySelector('.sb-field__error');
+      if (msg) msg.remove();
+    }
   }
 
   window.SietchBuilder.updateQuizMeta = function (modId, key, value) {
     const mod = state.modules.find(m => m.tempId === modId);
     if (!mod) return;
     mod.payload = { ...(mod.payload || {}), [key]: value };
+    saveStateDebounced();
   };
 
   window.SietchBuilder.addQuestion = function (modId) {
@@ -706,7 +1024,7 @@
     render();
   };
 
-  window.SietchBuilder.toggleOptionCorrect = function (modId, qid, oid, checked) {
+  window.SietchBuilder.toggleOptionCorrect = function (modId, qid, oid, checked, evtTarget) {
     const mod = state.modules.find(m => m.tempId === modId);
     const q = mod?.payload?.questions?.find(x => x.id === qid);
     if (!q) return;
@@ -716,14 +1034,40 @@
     } else {
       q.options.forEach(o => { o.correct = (o.id === oid && checked); });
     }
-    render();
+    // Atualiza visual sem re-render para evitar perder foco/scroll
+    const el = evtTarget || (event && event.target);
+    const questionEl = el ? el.closest('.sb-question') : null;
+    if (questionEl) {
+      questionEl.querySelectorAll('.sb-option').forEach(row => {
+        const input = row.querySelector('input[type="radio"], input[type="checkbox"]');
+        if (!input) return;
+        row.classList.toggle('is-correct', input.checked);
+      });
+      // Atualiza o contador de "X marcadas" no head se for multiple
+      if (q.kind === 'multiple') {
+        const head = questionEl.querySelector('.sb-question__opts-head .sb-label');
+        if (head) {
+          const count = q.options.filter(o => o.correct).length;
+          head.textContent = `Opções (múltiplas corretas — ${count} marcadas)`;
+        }
+      }
+    }
+    saveStateDebounced();
   };
 
-  window.SietchBuilder.updateOptionText = function (modId, qid, oid, text) {
+  window.SietchBuilder.updateOptionText = function (modId, qid, oid, text, evtTarget) {
     const mod = state.modules.find(m => m.tempId === modId);
     const q = mod?.payload?.questions?.find(x => x.id === qid);
     const o = q?.options.find(o => o.id === oid);
     if (o) o.text = text;
+    const errKey = `mod-${modId}-q-${qid}-opt-${oid}`;
+    if (text && text.trim() && hasErr(errKey)) {
+      delete state.errors[errKey];
+      const el = evtTarget || (event && event.target);
+      const optRow = el ? el.closest('.sb-option') : null;
+      if (optRow) optRow.classList.remove('has-error');
+    }
+    saveStateDebounced();
   };
 
   // ─── Editor: TASK ────────────────────────────────────────────────────
@@ -731,12 +1075,16 @@
   function renderTaskEditor(mod) {
     const p = mod.payload || {};
     const criteria = p.acceptance_criteria || [];
+    const stmtKey = `mod-${mod.tempId}-statement_md`;
     return `
-      <div class="sb-field">
+      <div class="${fieldCls(stmtKey)}">
         <label class="sb-label">Enunciado (Markdown) <span class="sb-req">*</span></label>
         <textarea style="min-height:140px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;"
-          onchange="SietchBuilder.updateTaskPayload('${mod.tempId}', 'statement_md', this.value)"
+          data-err-key="${stmtKey}"
+          oninput="SietchBuilder.updateTaskPayload('${mod.tempId}', 'statement_md', this.value, this)"
           placeholder="## Tarefa\n\nDescreva o que o colaborador deve entregar...">${esc(p.statement_md || '')}</textarea>
+        ${renderErr(stmtKey)}
+        <div class="sb-help">Mínimo 20 caracteres.</div>
       </div>
 
       <div class="sb-grid-2">
@@ -790,10 +1138,15 @@
     `;
   }
 
-  window.SietchBuilder.updateTaskPayload = function (modId, key, value) {
+  window.SietchBuilder.updateTaskPayload = function (modId, key, value, evtTarget) {
     const mod = state.modules.find(m => m.tempId === modId);
     if (!mod) return;
     mod.payload = { ...(mod.payload || {}), [key]: value };
+    if (key === 'statement_md') {
+      const errKey = `mod-${modId}-statement_md`;
+      if (hasErr(errKey) && value && value.length >= 20) clearFieldError(errKey, evtTarget);
+    }
+    saveStateDebounced();
   };
 
   window.SietchBuilder.addCriterion = function (modId) {
@@ -822,19 +1175,27 @@
 
   function renderPolicyEditor(mod) {
     const p = mod.payload || {};
+    const refKey  = `mod-${mod.tempId}-policy_ref`;
+    const verKey  = `mod-${mod.tempId}-policy_version`;
+    const contKey = `mod-${mod.tempId}-content_md`;
+    const lblKey  = `mod-${mod.tempId}-accept_label`;
     return `
       <div class="sb-grid-3">
-        <div class="sb-field">
+        <div class="${fieldCls(refKey)}">
           <label class="sb-label">Código <span class="sb-req">*</span></label>
           <input type="text" maxlength="20" value="${esc(p.policy_ref || '')}"
-            onchange="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'policy_ref', this.value)"
+            data-err-key="${refKey}"
+            oninput="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'policy_ref', this.value, this)"
             placeholder="Ex: DOC-001, A-01">
+          ${renderErr(refKey)}
         </div>
-        <div class="sb-field">
+        <div class="${fieldCls(verKey)}">
           <label class="sb-label">Versão <span class="sb-req">*</span></label>
           <input type="text" maxlength="10" value="${esc(p.policy_version || '')}"
-            onchange="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'policy_version', this.value)"
+            data-err-key="${verKey}"
+            oninput="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'policy_version', this.value, this)"
             placeholder="Ex: 2.1">
+          ${renderErr(verKey)}
         </div>
         <div class="sb-field">
           <label class="sb-label">Vigência</label>
@@ -843,19 +1204,24 @@
         </div>
       </div>
 
-      <div class="sb-field">
+      <div class="${fieldCls(contKey)}">
         <label class="sb-label">Conteúdo da política (Markdown) <span class="sb-req">*</span></label>
         <textarea style="min-height:240px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;"
-          onchange="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'content_md', this.value)"
+          data-err-key="${contKey}"
+          oninput="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'content_md', this.value, this)"
           placeholder="# Política ABC\n\n## Escopo\n\nEsta política aplica-se a...">${esc(p.content_md || '')}</textarea>
+        ${renderErr(contKey)}
+        <div class="sb-help">Mínimo 50 caracteres.</div>
       </div>
 
-      <div class="sb-field">
+      <div class="${fieldCls(lblKey)}">
         <label class="sb-label">Texto do aceite <span class="sb-req">*</span></label>
         <input type="text" maxlength="500"
           value="${esc(p.accept_label || '')}"
-          onchange="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'accept_label', this.value)"
+          data-err-key="${lblKey}"
+          oninput="SietchBuilder.updatePolicyPayload('${mod.tempId}', 'accept_label', this.value, this)"
           placeholder="Ex: Li e concordo com a Política DOC-001 v2.1">
+        ${renderErr(lblKey)}
       </div>
 
       <label class="sb-checkbox-line">
@@ -866,10 +1232,18 @@
     `;
   }
 
-  window.SietchBuilder.updatePolicyPayload = function (modId, key, value) {
+  window.SietchBuilder.updatePolicyPayload = function (modId, key, value, evtTarget) {
     const mod = state.modules.find(m => m.tempId === modId);
     if (!mod) return;
     mod.payload = { ...(mod.payload || {}), [key]: value };
+    const errKey = `mod-${modId}-${key}`;
+    if (hasErr(errKey)) {
+      const ok = (key === 'policy_ref' || key === 'policy_version' || key === 'accept_label') ? (!!value && !!value.trim())
+                : key === 'content_md' ? (!!value && value.length >= 50)
+                : true;
+      if (ok) clearFieldError(errKey, evtTarget);
+    }
+    saveStateDebounced();
   };
 
   // ─── Persistir módulo no state (lê os inputs comuns) ─────────────────
@@ -889,18 +1263,7 @@
 
   // ─── Módulos: helpers ────────────────────────────────────────────────
 
-  let _pendingInsertAt = -1; // -1 = no fim
-
-  window.SietchBuilder.toggleAddMenu = function (btn, pos) {
-    // Fecha todos os outros menus abertos
-    document.querySelectorAll('.sb-add-menu__list').forEach((el) => {
-      if (el !== btn.nextElementSibling) el.hidden = true;
-    });
-    const list = btn.nextElementSibling;
-    if (!list) return;
-    list.hidden = !list.hidden;
-    _pendingInsertAt = (pos == null || pos === -1) ? -1 : pos;
-  };
+  // (removido: dropdown legado — substituído pela toolbar sticky)
 
   window.SietchBuilder.addModule = function (type) {
     state.modules.forEach(m => { m.expanded = false; });
@@ -921,15 +1284,13 @@
       payload: defaultPayloads[type] || {},
       expanded: true,
     };
-    if (_pendingInsertAt < 0 || _pendingInsertAt >= state.modules.length) {
-      state.modules.push(item);
-    } else {
-      state.modules.splice(_pendingInsertAt, 0, item);
-    }
-    _pendingInsertAt = -1;
-    // Fecha todos menus
-    document.querySelectorAll('.sb-add-menu__list').forEach(el => { el.hidden = true; });
+    state.modules.push(item);
+    state._toolbarOpen = false; // fecha a toolbar ao adicionar
     render();
+    requestAnimationFrame(() => {
+      const newCard = document.querySelector(`.sb-mod[data-id="${item.tempId}"]`);
+      if (newCard) newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   };
 
   window.SietchBuilder.toggleModule = function (modId) {
@@ -960,6 +1321,7 @@
     const s = state.settings;
     return `
       <div class="sb-form">
+        ${renderBanner()}
         <div class="sb-grid-2">
           <label class="sb-checkbox-line sb-checkbox-line--card">
             <input type="checkbox" id="sb-set-mandatory" ${s.isMandatory ? 'checked' : ''}>
@@ -978,19 +1340,22 @@
         </div>
 
         <div class="sb-grid-3">
-          <div class="sb-field">
+          <div class="${fieldCls('deadlineDays')}">
             <label class="sb-label">Prazo de conclusão (dias)</label>
             <input id="sb-set-deadline" type="number" min="0" max="365" value="${s.deadlineDays ?? 30}">
+            ${renderErr('deadlineDays')}
             <div class="sb-help">0 = sem prazo</div>
           </div>
-          <div class="sb-field">
+          <div class="${fieldCls('passingScore')}">
             <label class="sb-label">Nota mínima geral (%)</label>
             <input id="sb-set-passing" type="number" min="0" max="100" value="${s.passingScore ?? 70}">
+            ${renderErr('passingScore')}
             <div class="sb-help">Aplicada à média ponderada dos quizzes</div>
           </div>
-          <div class="sb-field">
+          <div class="${fieldCls('maxAttempts')}">
             <label class="sb-label">Tentativas máx (curso)</label>
             <input id="sb-set-attempts" type="number" min="0" max="20" value="${s.maxAttempts ?? 0}">
+            ${renderErr('maxAttempts')}
             <div class="sb-help">0 = ilimitadas</div>
           </div>
         </div>
@@ -1087,24 +1452,38 @@
 
   function renderFooter() {
     const onLast = state.step === 4;
-    const canSave = state.trainingId !== null;
+    const canSave = typeof state.trainingId === 'string' && state.trainingId.length > 0;
+    const isEdit = state.mode === 'edit' && canSave;
     return `
       <div class="sb-footer">
-        ${state.step > 1 ? `
-          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.back()">← Voltar</button>
-        ` : '<span></span>'}
+        <div class="sb-footer__left">
+          ${state.step > 1 ? `
+            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.back()">← Voltar</button>
+          ` : ''}
+          ${isEdit ? `
+            <button type="button" class="sb-btn sb-btn--ghost sb-btn--danger-ghost"
+              onclick="SietchBuilder.archiveTraining()"
+              title="Arquivar treinamento">Arquivar</button>
+          ` : ''}
+        </div>
 
         <div class="sb-footer__right">
           ${canSave ? `
-            <span class="sb-help" style="margin-right:12px;">Rascunho salvo · v${state.trainingId.slice(0, 6)}</span>
+            <span class="sb-help" style="margin-right:12px;">${isEdit ? 'Editando' : 'Rascunho salvo'} · v${state.trainingId.slice(0, 6)}</span>
+          ` : ''}
+          ${isEdit ? `
+            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.previewAsStudent()"
+              title="Ver como aluno">Pré-visualizar</button>
+            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.openAssignModal()"
+              title="Atribuir a colaboradores">Atribuir</button>
           ` : ''}
           ${onLast ? `
-            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.runValidate()">Validar antes de publicar</button>
+            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.runValidate()">Validar</button>
             <button type="button" class="sb-btn sb-btn--primary"
               ${state.validation && !state.validation.valid ? 'disabled' : ''}
-              onclick="SietchBuilder.publish()">Publicar treinamento</button>
+              onclick="SietchBuilder.publish()">Publicar</button>
           ` : `
-            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.saveDraft()">Salvar rascunho</button>
+            <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.saveDraft()">Salvar</button>
             <button type="button" class="sb-btn sb-btn--primary" onclick="SietchBuilder.next()">Continuar →</button>
           `}
         </div>
@@ -1121,6 +1500,19 @@
 
     let host = document.getElementById('sb-page-root');
     const isNew = !host;
+
+    // Preserva scroll, foco e seleção do input antes do re-render
+    let preservedScroll = 0;
+    let preservedFocusSel = null;
+    if (!isNew) {
+      const oldMain = host.querySelector('.sb-page__main');
+      if (oldMain) preservedScroll = oldMain.scrollTop;
+      const af = document.activeElement;
+      if (af && host.contains(af)) {
+        preservedFocusSel = describeForFocus(af);
+      }
+    }
+
     if (isNew) {
       host = document.createElement('div');
       host.id = 'sb-page-root';
@@ -1160,21 +1552,70 @@
       </div>
     `;
 
+    // Em re-renders, o innerHTML cria um .sb-page novo sem a classe --in.
+    // Sem --in a página fica invisível (opacity: 0). Garante visibilidade
+    // sempre, e só anima slide-up na PRIMEIRA abertura.
+    const pageEl = host.querySelector('.sb-page');
     if (isNew) {
-      requestAnimationFrame(() => host.querySelector('.sb-page').classList.add('sb-page--in'));
       attachOutsideClickClose();
       document.body.classList.add('sb-page-open');
+      requestAnimationFrame(() => { if (pageEl) pageEl.classList.add('sb-page--in'); });
+    } else if (pageEl) {
+      pageEl.classList.add('sb-page--in');
     }
+
+    // Restaura scroll e foco
+    if (!isNew) {
+      const newMain = host.querySelector('.sb-page__main');
+      if (newMain && preservedScroll > 0) {
+        newMain.scrollTop = preservedScroll;
+      }
+      if (preservedFocusSel) restoreFocus(preservedFocusSel);
+    }
+
+    // Auto-save em localStorage (debounced)
+    saveStateDebounced();
+  }
+
+  // ─── Foco e scroll: preservação cross-render ─────────────────────────
+
+  function describeForFocus(el) {
+    if (!el) return null;
+    // Tenta achar uma identidade estável: data-mod-field + data-mod-id pai,
+    // ou um id, ou um attr name único.
+    const modWrap = el.closest('[data-mod-id]');
+    const modId = modWrap ? modWrap.getAttribute('data-mod-id') : null;
+    const dataField = el.getAttribute('data-mod-field');
+    const dataErrKey = el.getAttribute('data-err-key');
+    const id = el.id || null;
+    const name = el.getAttribute('name') || null;
+    const selStart = (typeof el.selectionStart === 'number') ? el.selectionStart : null;
+    const selEnd   = (typeof el.selectionEnd === 'number')   ? el.selectionEnd   : null;
+    return { tag: el.tagName, modId, dataField, dataErrKey, id, name, selStart, selEnd };
+  }
+
+  function restoreFocus(d) {
+    if (!d) return;
+    let el = null;
+    if (d.id) el = document.getElementById(d.id);
+    if (!el && d.dataErrKey) el = document.querySelector(`[data-err-key="${d.dataErrKey}"]`);
+    if (!el && d.modId && d.dataField) {
+      const wrap = document.querySelector(`[data-mod-id="${d.modId}"]`);
+      if (wrap) el = wrap.querySelector(`[data-mod-field="${d.dataField}"]`);
+    }
+    if (!el && d.name) el = document.querySelector(`[name="${d.name}"]`);
+    if (!el) return;
+    try {
+      el.focus({ preventScroll: true });
+      if (d.selStart != null && d.selEnd != null && typeof el.setSelectionRange === 'function') {
+        el.setSelectionRange(d.selStart, d.selEnd);
+      }
+    } catch {}
   }
 
   function attachOutsideClickClose() {
-    document.addEventListener('click', (e) => {
-      const menu = document.getElementById('sb-add-menu');
-      if (!menu || menu.hidden) return;
-      const btn = e.target.closest('[data-sb-add-toggle]');
-      if (btn) return;
-      if (!menu.contains(e.target)) menu.hidden = true;
-    });
+    // Mantido apenas como no-op (dropdown legado removido). Escape continua fechando o wizard
+    // via futuro handler se desejado.
   }
 
   window.SietchBuilder.close = function () {
@@ -1231,6 +1672,117 @@
     });
   }
 
+  function isHttpUrl(s) {
+    if (!s || typeof s !== 'string') return false;
+    return /^https?:\/\/\S+$/i.test(s.trim());
+  }
+  function isUuid(s) {
+    if (!s || typeof s !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
+  }
+  function clampInt(v, min, max, fallback) {
+    const n = parseInt(v, 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  // Constrói payload limpo per-tipo, batendo exatamente com o schema Zod do backend.
+  // Apenas os campos que o schema reconhece são incluídos; null não é enviado quando
+  // o schema espera `optional` (não nullable).
+  function sanitizeModulePayload(type, raw) {
+    const p = raw || {};
+    if (type === 'VIDEO') {
+      const srcIn = p.source || {};
+      const src = {};
+      if (srcIn.video_id)      src.video_id     = String(srcIn.video_id);
+      if (isHttpUrl(srcIn.url)) src.url         = srcIn.url.trim();
+      if (srcIn.unlisted_hash) src.unlisted_hash = String(srcIn.unlisted_hash);
+      if (isUuid(srcIn.asset_id)) src.asset_id  = srcIn.asset_id;
+      if (srcIn.playback_id)   src.playback_id  = String(srcIn.playback_id);
+      if (Number.isFinite(srcIn.duration_sec)) src.duration_sec = Math.max(0, Math.floor(srcIn.duration_sec));
+      const out = {
+        provider:      ['youtube','vimeo','upload'].includes(p.provider) ? p.provider : 'youtube',
+        source:        src,
+        allow_speed:   p.allow_speed !== false,
+        min_watch_pct: clampInt(p.min_watch_pct, 50, 100, 90),
+      };
+      if (isHttpUrl(p.captions_url)) out.captions_url = p.captions_url.trim();
+      const tr = (p.transcript_md || '').trim();
+      if (tr) out.transcript_md = tr.slice(0, 50000);
+      return out;
+    }
+
+    if (type === 'ARTICLE') {
+      const out = {
+        content_md: String(p.content_md || '').slice(0, 200000),
+      };
+      // attachments: array opcional — só envia se existir e bater com schema
+      if (Array.isArray(p.attachments) && p.attachments.length) {
+        out.attachments = p.attachments
+          .filter(a => a && typeof a.name === 'string' && isHttpUrl(a.url))
+          .map(a => ({ name: a.name, url: a.url }));
+      }
+      return out;
+    }
+
+    if (type === 'QUIZ') {
+      const questions = Array.isArray(p.questions) ? p.questions : [];
+      const out = {
+        passing_score:        clampInt(p.passing_score, 0, 100, 70),
+        max_attempts:         clampInt(p.max_attempts, 0, 100, 3),
+        shuffle_questions:    p.shuffle_questions !== false,
+        show_correct_answers: ['after_pass','always','never'].includes(p.show_correct_answers) ? p.show_correct_answers : 'after_pass',
+        questions: questions.map(q => {
+          const opts = Array.isArray(q.options) ? q.options : [];
+          const cleanOpts = opts.map(o => ({
+            id:      String(o.id || '').slice(0, 40) || 'o',
+            text:    String(o.text || ''),
+            correct: !!o.correct,
+          })).filter(o => o.text.length > 0);
+          const out = {
+            id:        String(q.id || '').slice(0, 40),
+            kind:      ['single','multiple','true_false'].includes(q.kind) ? q.kind : 'single',
+            statement: String(q.statement || ''),
+            options:   cleanOpts,
+            weight:    clampInt(q.weight, 0, 100, 1),
+          };
+          const exp = (q.explanation || '').trim();
+          if (exp) out.explanation = exp.slice(0, 2000);
+          return out;
+        }),
+      };
+      return out;
+    }
+
+    if (type === 'TASK') {
+      const crit = Array.isArray(p.acceptance_criteria) ? p.acceptance_criteria : [];
+      return {
+        statement_md:    String(p.statement_md || '').slice(0, 50000),
+        submission_kind: ['text','file','link','none'].includes(p.submission_kind) ? p.submission_kind : 'text',
+        acceptance_criteria: crit
+          .filter(c => c && c.text && String(c.text).trim())
+          .map(c => ({ id: String(c.id || 'c'), text: String(c.text) })),
+        auto_complete:   !!p.auto_complete,
+        reviewer_role:   ['manager','admin','none'].includes(p.reviewer_role) ? p.reviewer_role : 'admin',
+      };
+    }
+
+    if (type === 'POLICY') {
+      // effective_date deve ser string ISO; usa hoje como fallback se vazio
+      const today = new Date().toISOString().slice(0, 10);
+      return {
+        policy_ref:          String(p.policy_ref || '').slice(0, 20),
+        policy_version:      String(p.policy_version || '').slice(0, 10),
+        effective_date:      p.effective_date && /^\d{4}-\d{2}-\d{2}/.test(p.effective_date) ? p.effective_date : today,
+        content_md:          String(p.content_md || '').slice(0, 200000),
+        require_full_scroll: p.require_full_scroll !== false,
+        accept_label:        String(p.accept_label || '').slice(0, 500),
+      };
+    }
+
+    return p;
+  }
+
   async function syncModules() {
     if (!state.trainingId) return;
     // estratégia simples: cria os que ainda não têm savedId, atualiza os que têm
@@ -1241,7 +1793,7 @@
         description: mod.description || null,
         durationMin: mod.durationMin || 0,
         isRequired: mod.isRequired !== false,
-        payload: mod.payload || {},
+        payload: sanitizeModulePayload(mod.type, mod.payload),
       };
       if (mod.savedId) {
         await window.SietchAPI.updateModule(state.trainingId, mod.savedId, {
@@ -1265,38 +1817,176 @@
     }
   }
 
+  // ─── Validadores das etapas 2 e 3 ────────────────────────────────────
+
+  function validateStep2() {
+    const errs = {};
+    if (!state.modules || state.modules.length === 0) {
+      errs._general = 'Adicione pelo menos 1 módulo antes de continuar.';
+      return errs;
+    }
+    state.modules.forEach((mod, idx) => {
+      const p = mod.payload || {};
+      const k = (suffix) => `mod-${mod.tempId}-${suffix}`;
+      const label = `Módulo ${idx + 1}`;
+
+      if (!mod.title || mod.title.trim().length < 3) {
+        errs[k('title')] = 'Título do módulo é obrigatório (≥ 3 caracteres)';
+      }
+      if (!mod.durationMin || mod.durationMin < 1) {
+        errs[k('durationMin')] = 'Duração obrigatória (≥ 1 min)';
+      }
+
+      if (mod.type === 'VIDEO') {
+        const src = p.source || {};
+        const hasVideo = !!(src.video_id || src.asset_id);
+        if (!hasVideo) {
+          errs[k('video')] = `${label}: valide o link do vídeo (clique em "Validar") ou faça upload.`;
+        }
+        if (p.min_watch_pct != null && (p.min_watch_pct < 50 || p.min_watch_pct > 100)) {
+          errs[k('min_watch_pct')] = `${label}: % mínima deve estar entre 50 e 100.`;
+        }
+      } else if (mod.type === 'ARTICLE') {
+        const md = (p.content_md || '').trim();
+        if (md.length < 50) {
+          errs[k('content_md')] = `${label}: conteúdo do artigo precisa ter ≥ 50 caracteres.`;
+        }
+      } else if (mod.type === 'QUIZ') {
+        const qs = p.questions || [];
+        if (qs.length < 3) {
+          errs[k('questions')] = `${label}: o quiz precisa de no mínimo 3 questões (tem ${qs.length}).`;
+        }
+        qs.forEach((q, qi) => {
+          if (!q.statement || q.statement.trim().length < 5) {
+            errs[k(`q-${q.id}-statement`)] = `${label} · Q${qi + 1}: enunciado obrigatório.`;
+          }
+          const opts = q.options || [];
+          if (opts.length < 2) {
+            errs[k(`q-${q.id}-opts`)] = `${label} · Q${qi + 1}: mínimo 2 opções.`;
+          } else {
+            const correct = opts.filter(o => o.correct);
+            if (correct.length === 0) {
+              errs[k(`q-${q.id}-correct`)] = `${label} · Q${qi + 1}: marque ao menos uma opção como correta.`;
+            }
+            opts.forEach((o, oi) => {
+              if (!o.text || !o.text.trim()) {
+                errs[k(`q-${q.id}-opt-${o.id}`)] = `${label} · Q${qi + 1}: opção ${oi + 1} sem texto.`;
+              }
+            });
+          }
+        });
+        if (p.passing_score != null && (p.passing_score < 0 || p.passing_score > 100)) {
+          errs[k('passing_score')] = `${label}: nota mínima entre 0 e 100.`;
+        }
+      } else if (mod.type === 'TASK') {
+        const stmt = (p.statement_md || '').trim();
+        if (stmt.length < 20) {
+          errs[k('statement_md')] = `${label}: enunciado da tarefa (≥ 20 caracteres).`;
+        }
+      } else if (mod.type === 'POLICY') {
+        if (!p.policy_ref || !p.policy_ref.trim()) {
+          errs[k('policy_ref')] = `${label}: código da política obrigatório.`;
+        }
+        if (!p.policy_version || !p.policy_version.trim()) {
+          errs[k('policy_version')] = `${label}: versão obrigatória.`;
+        }
+        if (!p.content_md || p.content_md.trim().length < 50) {
+          errs[k('content_md')] = `${label}: conteúdo da política (≥ 50 caracteres).`;
+        }
+        if (!p.accept_label || !p.accept_label.trim()) {
+          errs[k('accept_label')] = `${label}: texto do aceite obrigatório.`;
+        }
+      }
+    });
+    return errs;
+  }
+
+  function validateStep3() {
+    const errs = {};
+    const s = state.settings;
+    if (s.deadlineDays != null && (s.deadlineDays < 0 || s.deadlineDays > 365)) {
+      errs.deadlineDays = 'Entre 0 e 365 dias';
+    }
+    if (s.passingScore == null || s.passingScore < 0 || s.passingScore > 100) {
+      errs.passingScore = 'Nota entre 0 e 100';
+    }
+    if (s.maxAttempts != null && (s.maxAttempts < 0 || s.maxAttempts > 20)) {
+      errs.maxAttempts = 'Entre 0 e 20';
+    }
+    return errs;
+  }
+
+  // ─── Navegação entre etapas ──────────────────────────────────────────
+
   window.SietchBuilder.next = async function () {
+    clearAllErrs();
+
     if (state.step === 1) {
       readStep1();
-      const err = validateStep1();
-      if (err) { alert(err); return; }
+      const errs = validateStep1();
+      if (hasAnyErrs(errs)) { setErrs(errs); render(); scrollFirstError(); return; }
       try {
         await ensureTrainingDraft();
         await syncMetaUpdate();
-      } catch (e) { alert('Erro ao salvar: ' + e.message); return; }
+      } catch (e) {
+        setErrs({ _general: 'Erro ao salvar: ' + e.message });
+        render(); scrollFirstError(); return;
+      }
     }
+
     if (state.step === 2) {
-      // garante que módulos foram persistidos
+      const errs = validateStep2();
+      if (hasAnyErrs(errs)) {
+        // Expande módulos que têm erros pra usuário ver o que falta
+        state.modules.forEach(m => {
+          if (Object.keys(errs).some(k => k.startsWith(`mod-${m.tempId}-`))) {
+            m.expanded = true;
+          }
+        });
+        setErrs(errs);
+        // Sem banner _general — o usuário vê os erros inline em cada campo
+        render(); scrollFirstError(); return;
+      }
       try { await syncModules(); }
-      catch (e) { alert('Erro ao salvar módulos: ' + e.message); return; }
+      catch (e) {
+        setErrs({ _general: 'Erro ao salvar módulos: ' + e.message });
+        render(); scrollFirstError(); return;
+      }
     }
+
     if (state.step === 3) {
       readStep3();
+      const errs = validateStep3();
+      if (hasAnyErrs(errs)) { setErrs(errs); render(); scrollFirstError(); return; }
       try { await syncSettings(); }
-      catch (e) { alert('Erro ao salvar configs: ' + e.message); return; }
+      catch (e) {
+        setErrs({ _general: 'Erro ao salvar configs: ' + e.message });
+        render(); scrollFirstError(); return;
+      }
     }
+
     if (state.step < 4) state.step += 1;
     render();
   };
 
   window.SietchBuilder.back = function () {
+    clearAllErrs();
     if (state.step > 1) state.step -= 1;
     render();
   };
 
-  window.SietchBuilder.goTo = function (n) {
-    state.step = Math.max(1, Math.min(4, n));
-    render();
+  window.SietchBuilder.goTo = async function (n) {
+    n = Math.max(1, Math.min(4, n));
+    if (n === state.step) return;
+    // Permite voltar livremente
+    if (n < state.step) { clearAllErrs(); state.step = n; render(); return; }
+    // Avançar: precisa rodar next() para cada etapa entre o atual e o alvo
+    while (state.step < n) {
+      const before = state.step;
+      await window.SietchBuilder.next();
+      // Se next bloqueou (erros), para
+      if (state.step === before) return;
+    }
   };
 
   window.SietchBuilder.saveDraft = async function () {
@@ -1313,39 +2003,482 @@
   };
 
   window.SietchBuilder.runValidate = async function () {
+    clearAllErrs();
     if (!state.trainingId) {
-      await window.SietchBuilder.saveDraft();
+      try { await window.SietchBuilder.saveDraft(); }
+      catch (e) { setErrs({ _general: 'Erro ao salvar: ' + e.message }); render(); return; }
     }
     try {
       const r = await window.SietchAPI.validateTraining(state.trainingId);
       state.validation = r;
       render();
-    } catch (e) { alert('Erro: ' + e.message); }
+    } catch (e) {
+      setErrs({ _general: 'Erro ao validar: ' + e.message });
+      render();
+    }
+  };
+
+  // ─── Modal de atribuição ─────────────────────────────────────────────
+
+  let _assignState = null;
+
+  async function renderAssignModal(trainingId, trainingTitle) {
+    _assignState = {
+      trainingId,
+      trainingTitle,
+      mode: 'all',          // 'all' | 'specific'
+      selectedUsers: new Set(),
+      deadlineDays: 30,
+      mandatory: true,
+      users: [],
+      loadingUsers: false,
+    };
+
+    // Cria overlay
+    let host = document.getElementById('sb-assign-root');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'sb-assign-root';
+      document.body.appendChild(host);
+    }
+    renderAssignModalDom();
+
+    // Carrega usuários do backend
+    _assignState.loadingUsers = true;
+    renderAssignModalDom();
+    try {
+      const r = await window.SietchAPI.colabUsers();
+      _assignState.users = r.users || [];
+    } catch (e) {
+      _assignState.loadError = e.message;
+    } finally {
+      _assignState.loadingUsers = false;
+      renderAssignModalDom();
+    }
+  }
+
+  function renderAssignModalDom() {
+    const s = _assignState;
+    if (!s) return;
+    const host = document.getElementById('sb-assign-root');
+    if (!host) return;
+    const allSelected = s.mode === 'specific' && s.users.length > 0 && s.users.every(u => s.selectedUsers.has(u.id));
+
+    host.innerHTML = `
+      <div class="sb-assign__backdrop" onclick="SietchBuilder.closeAssignModal()"></div>
+      <div class="sb-assign__panel" role="dialog" aria-labelledby="sb-assign-title">
+        <div class="sb-assign__head">
+          <div>
+            <div class="sb-assign__crumb">Atribuir</div>
+            <h2 class="sb-assign__title" id="sb-assign-title">${esc(s.trainingTitle || '—')}</h2>
+          </div>
+          <button type="button" class="sb-page__close" onclick="SietchBuilder.closeAssignModal()" aria-label="Fechar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="sb-assign__body">
+          <div class="sb-assign__section-title">Para quem?</div>
+          <div class="sb-assign__choice-group">
+            <label class="sb-assign__choice ${s.mode === 'all' ? 'is-selected' : ''}">
+              <input type="radio" name="assign-mode" value="all" ${s.mode === 'all' ? 'checked' : ''}
+                onchange="SietchBuilder.setAssignMode('all')">
+              <div>
+                <div class="sb-assign__choice-title">Todos os colaboradores</div>
+                <div class="sb-assign__choice-desc">Atribuição em massa para todos os usuários ativos.</div>
+              </div>
+            </label>
+            <label class="sb-assign__choice ${s.mode === 'specific' ? 'is-selected' : ''}">
+              <input type="radio" name="assign-mode" value="specific" ${s.mode === 'specific' ? 'checked' : ''}
+                onchange="SietchBuilder.setAssignMode('specific')">
+              <div>
+                <div class="sb-assign__choice-title">Colaboradores específicos</div>
+                <div class="sb-assign__choice-desc">Você escolhe quem recebe.</div>
+              </div>
+            </label>
+          </div>
+
+          ${s.mode === 'specific' ? `
+            <div class="sb-assign__users">
+              <div class="sb-assign__users-head">
+                <span class="sb-label sb-label--sm">${s.users.length} usuários · ${s.selectedUsers.size} selecionados</span>
+                <button type="button" class="sb-add-opt" onclick="SietchBuilder.toggleAllUsers()">
+                  ${allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+                </button>
+              </div>
+              <div class="sb-assign__users-list">
+                ${s.loadingUsers ? '<div class="sb-help">Carregando…</div>' :
+                  s.users.length === 0 ? '<div class="sb-help">Nenhum usuário disponível.</div>' :
+                  s.users.map(u => `
+                    <label class="sb-assign__user ${s.selectedUsers.has(u.id) ? 'is-selected' : ''}">
+                      <input type="checkbox" ${s.selectedUsers.has(u.id) ? 'checked' : ''}
+                        onchange="SietchBuilder.toggleAssignUser('${u.id}')">
+                      <div class="sb-assign__user-info">
+                        <div class="sb-assign__user-name">${esc(u.name || u.email || '?')}</div>
+                        <div class="sb-assign__user-meta">${esc(u.role || '')} ${u.team ? '· ' + esc(u.team) : ''}</div>
+                      </div>
+                    </label>
+                  `).join('')
+                }
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="sb-assign__section-title" style="margin-top:18px;">Configurações</div>
+          <div class="sb-grid-2">
+            <div class="sb-field">
+              <label class="sb-label">Prazo (dias)</label>
+              <input type="number" min="1" max="365" value="${s.deadlineDays}"
+                oninput="SietchBuilder.setAssignDeadline(parseInt(this.value, 10) || 30)">
+            </div>
+            <div class="sb-field">
+              <label class="sb-label">Obrigatoriedade</label>
+              <label class="sb-checkbox-line">
+                <input type="checkbox" ${s.mandatory ? 'checked' : ''}
+                  onchange="SietchBuilder.setAssignMandatory(this.checked)">
+                <span>Marcar como obrigatório</span>
+              </label>
+            </div>
+          </div>
+
+          ${s.loadError ? `<div class="sb-banner-error">Erro: ${esc(s.loadError)}</div>` : ''}
+          ${s.actionError ? `<div class="sb-banner-error">${esc(s.actionError)}</div>` : ''}
+        </div>
+
+        <div class="sb-assign__foot">
+          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.closeAssignModal()">Cancelar</button>
+          <button type="button" class="sb-btn sb-btn--primary"
+            ${s.mode === 'specific' && s.selectedUsers.size === 0 ? 'disabled' : ''}
+            onclick="SietchBuilder.confirmAssign()">
+            ${s.mode === 'all' ? 'Atribuir a todos' : `Atribuir a ${s.selectedUsers.size}`}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  window.SietchBuilder.setAssignMode = function (mode) {
+    if (!_assignState) return;
+    _assignState.mode = mode;
+    renderAssignModalDom();
+  };
+  window.SietchBuilder.toggleAssignUser = function (userId) {
+    if (!_assignState) return;
+    if (_assignState.selectedUsers.has(userId)) _assignState.selectedUsers.delete(userId);
+    else _assignState.selectedUsers.add(userId);
+    renderAssignModalDom();
+  };
+  window.SietchBuilder.toggleAllUsers = function () {
+    if (!_assignState) return;
+    const allSelected = _assignState.users.every(u => _assignState.selectedUsers.has(u.id));
+    if (allSelected) _assignState.selectedUsers.clear();
+    else _assignState.users.forEach(u => _assignState.selectedUsers.add(u.id));
+    renderAssignModalDom();
+  };
+  window.SietchBuilder.setAssignDeadline = function (d) {
+    if (_assignState) _assignState.deadlineDays = d;
+  };
+  window.SietchBuilder.setAssignMandatory = function (m) {
+    if (_assignState) _assignState.mandatory = m;
+  };
+  window.SietchBuilder.closeAssignModal = function () {
+    const host = document.getElementById('sb-assign-root');
+    if (host) host.remove();
+    _assignState = null;
+  };
+  window.SietchBuilder.confirmAssign = async function () {
+    const s = _assignState;
+    if (!s) return;
+    const userIds = s.mode === 'all' ? s.users.map(u => u.id) : Array.from(s.selectedUsers);
+    if (userIds.length === 0) {
+      s.actionError = 'Selecione pelo menos um colaborador';
+      renderAssignModalDom();
+      return;
+    }
+    try {
+      const dueAt = s.deadlineDays
+        ? new Date(Date.now() + s.deadlineDays * 86400000).toISOString()
+        : null;
+      await window.SietchAPI.bulkAssign({
+        trainingId: s.trainingId,
+        userIds,
+        dueAt,
+      });
+      if (window.showToast) window.showToast(`Atribuído a ${userIds.length} colaborador(es)`, 'success');
+      window.SietchBuilder.closeAssignModal();
+      if (window.SietchBridge?.reloadAssignments) await window.SietchBridge.reloadAssignments();
+      if (window.renderTreinamentos) window.renderTreinamentos();
+    } catch (e) {
+      s.actionError = 'Erro: ' + (e.details ? JSON.stringify(e.details) : e.message);
+      renderAssignModalDom();
+    }
+  };
+
+  // ─── Ações do edit mode ──────────────────────────────────────────────
+
+  window.SietchBuilder.archiveTraining = async function () {
+    if (!state.trainingId) return;
+    if (!confirm('Arquivar este treinamento? Ele sairá do catálogo ativo (não é deletado).')) return;
+    try {
+      await window.SietchAPI.archiveTraining(state.trainingId);
+      if (window.SietchBridge?.reloadCatalog) await window.SietchBridge.reloadCatalog();
+      if (window.renderTreinamentos) window.renderTreinamentos();
+      if (window.showToast) window.showToast('Treinamento arquivado', 'success');
+      window.SietchBuilder.close();
+    } catch (e) {
+      setErrs({ _general: 'Erro ao arquivar: ' + e.message });
+      render();
+    }
+  };
+
+  window.SietchBuilder.previewAsStudent = async function () {
+    if (!state.trainingId) return;
+    // Injeta uma "assignment" sintética no MY_ASSIGNMENTS pra reutilizar o player
+    const fakeId = 'preview-' + state.trainingId;
+    window.MY_ASSIGNMENTS = window.MY_ASSIGNMENTS || [];
+    if (!window.MY_ASSIGNMENTS.find(a => a.id === fakeId)) {
+      window.MY_ASSIGNMENTS.push({
+        id: fakeId,
+        trainingId: state.trainingId,
+        title: state.meta.title || 'Pré-visualização',
+        track: 'soft',
+        status: 'pendente',
+        progress: 0,
+        progressByModule: {},
+        deadline: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        mandatory: !!state.settings.isMandatory,
+        _preview: true,
+      });
+    }
+    if (window.SietchBridge?.hydrateModules) {
+      try { await window.SietchBridge.hydrateModules(state.trainingId); } catch {}
+    }
+    if (typeof window.openTrainingPlayer === 'function') {
+      window.openTrainingPlayer(fakeId);
+    }
+  };
+
+  window.SietchBuilder.openAssignModal = function () {
+    if (!state.trainingId) return;
+    renderAssignModal(state.trainingId, state.meta.title);
   };
 
   window.SietchBuilder.publish = async function () {
-    if (!state.trainingId) { alert('Salve primeiro'); return; }
+    if (!state.trainingId) {
+      setErrs({ _general: 'Salve o rascunho antes de publicar.' });
+      render(); return;
+    }
+    // Garante validação server-side antes de publicar
+    if (!state.validation) {
+      await window.SietchBuilder.runValidate();
+      if (!state.validation || !state.validation.valid) return;
+    }
+    if (state.validation && !state.validation.valid) return;
     try {
       await window.SietchAPI.publishTraining(state.trainingId, 'minor');
+      clearSavedState(); // rascunho não é mais necessário
       window.SietchBuilder.close();
       if (window.SietchBridge?.reloadCatalog) await window.SietchBridge.reloadCatalog();
       if (window.renderTreinamentos) window.renderTreinamentos();
       if (window.showToast) window.showToast('Treinamento publicado!', 'success');
     } catch (e) {
-      alert('Erro ao publicar: ' + (e.details ? JSON.stringify(e.details) : e.message));
+      setErrs({ _general: 'Erro ao publicar: ' + (e.details ? JSON.stringify(e.details) : e.message) });
+      render();
     }
   };
 
   // ─── API pública ─────────────────────────────────────────────────────
 
-  window.SietchBuilder.open = function (opts = {}) {
+  window.SietchBuilder.open = async function (opts = {}) {
     state = newDraftState();
+
+    // Modo edit: hidrata do backend SEM restaurar localStorage
     if (opts.trainingId) {
       state.trainingId = opts.trainingId;
       state.mode = 'edit';
-      // TODO: hidratar do backend
+      render();
+      try {
+        await hydrateFromBackend(opts.trainingId);
+      } catch (e) {
+        setErrs({ _general: 'Erro ao carregar treinamento: ' + e.message });
+      }
+      render();
+      return;
+    }
+
+    // Modo create: se houver rascunho salvo, restaura
+    const saved = loadSavedState();
+    if (saved && !opts.fresh) {
+      // restaura tudo
+      state.mode       = saved.mode || 'create';
+      state.trainingId = saved.trainingId || null;
+      state.step       = saved.step || 1;
+      state.meta       = { ...state.meta, ...(saved.meta || {}) };
+      state.modules    = Array.isArray(saved.modules) ? saved.modules : [];
+      state.settings   = { ...state.settings, ...(saved.settings || {}) };
+      state._toolbarOpen = !!saved._toolbarOpen;
+      if (window.showToast) window.showToast('Rascunho restaurado', 'info');
     }
     render();
+  };
+
+  // Permite descartar manualmente
+  window.SietchBuilder.discardDraft = function () {
+    if (!confirm('Descartar o rascunho atual e começar do zero?')) return;
+    clearSavedState();
+    state = newDraftState();
+    render();
+  };
+
+  window.SietchBuilder.hasDraft = function () {
+    const s = loadSavedState();
+    return !!(s && (s.meta?.title || s.modules?.length));
+  };
+
+  // Carrega dados do backend para o state do wizard (modo edição)
+  async function hydrateFromBackend(trainingId) {
+    const trainingResp = await window.SietchAPI.getTraining(trainingId);
+    const t = trainingResp.training || trainingResp;
+    // Meta
+    state.meta = {
+      title:       t.title || '',
+      description: t.description || '',
+      category:    t.category || '',
+      tags:        t.tags || [],
+      coverUrl:    t.coverUrl || '',
+      policyRef:   t.policyRef || '',
+      language:    t.language || 'pt-BR',
+    };
+    // Settings
+    state.settings = {
+      isMandatory:    !!t.isMandatory,
+      deadlineDays:   t.deadlineDays ?? 30,
+      passingScore:   t.passingScore ?? 70,
+      maxAttempts:    t.maxAttempts ?? 0,
+      visibility:     t.visibility || 'ALL',
+      hasCertificate: !!t.hasCertificate,
+      recurrence:     t.recurrence || { kind: 'never' },
+    };
+    // Módulos (vem em t.modules pelo include do getTrainingById)
+    const mods = Array.isArray(t.modules) ? t.modules : (await window.SietchAPI.listModules(trainingId)).modules || [];
+    state.modules = mods.map(m => ({
+      tempId:      uid(),
+      savedId:     m.id,
+      type:        m.type,
+      title:       m.title || '',
+      description: m.description || '',
+      durationMin: m.durationMin || 0,
+      isRequired:  m.isRequired !== false,
+      payload:     m.payload || {},
+      expanded:    false,
+    }));
+  }
+
+  // Hook global pro click no card admin
+  window.openAdminTrainingEdit = function (trainingId) {
+    window.SietchBuilder.open({ trainingId });
+  };
+
+  // Abrir treinamento no modo "visualização como aluno" com barra admin fixa
+  window.openAdminTrainingView = async function (trainingId) {
+    if (!trainingId) return;
+    // Garante metadata mínima
+    const t = (window.TRAINING_CATALOG || []).find(x => x.id === trainingId);
+    const title = t?.title || 'Treinamento';
+
+    // Cria assignment sintética
+    const fakeId = 'preview-' + trainingId;
+    window.MY_ASSIGNMENTS = window.MY_ASSIGNMENTS || [];
+    if (!window.MY_ASSIGNMENTS.find(a => a.id === fakeId)) {
+      window.MY_ASSIGNMENTS.push({
+        id: fakeId,
+        trainingId,
+        title,
+        track: t?.track || 'soft',
+        status: 'pendente',
+        progress: 0,
+        progressByModule: {},
+        deadline: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        mandatory: !!t?.mandatory,
+        _preview: true,
+      });
+    }
+    // Hidrata módulos do backend
+    if (window.SietchBridge?.hydrateModules) {
+      try { await window.SietchBridge.hydrateModules(trainingId); } catch {}
+    }
+    if (typeof window.openTrainingPlayer === 'function') {
+      window.openTrainingPlayer(fakeId);
+    }
+    // Aguarda o player abrir e injeta a barra admin
+    setTimeout(() => injectAdminActionBar(trainingId, title), 300);
+  };
+
+  function injectAdminActionBar(trainingId, title) {
+    // Remove se já existe
+    const old = document.getElementById('sb-admin-bar');
+    if (old) old.remove();
+
+    const overlay = document.getElementById('trein-player-overlay');
+    if (!overlay) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'sb-admin-bar';
+    bar.innerHTML = `
+      <div class="sb-admin-bar__inner">
+        <div class="sb-admin-bar__label">
+          <span class="sb-admin-bar__chip">ADMIN</span>
+          <span class="sb-admin-bar__title">${esc(title)}</span>
+        </div>
+        <div class="sb-admin-bar__actions">
+          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.adminEditFromView('${trainingId}')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2l3 3-9 9H2v-3z"/></svg>
+            Editar
+          </button>
+          <button type="button" class="sb-btn sb-btn--ghost" onclick="SietchBuilder.adminAssignFromView('${trainingId}', '${esc(title)}')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.5"/><path d="M2 14c0-2.2 1.8-4 4-4s4 1.8 4 4"/><path d="M12 6v4M14 8h-4"/></svg>
+            Atribuir
+          </button>
+          <button type="button" class="sb-btn sb-btn--ghost sb-btn--danger-ghost" onclick="SietchBuilder.adminArchiveFromView('${trainingId}')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M5 4V2.5A.5.5 0 0 1 5.5 2h5a.5.5 0 0 1 .5.5V4M3.5 4l.7 9a1 1 0 0 0 1 .9h5.6a1 1 0 0 0 1-.9l.7-9"/></svg>
+            Arquivar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(bar);
+
+    // Hook no fechamento do player pra remover a barra
+    const origClose = window.closePlayerOverlay;
+    if (origClose && !origClose._sietchAdminBarWrap) {
+      window.closePlayerOverlay = function () {
+        const b = document.getElementById('sb-admin-bar');
+        if (b) b.remove();
+        return origClose.apply(this, arguments);
+      };
+      window.closePlayerOverlay._sietchAdminBarWrap = true;
+    }
+  }
+
+  window.SietchBuilder.adminEditFromView = function (trainingId) {
+    // Fecha player e abre wizard em edit
+    if (typeof window.closePlayerOverlay === 'function') window.closePlayerOverlay();
+    setTimeout(() => window.SietchBuilder.open({ trainingId }), 220);
+  };
+  window.SietchBuilder.adminAssignFromView = function (trainingId, title) {
+    renderAssignModal(trainingId, title);
+  };
+  window.SietchBuilder.adminArchiveFromView = async function (trainingId) {
+    if (!confirm('Arquivar este treinamento? Ele sairá do catálogo ativo.')) return;
+    try {
+      await window.SietchAPI.archiveTraining(trainingId);
+      if (typeof window.closePlayerOverlay === 'function') window.closePlayerOverlay();
+      if (window.SietchBridge?.reloadCatalog) await window.SietchBridge.reloadCatalog();
+      if (window.renderTreinamentos) window.renderTreinamentos();
+      if (window.showToast) window.showToast('Treinamento arquivado', 'success');
+    } catch (e) {
+      alert('Erro ao arquivar: ' + e.message);
+    }
   };
 
   // Substitui o openCreateTraining global — depois do bridge instalar o dele
@@ -1353,13 +2486,28 @@
     window.openCreateTraining = function () { window.SietchBuilder.open(); };
   }
 
+  // Auto-resume: se houver rascunho válido ao carregar, reabre o wizard
+  function tryAutoResume() {
+    try {
+      const s = loadSavedState();
+      if (!s) return;
+      const hasContent = (s.meta?.title || (s.modules && s.modules.length > 0));
+      if (!hasContent) return;
+      // Aguarda um pouco para o bridge terminar de carregar o app
+      setTimeout(() => {
+        if (typeof window.openCreateTraining === 'function') {
+          window.SietchBuilder.open();
+        }
+      }, 800);
+    } catch {}
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      // Roda após o handler do bridge (que também escuta DOMContentLoaded).
-      // Usar setTimeout 0 garante que o bridge installOverrides já rodou.
-      setTimeout(installOverride, 0);
+      setTimeout(() => { installOverride(); tryAutoResume(); }, 0);
     });
   } else {
     installOverride();
+    tryAutoResume();
   }
 })();
