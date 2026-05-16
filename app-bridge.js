@@ -581,38 +581,40 @@
       const tracks = window.TRAINING_TRACKS || [];
       const trackOptions = tracks.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
 
+      const labelCss = 'font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;';
+      const fieldCss = 'width:100%;';
       window.treinOpenModal({
         title: 'Criar treinamento',
         body: `
           <div style="display:flex;flex-direction:column;gap:var(--spacing-4);">
             <div>
-              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Título *</label>
-              <input id="sb-train-title" type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);" placeholder="Ex: Fundamentos de Cyber Security">
+              <label style="${labelCss}">Título *</label>
+              <input id="sb-train-title" type="text" style="${fieldCss}" placeholder="Ex: Fundamentos de Cyber Security">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
-                <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Trilha *</label>
-                <select id="sb-train-track" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);font-family:var(--font-family);">
+                <label style="${labelCss}">Trilha *</label>
+                <select id="sb-train-track" style="${fieldCss}">
                   <option value="">Selecionar…</option>
                   ${trackOptions}
                 </select>
               </div>
               <div>
-                <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Prazo (dias)</label>
-                <input id="sb-train-deadline" type="number" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="30" value="30">
+                <label style="${labelCss}">Prazo (dias)</label>
+                <input id="sb-train-deadline" type="number" style="${fieldCss}" placeholder="30" value="30">
               </div>
             </div>
             <div>
-              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Descrição *</label>
-              <textarea id="sb-train-desc" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);min-height:80px;resize:vertical;font-family:var(--font-family);" placeholder="Mínimo 20 caracteres — aparece nos cards"></textarea>
+              <label style="${labelCss}">Descrição *</label>
+              <textarea id="sb-train-desc" style="${fieldCss}min-height:96px;" placeholder="Mínimo 20 caracteres — aparece nos cards"></textarea>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input type="checkbox" id="sb-train-mandatory" style="width:16px;height:16px;accent-color:var(--blue-9);">
-              <label for="sb-train-mandatory" style="font-size:14px;color:var(--text-default);cursor:pointer;">Treinamento obrigatório</label>
-            </div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="sb-train-mandatory">
+              <span style="font-size:14px;color:var(--text-default);">Treinamento obrigatório</span>
+            </label>
             <div>
-              <label style="font-size:13px;font-weight:600;color:var(--text-default);display:block;margin-bottom:6px;">Política vinculada (opcional)</label>
-              <input id="sb-train-policy" type="text" style="width:100%;padding:10px 12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:14px;color:var(--text-default);" placeholder="Ex: DOC-005">
+              <label style="${labelCss}">Política vinculada (opcional)</label>
+              <input id="sb-train-policy" type="text" style="${fieldCss}" placeholder="Ex: DOC-005">
             </div>
             <div id="sb-train-err" style="color:#ff5e7d;font-size:13px;min-height:18px;"></div>
           </div>
